@@ -15,7 +15,7 @@ import type {
 import { resolveCreateId } from '../utils/uuidv7'
 import { BaseClient } from './base-client'
 
-const ChannelListSchema = z.array(ChannelSchema)
+export const ChannelListSchema = z.array(ChannelSchema)
 
 /**
  * Client for `/api/v3/channels/`. The SDK auto-generates an `id` on

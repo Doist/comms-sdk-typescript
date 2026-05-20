@@ -34,12 +34,16 @@ const api = new CommsApi('YOUR_API_TOKEN', {
 ### Creating entities
 
 Channel / thread / comment / conversation / message / group IDs are
-opaque strings; `workspaceId` and `userId` are numeric.
+opaque base58-encoded UUIDv7 strings; `workspaceId` and `userId` are
+numeric.
 
 Creation endpoints (`createChannel`, `createThread`, `createComment`,
 `getOrCreateConversation`, `createMessage`, `createGroup`) accept an
-optional `id`. Pass your own to keep an optimistic-UI ID stable through
-the round-trip, or let the SDK mint one with `generateId()`:
+optional `id`. **A caller-supplied `id` must be a base58-encoded
+UUIDv7** — anything else fails fast with a `UuidV7Error` before the
+request leaves the SDK. Either mint your own with `generateId()` (handy
+for optimistic UI — the ID survives the round-trip unchanged) or omit
+`id` and let the SDK mint one:
 
 ```typescript
 import { CommsApi, generateId } from '@doist/comms-sdk'
@@ -52,7 +56,7 @@ const channel = await api.channels.createChannel({
     name: 'Engineering',
 })
 
-// Option 2: mint the ID yourself
+// Option 2: mint the ID yourself (must be a base58 UUIDv7 from generateId)
 const id = generateId()
 const sameChannel = await api.channels.createChannel({
     workspaceId: 1,

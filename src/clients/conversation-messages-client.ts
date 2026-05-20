@@ -16,7 +16,7 @@ import type {
 import { resolveCreateId } from '../utils/uuidv7'
 import { BaseClient } from './base-client'
 
-const ConversationMessageListSchema = z.array(ConversationMessageSchema)
+export const ConversationMessageListSchema = z.array(ConversationMessageSchema)
 
 /**
  * Client for `/api/v3/conversation_messages/`. The SDK auto-generates the

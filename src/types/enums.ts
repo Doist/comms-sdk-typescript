@@ -1,4 +1,24 @@
-import { EVERYONE, EVERYONE_IN_THREAD, type GroupId } from './entities'
+/**
+ * Marker constants for the two "broadcast" group recipients. These appear
+ * in group-bearing fields (`Thread.groups`, `Comment.groups`,
+ * `Channel.defaultGroups`, `directGroupMentions`, etc.) in place of a
+ * real group ID and tell the backend to notify "everyone in the channel"
+ * or "everyone in the thread" respectively. Input and output are
+ * symmetric. Defined here (and not in `./entities`) so that `enums`
+ * stays leaf-level — `entities` imports from `enums`, never the reverse.
+ */
+export const EVERYONE = 'EVERYONE' as const
+export const EVERYONE_IN_THREAD = 'EVERYONE_IN_THREAD' as const
+
+/** Union of the two broadcast group markers. */
+export const GROUP_ID_MARKERS = [EVERYONE, EVERYONE_IN_THREAD] as const
+export type GroupIdMarker = (typeof GROUP_ID_MARKERS)[number]
+
+/**
+ * A group identifier on the wire — either an opaque group ID or one of
+ * the {@link GROUP_ID_MARKERS} for a broadcast audience.
+ */
+export type GroupId = string
 
 // User types for workspace users
 export const USER_TYPES = ['USER', 'GUEST', 'ADMIN'] as const

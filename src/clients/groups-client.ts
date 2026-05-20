@@ -12,7 +12,7 @@ import type {
 import { resolveCreateId } from '../utils/uuidv7'
 import { BaseClient } from './base-client'
 
-const GroupListSchema = z.array(GroupSchema)
+export const GroupListSchema = z.array(GroupSchema)
 
 /**
  * Client for `/api/v3/groups/`. The broadcast markers `EVERYONE` /

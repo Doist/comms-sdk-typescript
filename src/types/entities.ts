@@ -2,25 +2,10 @@ import { z } from 'zod'
 import { getFullCommsURL } from '../utils/url-helpers'
 import { USER_TYPES, WORKSPACE_PLANS } from './enums'
 
-/**
- * Marker constants for the two "broadcast" group recipients. These appear in
- * group-bearing fields (`Thread.groups`, `Comment.groups`,
- * `Channel.defaultGroups`, `directGroupMentions`, etc.) in place of a real
- * group ID and tell the backend to notify "everyone in the channel" or
- * "everyone in the thread" respectively. Input and output are symmetric.
- */
-export const EVERYONE = 'EVERYONE' as const
-export const EVERYONE_IN_THREAD = 'EVERYONE_IN_THREAD' as const
-
-/** Union of the two broadcast group markers. */
-export const GROUP_ID_MARKERS = [EVERYONE, EVERYONE_IN_THREAD] as const
-export type GroupIdMarker = (typeof GROUP_ID_MARKERS)[number]
-
-/**
- * A group identifier on the wire — either an opaque group ID or one of the
- * {@link GROUP_ID_MARKERS} for a broadcast audience.
- */
-export type GroupId = string
+// EVERYONE / EVERYONE_IN_THREAD / GROUP_ID_MARKERS / GroupId / GroupIdMarker
+// are defined in `./enums` (re-exported through `./index`) to keep this
+// module from depending back on `./enums` for them. They're available
+// from the same public surface (`@doist/comms-sdk`) either way.
 
 // Reusable schema for system messages that can be either a string or an
 // object. Nullable — the backend returns `null` when there is no system
@@ -28,11 +13,13 @@ export type GroupId = string
 export const SystemMessageSchema = z.union([z.string(), z.unknown()]).nullable().optional()
 
 /**
- * Shared `{ status: "ok" }` response shape. Most write endpoints that
- * don't return an entity use this — archive / unarchive / mark-read /
- * mark-all-read / mute / clear-unread / etc.
+ * Shared `{ status: "ok" }` response shape. Pinned to the literal `'ok'`
+ * so a regression on the backend (e.g. a status code change) surfaces as
+ * a parse error here instead of being silently typed away. Most write
+ * endpoints that don't return an entity use this — archive / unarchive /
+ * mark-read / mark-all-read / mute / clear-unread / etc.
  */
-export const StatusOkSchema = z.object({ status: z.string() })
+export const StatusOkSchema = z.object({ status: z.literal('ok') })
 export type StatusOk = z.infer<typeof StatusOkSchema>
 
 // Attachment entity from API. Mirrors the canonical backend shape produced

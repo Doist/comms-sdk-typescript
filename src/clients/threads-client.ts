@@ -28,7 +28,7 @@ import { resolveCreateId } from '../utils/uuidv7'
 import { addCommentRequest } from './add-comment-helper'
 import { BaseClient } from './base-client'
 
-const ThreadListSchema = z.array(ThreadSchema)
+export const ThreadListSchema = z.array(ThreadSchema)
 
 const GetUnreadResponseSchema = z.object({
     data: z.array(UnreadThreadSchema),

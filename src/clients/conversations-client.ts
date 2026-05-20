@@ -23,7 +23,7 @@ import type {
 import { resolveCreateId } from '../utils/uuidv7'
 import { BaseClient } from './base-client'
 
-const ConversationListSchema = z.array(ConversationSchema)
+export const ConversationListSchema = z.array(ConversationSchema)
 
 const GetUnreadResponseSchema = z.object({
     data: z.array(UnreadConversationSchema),

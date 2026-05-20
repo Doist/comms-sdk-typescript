@@ -12,7 +12,7 @@ import type {
 import { addCommentRequest } from './add-comment-helper'
 import { BaseClient } from './base-client'
 
-const CommentListSchema = z.array(CommentSchema)
+export const CommentListSchema = z.array(CommentSchema)
 
 /**
  * Client for `/api/v3/comments/`. The SDK auto-generates the comment `id`

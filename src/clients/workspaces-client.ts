@@ -5,7 +5,7 @@ import type { BatchRequestDescriptor } from '../types/batch'
 import { Channel, ChannelSchema, Workspace, WorkspaceSchema } from '../types/entities'
 import { BaseClient } from './base-client'
 
-const ChannelListSchema = z.array(ChannelSchema)
+export const ChannelListSchema = z.array(ChannelSchema)
 
 /**
  * Client for `/api/v3/workspaces/`. Workspace IDs are integers. The backend
