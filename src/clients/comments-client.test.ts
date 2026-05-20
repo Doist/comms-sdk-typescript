@@ -14,10 +14,10 @@ const BASE = 'https://comms.todoist.com/api/v3'
 
 describe('CommentsClient — wire serialization', () => {
     it('getComments sends thread_id / newer_than_ts / older_than_ts on the URL', async () => {
-        let capturedUrl: URL | null = null
+        const capturedUrls: URL[] = []
         server.use(
             http.get(`${BASE}/comments/get`, ({ request }) => {
-                capturedUrl = new URL(request.url)
+                capturedUrls.push(new URL(request.url))
                 return HttpResponse.json([])
             }),
         )
@@ -30,8 +30,8 @@ describe('CommentsClient — wire serialization', () => {
             limit: 50,
         })
 
-        if (capturedUrl === null) throw new Error('expected a captured URL')
-        const params = capturedUrl.searchParams
+        expect(capturedUrls).toHaveLength(1)
+        const params = (capturedUrls[0] as URL).searchParams
         expect(params.get('thread_id')).toBe(TEST_THREAD_ID)
         expect(params.get('newer_than_ts')).toBe(
             String(Math.floor(new Date('2026-01-01T00:00:00Z').getTime() / 1000)),

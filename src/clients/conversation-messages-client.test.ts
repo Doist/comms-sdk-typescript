@@ -28,10 +28,10 @@ const MESSAGE_RESPONSE = {
 
 describe('ConversationMessagesClient — wire serialization', () => {
     it('getMessages sends conversation_id / newer_than_ts / older_than_ts', async () => {
-        let capturedUrl: URL | null = null
+        const capturedUrls: URL[] = []
         server.use(
             http.get(`${BASE}/conversation_messages/get`, ({ request }) => {
-                capturedUrl = new URL(request.url)
+                capturedUrls.push(new URL(request.url))
                 return HttpResponse.json([])
             }),
         )
@@ -45,8 +45,8 @@ describe('ConversationMessagesClient — wire serialization', () => {
             cursor: 'abc',
         })
 
-        if (capturedUrl === null) throw new Error('expected a captured URL')
-        const params = capturedUrl.searchParams
+        expect(capturedUrls).toHaveLength(1)
+        const params = (capturedUrls[0] as URL).searchParams
         expect(params.get('conversation_id')).toBe(TEST_CONVERSATION_ID)
         expect(params.get('newer_than_ts')).toBe(
             String(Math.floor(new Date('2026-01-01T00:00:00Z').getTime() / 1000)),
@@ -59,10 +59,10 @@ describe('ConversationMessagesClient — wire serialization', () => {
     })
 
     it('createMessage POSTs snake_case keys on the wire', async () => {
-        let capturedBody: Record<string, unknown> | null = null
+        const capturedBodies: Record<string, unknown>[] = []
         server.use(
             http.post(`${BASE}/conversation_messages/add`, async ({ request }) => {
-                capturedBody = (await request.json()) as Record<string, unknown>
+                capturedBodies.push((await request.json()) as Record<string, unknown>)
                 return HttpResponse.json(MESSAGE_RESPONSE)
             }),
         )
@@ -77,14 +77,16 @@ describe('ConversationMessagesClient — wire serialization', () => {
             notify: false,
         })
 
-        expect(capturedBody).toMatchObject({
+        expect(capturedBodies).toHaveLength(1)
+        const body = capturedBodies[0] as Record<string, unknown>
+        expect(body).toMatchObject({
             conversation_id: TEST_CONVERSATION_ID,
             content: 'hi',
             direct_mentions: [42],
             direct_group_mentions: ['EVERYONE'],
             notify: false,
         })
-        expect(capturedBody?.id).toBeTypeOf('string')
+        expect(body.id).toBeTypeOf('string')
     })
 
     it('batch descriptor carries camelCase params', () => {
