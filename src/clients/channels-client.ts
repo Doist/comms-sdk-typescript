@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { ENDPOINT_CHANNELS } from '../consts/endpoints'
 import { request } from '../transport/http-client'
 import type { BatchRequestDescriptor } from '../types/batch'
-import { type Channel, ChannelSchema } from '../types/entities'
+import { type Channel, ChannelSchema, type StatusOk, StatusOkSchema } from '../types/entities'
 import type {
     AddChannelUserArgs,
     AddChannelUsersArgs,
@@ -15,16 +15,12 @@ import type {
 import { resolveCreateId } from '../utils/uuidv7'
 import { BaseClient } from './base-client'
 
-const StatusOkSchema = z.object({ status: z.string() })
-type StatusOk = z.infer<typeof StatusOkSchema>
+export const ChannelListSchema = z.array(ChannelSchema)
 
 /**
- * Client for `/api/v3/channels/`. The channels module is the FastAPI port,
- * so request bodies are JSON on POST.
- *
- * Channel IDs are base58-encoded UUIDv7 strings. The SDK auto-generates an
- * `id` on `createChannel` when the caller doesn't supply one — pass your
- * own `id` to keep an optimistic-UI ID stable through the round-trip.
+ * Client for `/api/v3/channels/`. The SDK auto-generates an `id` on
+ * `createChannel` when the caller doesn't supply one — pass your own `id`
+ * to keep an optimistic-UI ID stable through the round-trip.
  */
 export class ChannelsClient extends BaseClient {
     /** Lists channels in a workspace. */
@@ -37,7 +33,7 @@ export class ChannelsClient extends BaseClient {
         const method = 'GET'
         const url = `${ENDPOINT_CHANNELS}/get`
         if (options?.batch) {
-            return { method, url, params: args, schema: z.array(ChannelSchema) }
+            return { method, url, params: args, schema: ChannelListSchema }
         }
         return request<Channel[]>({
             httpMethod: method,
@@ -46,7 +42,7 @@ export class ChannelsClient extends BaseClient {
             apiToken: this.apiToken,
             payload: args,
             customFetch: this.customFetch,
-        }).then((response) => response.data.map((c) => ChannelSchema.parse(c)))
+        }).then((response) => ChannelListSchema.parse(response.data))
     }
 
     /** Fetches a single channel by ID. */

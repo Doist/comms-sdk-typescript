@@ -11,10 +11,7 @@ type InboxCountResponse = {
     version: number
 }
 
-/**
- * Client for `/api/v3/inbox/`. Thread IDs are base58-encoded UUIDv7
- * strings.
- */
+/** Client for `/api/v3/inbox/`. */
 export class InboxClient extends BaseClient {
     /**
      * Gets inbox items (threads).

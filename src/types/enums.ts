@@ -1,4 +1,24 @@
-import { EVERYONE, EVERYONE_IN_THREAD, type GroupId } from './entities'
+/**
+ * Marker constants for the two "broadcast" group recipients. These appear
+ * in group-bearing fields (`Thread.groups`, `Comment.groups`,
+ * `Channel.defaultGroups`, `directGroupMentions`, etc.) in place of a
+ * real group ID and tell the backend to notify "everyone in the channel"
+ * or "everyone in the thread" respectively. Input and output are
+ * symmetric. Defined here (and not in `./entities`) so that `enums`
+ * stays leaf-level — `entities` imports from `enums`, never the reverse.
+ */
+export const EVERYONE = 'EVERYONE' as const
+export const EVERYONE_IN_THREAD = 'EVERYONE_IN_THREAD' as const
+
+/** Union of the two broadcast group markers. */
+export const GROUP_ID_MARKERS = [EVERYONE, EVERYONE_IN_THREAD] as const
+export type GroupIdMarker = (typeof GROUP_ID_MARKERS)[number]
+
+/**
+ * A group identifier on the wire — either an opaque group ID or one of
+ * the {@link GROUP_ID_MARKERS} for a broadcast audience.
+ */
+export type GroupId = string
 
 // User types for workspace users
 export const USER_TYPES = ['USER', 'GUEST', 'ADMIN'] as const
@@ -14,18 +34,17 @@ export const USER_TYPES = ['USER', 'GUEST', 'ADMIN'] as const
  */
 export type UserType = (typeof USER_TYPES)[number]
 
-// Workspace plans
-export const WORKSPACE_PLANS = ['free', 'unlimited'] as const
+// Workspace plans. The known values today are `'free'`, `'unlimited'`,
+// and `'business'`, but the backend can introduce new plan names without
+// coordinating a SDK release — so the schema accepts any string and the
+// const array stays as a hint for autocomplete only.
+export const WORKSPACE_PLANS = ['free', 'unlimited', 'business'] as const
 
 /**
- * The plan type for a workspace.
- *
- * @remarks
- * Possible values:
- * - `'free'` - Free plan
- * - `'unlimited'` - Unlimited plan
+ * The plan type for a workspace. Any string accepted; the listed values
+ * are the ones the backend exposes today.
  */
-export type WorkspacePlan = (typeof WORKSPACE_PLANS)[number]
+export type WorkspacePlan = (typeof WORKSPACE_PLANS)[number] | (string & {})
 
 // Audiences that comment-creating endpoints can target alongside (or instead
 // of) individual `recipients` / custom `groups`.
@@ -43,15 +62,11 @@ export const NOTIFY_AUDIENCES = ['channel', 'thread'] as const
 export type NotifyAudience = (typeof NOTIFY_AUDIENCES)[number]
 
 /**
- * Internal mapping from {@link NotifyAudience} to the backend marker IDs
- * that comment / thread creation endpoints use on the wire (`EVERYONE` and
- * `EVERYONE_IN_THREAD`). Exposed here so the audience constants and their
- * encoding stay in a single source of truth; SDK consumers should use
- * {@link NotifyAudience} via `notifyAudience` on the request args rather
- * than passing these IDs directly.
- *
- * Per `Comms_API_changes.md`, the prior numeric IDs `1` / `2` were replaced
- * with string constants on the wire.
+ * Internal mapping from {@link NotifyAudience} to the broadcast marker IDs
+ * (`EVERYONE` / `EVERYONE_IN_THREAD`) that comment- and thread-creation
+ * endpoints use on the wire. SDK consumers should use {@link NotifyAudience}
+ * via `notifyAudience` on the request args rather than passing these IDs
+ * directly.
  */
 export const NOTIFY_AUDIENCE_GROUP_IDS: Readonly<Record<NotifyAudience, GroupId>> = {
     channel: EVERYONE,

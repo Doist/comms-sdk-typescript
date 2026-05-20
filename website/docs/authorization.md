@@ -5,16 +5,16 @@ sidebar_position: 2
 
 # Authorization
 
-The Twist SDK provides helper functions to implement OAuth 2.0 authentication for your application. This allows you to obtain access tokens on behalf of users to interact with the Twist API.
+The Comms SDK provides helper functions to implement OAuth 2.0 authentication for your application. This allows you to obtain access tokens on behalf of users to interact with the Comms API.
 
 ## Quick Start
 
 For quick testing and development, you can use an API token directly:
 
 ```typescript
-import { TwistApi } from '@doist/twist-sdk'
+import { CommsApi } from '@doist/comms-sdk'
 
-const api = new TwistApi('your-api-token')
+const api = new CommsApi('your-api-token')
 const user = await api.users.getSessionUser()
 ```
 
@@ -29,7 +29,7 @@ The SDK provides three main functions to handle OAuth authentication:
 First, generate a secure random state parameter to prevent CSRF attacks:
 
 ```typescript
-import { getAuthStateParameter } from '@doist/twist-sdk'
+import { getAuthStateParameter } from '@doist/comms-sdk'
 
 const state = getAuthStateParameter()
 // Returns a UUID v4 string like: "550e8400-e29b-41d4-a716-446655440000"
@@ -43,9 +43,9 @@ req.session.oauthState = state
 Create the URL to redirect users to for authorization:
 
 ```typescript
-import { getAuthorizationUrl, TwistScope } from '@doist/twist-sdk'
+import { getAuthorizationUrl, CommsScope } from '@doist/comms-sdk'
 
-const scopes: TwistScope[] = ['user:read', 'workspaces:read', 'channels:read', 'threads:write']
+const scopes: CommsScope[] = ['user:read', 'workspaces:read', 'channels:read', 'threads:write']
 
 const authUrl = getAuthorizationUrl(
     'your-client-id', // Your OAuth client ID
@@ -63,7 +63,7 @@ res.redirect(authUrl)
 ```typescript
 getAuthorizationUrl(
     clientId: string,
-    scopes: TwistScope[],
+    scopes: CommsScope[],
     state: string,
     redirectUri?: string,
     baseUrl?: string,
@@ -72,10 +72,10 @@ getAuthorizationUrl(
 
 ### 3. Exchange Authorization Code for Access Token
 
-After the user authorizes your app, Twist redirects them back to your redirect URI with an authorization code. Exchange this code for an access token:
+After the user authorizes your app, Comms redirects them back to your redirect URI with an authorization code. Exchange this code for an access token:
 
 ```typescript
-import { getAuthToken } from '@doist/twist-sdk'
+import { getAuthToken } from '@doist/comms-sdk'
 
 // In your OAuth callback handler:
 app.get('/callback', async (req, res) => {
@@ -99,10 +99,10 @@ app.get('/callback', async (req, res) => {
     req.session.accessToken = tokenResponse.accessToken
 
     // Now you can use the SDK
-    const api = new TwistApi(tokenResponse.accessToken)
+    const api = new CommsApi(tokenResponse.accessToken)
     const user = await api.users.getSessionUser()
 
-    res.send(`Hello ${user.name}!`)
+    res.send(`Hello ${user.fullName}!`)
 })
 ```
 
@@ -131,7 +131,7 @@ getAuthToken(
 When a user logs out or revokes access, you can revoke the token:
 
 ```typescript
-import { revokeAuthToken } from '@doist/twist-sdk'
+import { revokeAuthToken } from '@doist/comms-sdk'
 
 const success = await revokeAuthToken({
     clientId: 'your-client-id',
@@ -159,7 +159,7 @@ revokeAuthToken(
 
 ## Available Scopes
 
-The SDK includes a `TwistScope` type that defines all available OAuth scopes:
+The SDK includes a `CommsScope` type that defines all available OAuth scopes:
 
 ### User Scopes
 
@@ -234,9 +234,9 @@ import {
     getAuthStateParameter,
     getAuthorizationUrl,
     getAuthToken,
-    TwistApi,
-    TwistScope,
-} from '@doist/twist-sdk'
+    CommsApi,
+    CommsScope,
+} from '@doist/comms-sdk'
 
 const app = express()
 
@@ -249,14 +249,14 @@ app.use(
 )
 
 // Step 1: Initiate OAuth flow
-app.get('/auth/twist', (req, res) => {
+app.get('/auth/comms', (req, res) => {
     const state = getAuthStateParameter()
     req.session.oauthState = state
 
-    const scopes: TwistScope[] = ['user:read', 'workspaces:read', 'channels:read', 'threads:write']
+    const scopes: CommsScope[] = ['user:read', 'workspaces:read', 'channels:read', 'threads:write']
 
     const authUrl = getAuthorizationUrl(
-        process.env.TWIST_CLIENT_ID!,
+        process.env.COMMS_CLIENT_ID!,
         scopes,
         state,
         'http://localhost:3000/auth/callback',
@@ -276,18 +276,18 @@ app.get('/auth/callback', async (req, res) => {
 
     try {
         const tokenResponse = await getAuthToken({
-            clientId: process.env.TWIST_CLIENT_ID!,
-            clientSecret: process.env.TWIST_CLIENT_SECRET!,
+            clientId: process.env.COMMS_CLIENT_ID!,
+            clientSecret: process.env.COMMS_CLIENT_SECRET!,
             code,
             redirectUri: 'http://localhost:3000/auth/callback',
         })
 
         req.session.accessToken = tokenResponse.accessToken
 
-        const api = new TwistApi(tokenResponse.accessToken)
+        const api = new CommsApi(tokenResponse.accessToken)
         const user = await api.users.getSessionUser()
 
-        res.send(`Successfully authenticated as ${user.name}!`)
+        res.send(`Successfully authenticated as ${user.fullName}!`)
     } catch (error) {
         res.status(500).send('Authentication failed')
     }
@@ -310,14 +310,13 @@ The SDK exports these types for OAuth operations:
 
 ```typescript
 import type {
-    TwistScope,
+    CommsScope,
     AuthTokenRequestArgs,
     AuthTokenResponse,
     RevokeAuthTokenRequestArgs,
-} from '@doist/twist-sdk'
+} from '@doist/comms-sdk'
 ```
 
 ## Additional Resources
 
-- [Twist API Documentation](https://developer.twist.com/v3/#authentication)
 - [OAuth 2.0 Authorization Code Flow](https://oauth.net/2/grant-types/authorization-code/)

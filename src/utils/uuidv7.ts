@@ -1,14 +1,13 @@
 import { v7 as uuidv7 } from 'uuid'
 
 /**
- * Comms' wire format for IDs of migrated entities (channels, threads,
- * comments, conversations, groups) is a base58-encoded UUIDv7. The encoding
- * mirrors the backend's `twist.apps.uuidv7` module so callers can mint IDs
- * locally and pass them to creation endpoints.
+ * ID utilities for entities that use opaque string identifiers (channels,
+ * threads, comments, conversations, messages, groups).
  *
- * Use {@link generateId} to mint a new ID. Use {@link encodeUuidToBase58} /
- * {@link decodeBase58ToUuidBytes} to convert between raw UUID bytes and the
- * wire format if you need to round-trip them yourself.
+ * Use {@link generateId} to mint a new ID locally and pass it to a creation
+ * endpoint. {@link encodeUuidToBase58} / {@link decodeBase58ToUuidBytes}
+ * expose the underlying encoding for callers that need to round-trip raw
+ * UUID bytes themselves.
  */
 
 const BASE58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
@@ -32,9 +31,7 @@ export class UuidV7Error extends Error {
     }
 }
 
-/**
- * Encode a 16-byte UUID to a base58 string using Comms' alphabet.
- */
+/** Encode a 16-byte UUID as a base58 string. */
 export function encodeUuidToBase58(bytes: Uint8Array): string {
     if (bytes.length !== UUID_BYTES_LEN) {
         throw new UuidV7Error(`id must be ${UUID_BYTES_LEN} bytes`)
@@ -107,15 +104,15 @@ export function decodeBase58ToUuidBytes(value: string): Uint8Array {
 function hexToBytes(hex: string): Uint8Array {
     const out = new Uint8Array(hex.length / 2)
     for (let i = 0; i < out.length; i++) {
-        out[i] = parseInt(hex.substr(i * 2, 2), 16)
+        out[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16)
     }
     return out
 }
 
 /**
- * Mint a new base58-encoded UUIDv7. Callers should generate one of these
- * locally when creating a new channel / thread / comment / conversation; the
- * backend requires the client to supply the ID on create.
+ * Mint a fresh ID. Callers should generate one of these locally when
+ * creating a new channel / thread / comment / conversation / message /
+ * group — the backend requires the client to supply the ID on create.
  */
 export function generateId(): string {
     const hex = uuidv7().replace(/-/g, '')
@@ -123,27 +120,24 @@ export function generateId(): string {
 }
 
 /**
- * Resolve the `id` for a create-style API call: either validate the
- * caller-supplied value (rejecting with a clear {@link UuidV7Error} before
- * the request leaves the SDK) or mint a fresh one via {@link generateId}.
- * Used internally by the create methods on `channels`, `threads`,
- * `comments`, `conversations`, `groups`, and `conversation_messages`.
+ * Resolve the `id` for a create-style API call: validate the caller-supplied
+ * value (throwing {@link UuidV7Error} before the request leaves the SDK) or
+ * mint a fresh one via {@link generateId}.
  */
 export function resolveCreateId(id: string | undefined): string {
     if (id === undefined) return generateId()
     if (!isValidUuidV7Base58(id)) {
         throw new UuidV7Error(
-            `id must be a base58-encoded UUIDv7 string; got ${JSON.stringify(id)}. ` +
-                'Use generateId() or omit `id` and let the SDK mint one.',
+            `invalid id ${JSON.stringify(id)} — use generateId() or omit \`id\` and let the SDK mint one.`,
         )
     }
     return id
 }
 
 /**
- * Validate that a value is a syntactically valid base58-encoded UUIDv7 (i.e.
- * the bytes have the v7 version nibble + RFC 4122/9562 variant bits). Does
- * NOT validate the timestamp window — the backend may still reject a value
+ * Validate that a value matches the expected ID format (the decoded bytes
+ * have the v7 version nibble + RFC 4122/9562 variant bits). Does NOT
+ * validate the embedded timestamp — the backend may still reject a value
  * that is too far in the future or past.
  */
 export function isValidUuidV7Base58(value: unknown): value is string {
@@ -160,9 +154,9 @@ export function isValidUuidV7Base58(value: unknown): value is string {
 }
 
 /**
- * Round-trip helper: take a UUID string (hyphenated or not, any case) and
- * encode its 16 raw bytes as base58. Useful when interoperating with
- * non-Comms systems that hand you UUIDs in canonical form.
+ * Encode a canonical UUID string (hyphenated or not, any case) as a
+ * wire-format ID. Useful when interoperating with systems that hand you
+ * UUIDs in canonical form.
  */
 export function base58FromUuidString(uuid: string): string {
     const stripped = uuid.replace(/-/g, '').toLowerCase()
@@ -173,8 +167,8 @@ export function base58FromUuidString(uuid: string): string {
 }
 
 /**
- * Inverse of {@link base58FromUuidString}: takes a base58 ID and returns the
- * canonical hyphenated UUID string.
+ * Inverse of {@link base58FromUuidString}: takes a wire-format ID and
+ * returns the canonical hyphenated UUID string.
  */
 export function uuidStringFromBase58(value: string): string {
     const bytes = decodeBase58ToUuidBytes(value)

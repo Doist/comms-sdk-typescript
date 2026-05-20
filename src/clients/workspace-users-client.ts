@@ -12,14 +12,8 @@ import type {
 import { BaseClient } from './base-client'
 
 /**
- * Client for `/api/v3/workspace_users/`. Every endpoint is also aliased
- * onto `/api/v3/workspaces/<verb>_user[...]` for legacy compatibility; this
- * client uses the canonical `workspace_users/...` paths.
- *
- * Note: the backend's `add` endpoint currently rejects non-empty `name` and
- * `channelIds` — invitee names and invite-to-channels were intentionally
- * dropped. The args here are kept for forward-compatibility but the backend
- * will return `BAD_REQUEST` if you populate them.
+ * Client for `/api/v3/workspace_users/`. The backend's `add` endpoint
+ * rejects non-empty `name` and `channelIds` — set neither.
  */
 export class WorkspaceUsersClient extends BaseClient {
     /**

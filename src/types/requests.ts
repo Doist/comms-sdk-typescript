@@ -3,11 +3,11 @@ import { type Attachment, AttachmentSchema } from './entities'
 import { NOTIFY_AUDIENCES } from './enums'
 
 /**
- * Create-side requests now require an `id` that's a base58-encoded UUIDv7
- * string (per the migration). The SDK clients accept `id` as optional and
- * auto-generate one via {@link import('../utils/uuidv7').generateId} when
- * the caller doesn't pass one — callers can still mint their own ID locally
- * (e.g. for optimistic UI) and have it stick.
+ * Create-side requests require an `id` on the wire. The SDK clients accept
+ * `id` as optional and auto-generate one via
+ * {@link import('../utils/uuidv7').generateId} when the caller doesn't pass
+ * one — callers can still mint their own ID locally (e.g. for optimistic
+ * UI) and have it stick.
  */
 
 export const CreateChannelArgsSchema = z.object({
@@ -167,9 +167,9 @@ export const GetOrCreateConversationArgsSchema = z.object({
 
 export type GetOrCreateConversationArgs = z.infer<typeof GetOrCreateConversationArgsSchema>
 
-// Users — only the fields still supported after the Todoist-id migration.
-// `password`/`current_password` are wired through Todoist; profile fields
-// (full_name, image, etc.) round-trip through `/users/update` here.
+// Users. `password`/`current_password` are wired through Todoist-ID;
+// profile fields (full_name, image, etc.) round-trip through
+// `/users/update` here.
 export type UpdateUserArgs = {
     name?: string
     password?: string
@@ -222,7 +222,7 @@ export type GetConversationMessagesArgs = {
 export type CreateConversationMessageArgs = {
     conversationId: string
     content: string
-    /** Caller-supplied base58 UUIDv7. Auto-generated if omitted. */
+    /** Caller-supplied ID. Auto-generated if omitted. */
     id?: string
     attachments?: Attachment[]
     actions?: unknown[]
@@ -267,7 +267,7 @@ export type ArchiveAllArgs = {
     since?: Date
 }
 
-// Reactions — all targets are base58 UUIDv7 strings.
+// Reactions.
 export type AddReactionArgs = {
     threadId?: string
     commentId?: string
@@ -387,9 +387,9 @@ export type MuteConversationArgs = {
     minutes: number
 }
 
-// Groups — IDs are base58 UUIDv7 strings; `EVERYONE` / `EVERYONE_IN_THREAD`
-// can also appear in group-bearing fields on threads/comments/channels but
-// not in these group-management endpoints (those address a concrete group).
+// Groups. The broadcast markers `EVERYONE` / `EVERYONE_IN_THREAD` are not
+// addressable through these endpoints — they only appear in group-bearing
+// fields on threads/comments/channels.
 export type AddGroupUserArgs = {
     id: string
     workspaceId: number

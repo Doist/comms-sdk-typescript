@@ -31,16 +31,19 @@ const api = new CommsApi('YOUR_API_TOKEN', {
 })
 ```
 
-### IDs are base58-encoded UUIDv7
+### Creating entities
 
-As of the UUIDv7 migration, channel / thread / comment / conversation /
-conversation-message / group IDs are **base58-encoded UUIDv7 strings**, not
-integers. `workspaceId` and `userId` remain numeric.
+Channel / thread / comment / conversation / message / group IDs are
+opaque base58-encoded UUIDv7 strings; `workspaceId` and `userId` are
+numeric.
 
 Creation endpoints (`createChannel`, `createThread`, `createComment`,
-`getOrCreateConversation`, `createMessage`, `createGroup`) require the
-caller to supply an `id`. If you don't, the SDK auto-generates one with
-`generateId()`:
+`getOrCreateConversation`, `createMessage`, `createGroup`) accept an
+optional `id`. **A caller-supplied `id` must be a base58-encoded
+UUIDv7** — anything else fails fast with a `UuidV7Error` before the
+request leaves the SDK. Either mint your own with `generateId()` (handy
+for optimistic UI — the ID survives the round-trip unchanged) or omit
+`id` and let the SDK mint one:
 
 ```typescript
 import { CommsApi, generateId } from '@doist/comms-sdk'
@@ -53,8 +56,7 @@ const channel = await api.channels.createChannel({
     name: 'Engineering',
 })
 
-// Option 2: mint the ID yourself (useful for optimistic UI — the local ID
-// is the permanent ID; the brief unsynced window is the only difference)
+// Option 2: mint the ID yourself (must be a base58 UUIDv7 from generateId)
 const id = generateId()
 const sameChannel = await api.channels.createChannel({
     workspaceId: 1,
@@ -65,11 +67,10 @@ const sameChannel = await api.channels.createChannel({
 
 ### Broadcast group markers
 
-The legacy magic group IDs `1` (channel) and `2` (thread) are gone. Use the
-string constants `EVERYONE` / `EVERYONE_IN_THREAD` when populating
-`groups[]` / `directGroupMentions[]` directly, or use the `notifyAudience`
-option on `createComment` / `closeThread` / `reopenThread` and let the SDK
-encode it for you:
+Use the string constants `EVERYONE` / `EVERYONE_IN_THREAD` when
+populating `groups[]` / `directGroupMentions[]` directly, or pass
+`notifyAudience` to `createComment` / `closeThread` / `reopenThread`
+and let the SDK encode it for you:
 
 ```typescript
 await api.comments.createComment({
@@ -120,25 +121,6 @@ if (results[1].code === 200) console.log(results[1].data.fullName)
 
 GET-only batches run in parallel on the server. Mixed GET/POST batches run
 sequentially.
-
-## What's gone vs. legacy Twist
-
-Per `Comms_API_changes.md`, several user / auth surfaces have been dropped
-because authentication now flows through Todoist-ID:
-
-- `reset_password`, `register_with_google`, `connect_with_google`,
-  `disconnect_google`, `is_connected_to_google`, all `*_with_apple`
-  endpoints, all `email` management endpoints (`add_email`,
-  `confirm_email`, `remove_email`, etc.), and `login_with_provider`.
-- User-model fields removed: `snooze_until` / `snooze_dnd_*`, `away_mode`,
-  `off_days`, `profession`, `contact_info`, `default_workspace`, `is_bot`,
-  `feature_flags`, `original_avatar_id`, `email_mask`.
-- User-model fields renamed: `name` → `fullName`, `avatar_id` → `imageId`.
-- User-model retypes: `theme` → `number`, `setupPending` → `boolean`.
-- Workspace lost `default_channel`, `welcome_channel`, `security` (and
-  `color` is fixed at `1`).
-- Thread `is_starred` → `is_saved` (and the matching `star` / `unstar`
-  endpoints are now `save` / `unsave`).
 
 ## Development
 

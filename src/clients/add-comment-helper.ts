@@ -19,18 +19,29 @@ function isNotifyAudience(value: unknown): value is NotifyAudience {
     return typeof value === 'string' && (NOTIFY_AUDIENCES as readonly string[]).includes(value)
 }
 
-function rejectMarkersIn(field: 'groups' | 'directGroupMentions', values: string[] | undefined) {
-    if (!values) return
+function collectMarkerOffenses(
+    field: 'groups' | 'directGroupMentions',
+    values: readonly string[] | undefined,
+): { field: string; offending: string[] } | null {
+    if (!values) return null
     const offending = values.filter((id) => SENTINEL_GROUP_IDS.has(id))
-    if (offending.length === 0) return
-    throw new Error(
-        `\`${field}\` must not contain reserved broadcast marker IDs (${offending.join(', ')}). Use \`notifyAudience\` on createComment / closeThread / reopenThread, or import EVERYONE / EVERYONE_IN_THREAD from '@doist/comms-sdk' and treat the rejection as a typo.`,
-    )
+    return offending.length > 0 ? { field, offending } : null
 }
 
 function applyNotifyAudience(params: CreateCommentArgs): Omit<CreateCommentArgs, 'notifyAudience'> {
-    rejectMarkersIn('groups', params.groups ?? undefined)
-    rejectMarkersIn('directGroupMentions', params.directGroupMentions ?? undefined)
+    const offenses = [
+        collectMarkerOffenses('groups', params.groups ?? undefined),
+        collectMarkerOffenses('directGroupMentions', params.directGroupMentions ?? undefined),
+    ].filter((o): o is { field: string; offending: string[] } => o !== null)
+
+    if (offenses.length > 0) {
+        const details = offenses
+            .map(({ field, offending }) => `\`${field}\` contains ${offending.join(', ')}`)
+            .join('; ')
+        throw new Error(
+            `Reserved broadcast marker IDs found: ${details}. Pass these via \`notifyAudience\` on createComment / closeThread / reopenThread (e.g. \`notifyAudience: 'channel'\` for EVERYONE) instead of populating \`groups\` / \`directGroupMentions\` directly.`,
+        )
+    }
 
     if (params.notifyAudience == null) return params
 

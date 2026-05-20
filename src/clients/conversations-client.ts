@@ -5,6 +5,8 @@ import type { BatchRequestDescriptor } from '../types/batch'
 import {
     type Conversation,
     ConversationSchema,
+    type StatusOk,
+    StatusOkSchema,
     type UnreadConversation,
     UnreadConversationSchema,
 } from '../types/entities'
@@ -21,8 +23,7 @@ import type {
 import { resolveCreateId } from '../utils/uuidv7'
 import { BaseClient } from './base-client'
 
-const StatusOkSchema = z.object({ status: z.string() })
-type StatusOk = z.infer<typeof StatusOkSchema>
+export const ConversationListSchema = z.array(ConversationSchema)
 
 const GetUnreadResponseSchema = z.object({
     data: z.array(UnreadConversationSchema),
@@ -30,9 +31,8 @@ const GetUnreadResponseSchema = z.object({
 })
 
 /**
- * Client for `/api/v3/conversations/`. Conversation IDs are
- * base58-encoded UUIDv7 strings. `getOrCreate` requires an `id` (the SDK
- * auto-generates one for new conversations); the backend dedupes on
+ * Client for `/api/v3/conversations/`. `getOrCreate` requires an `id` (the
+ * SDK auto-generates one for new conversations); the backend dedupes on
  * `userIds`, so an existing conversation will be returned with its own
  * already-assigned `id` and your generated one is silently dropped.
  */
@@ -55,7 +55,7 @@ export class ConversationsClient extends BaseClient {
         const params = args
 
         if (options?.batch) {
-            return { method, url, params, schema: z.array(ConversationSchema) }
+            return { method, url, params, schema: ConversationListSchema }
         }
 
         return request<Conversation[]>({
@@ -65,9 +65,7 @@ export class ConversationsClient extends BaseClient {
             apiToken: this.apiToken,
             payload: params,
             customFetch: this.customFetch,
-        }).then((response) =>
-            response.data.map((conversation) => ConversationSchema.parse(conversation)),
-        )
+        }).then((response) => ConversationListSchema.parse(response.data))
     }
 
     /** Fetches a single conversation by ID. */

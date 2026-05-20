@@ -5,17 +5,17 @@ import { themes as prismThemes } from 'prism-react-renderer'
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
 const config: Config = {
-    title: 'Twist SDK TypeScript',
-    tagline: 'The TypeScript SDK for the Twist REST API.',
+    title: 'Comms SDK TypeScript',
+    tagline: 'The TypeScript SDK for the Comms REST API.',
     favicon: 'img/favicon.ico',
 
     url: 'https://doist.github.io/',
     // Set the /<baseUrl>/ pathname under which your site is served
     // For GitHub pages deployment, it is often '/<projectName>/'
-    baseUrl: '/twist-sdk-typescript/',
+    baseUrl: '/comms-sdk-typescript/',
 
     organizationName: 'Doist',
-    projectName: 'twist-sdk-typescript',
+    projectName: 'comms-sdk-typescript',
 
     onBrokenLinks: 'throw',
     onBrokenMarkdownLinks: 'warn',
@@ -42,12 +42,12 @@ const config: Config = {
     ],
 
     themeConfig: {
-        image: 'img/twist-social-card.png',
+        image: 'img/todoist-social-card.png',
         navbar: {
-            title: 'Twist SDK TypeScript',
+            title: 'Comms SDK TypeScript',
             logo: {
-                alt: 'Twist Logo',
-                src: 'img/twist-logo.png',
+                alt: 'Comms Logo',
+                src: 'img/todoist-logo.svg',
             },
             items: [
                 {
@@ -56,7 +56,7 @@ const config: Config = {
                     to: '/',
                 },
                 {
-                    href: 'https://github.com/Doist/twist-sdk-typescript',
+                    href: 'https://github.com/Doist/comms-sdk-typescript',
                     label: 'GitHub',
                     position: 'right',
                 },
@@ -78,7 +78,7 @@ const config: Config = {
                         },
                         {
                             label: 'API Reference',
-                            to: '/api/classes/TwistApi',
+                            to: '/api/classes/CommsApi',
                         },
                     ],
                 },
@@ -91,7 +91,7 @@ const config: Config = {
                         },
                         {
                             label: 'GitHub',
-                            href: 'https://github.com/Doist/twist-sdk-typescript',
+                            href: 'https://github.com/Doist/comms-sdk-typescript',
                         },
                     ],
                 },

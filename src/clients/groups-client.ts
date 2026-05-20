@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { ENDPOINT_GROUPS } from '../consts/endpoints'
 import { request } from '../transport/http-client'
 import type { BatchRequestDescriptor } from '../types/batch'
-import { type Group, GroupSchema } from '../types/entities'
+import { type Group, GroupSchema, type StatusOk, StatusOkSchema } from '../types/entities'
 import type {
     AddGroupUserArgs,
     AddGroupUsersArgs,
@@ -12,19 +12,16 @@ import type {
 import { resolveCreateId } from '../utils/uuidv7'
 import { BaseClient } from './base-client'
 
-const StatusOkSchema = z.object({ status: z.string() })
-type StatusOk = z.infer<typeof StatusOkSchema>
+export const GroupListSchema = z.array(GroupSchema)
 
 /**
- * Client for `/api/v3/groups/`.
+ * Client for `/api/v3/groups/`. The broadcast markers `EVERYONE` /
+ * `EVERYONE_IN_THREAD` are NOT addressable through these endpoints — they
+ * only appear as members of `direct_group_mentions` / `groups` lists on
+ * thread/comment writes.
  *
- * Group IDs are base58-encoded UUIDv7 strings. The special markers
- * `EVERYONE` / `EVERYONE_IN_THREAD` are NOT addressable through these
- * endpoints — they only appear as members of `direct_group_mentions` /
- * `groups` lists on thread/comment writes.
- *
- * Per the backend contract, `getone` / `update` / `remove` / member ops all
- * require `workspace_id` alongside the group `id`.
+ * `getone` / `update` / `remove` and the member-management ops all require
+ * `workspace_id` alongside the group `id`.
  */
 export class GroupsClient extends BaseClient {
     /** Lists groups in a workspace. */
@@ -39,7 +36,7 @@ export class GroupsClient extends BaseClient {
         const params = { workspaceId }
 
         if (options?.batch) {
-            return { method, url, params, schema: z.array(GroupSchema) }
+            return { method, url, params, schema: GroupListSchema }
         }
 
         return request<Group[]>({
@@ -49,7 +46,7 @@ export class GroupsClient extends BaseClient {
             apiToken: this.apiToken,
             payload: params,
             customFetch: this.customFetch,
-        }).then((response) => response.data.map((group) => GroupSchema.parse(group)))
+        }).then((response) => GroupListSchema.parse(response.data))
     }
 
     /** Fetches a single group by ID (requires `workspaceId`). */

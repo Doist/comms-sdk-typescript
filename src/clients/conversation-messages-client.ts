@@ -2,7 +2,12 @@ import { z } from 'zod'
 import { ENDPOINT_CONVERSATION_MESSAGES } from '../consts/endpoints'
 import { request } from '../transport/http-client'
 import type { BatchRequestDescriptor } from '../types/batch'
-import { type ConversationMessage, ConversationMessageSchema } from '../types/entities'
+import {
+    type ConversationMessage,
+    ConversationMessageSchema,
+    type StatusOk,
+    StatusOkSchema,
+} from '../types/entities'
 import type {
     CreateConversationMessageArgs,
     GetConversationMessagesArgs,
@@ -11,12 +16,11 @@ import type {
 import { resolveCreateId } from '../utils/uuidv7'
 import { BaseClient } from './base-client'
 
-const StatusOkSchema = z.object({ status: z.string() })
-type StatusOk = z.infer<typeof StatusOkSchema>
+export const ConversationMessageListSchema = z.array(ConversationMessageSchema)
 
 /**
- * Client for `/api/v3/conversation_messages/`. Message IDs and conversation
- * IDs are both base58-encoded UUIDv7 strings on the wire.
+ * Client for `/api/v3/conversation_messages/`. The SDK auto-generates the
+ * message `id` on `createMessage` when the caller doesn't supply one.
  */
 export class ConversationMessagesClient extends BaseClient {
     /** Lists messages in a conversation. */
@@ -32,9 +36,9 @@ export class ConversationMessagesClient extends BaseClient {
         args: GetConversationMessagesArgs,
         options?: { batch?: boolean },
     ): Promise<ConversationMessage[]> | BatchRequestDescriptor<ConversationMessage[]> {
-        const params: Record<string, unknown> = { conversation_id: args.conversationId }
-        if (args.newerThan) params.newer_than_ts = Math.floor(args.newerThan.getTime() / 1000)
-        if (args.olderThan) params.older_than_ts = Math.floor(args.olderThan.getTime() / 1000)
+        const params: Record<string, unknown> = { conversationId: args.conversationId }
+        if (args.newerThan) params.newerThanTs = Math.floor(args.newerThan.getTime() / 1000)
+        if (args.olderThan) params.olderThanTs = Math.floor(args.olderThan.getTime() / 1000)
         if (args.limit) params.limit = args.limit
         if (args.cursor) params.cursor = args.cursor
 
@@ -42,7 +46,7 @@ export class ConversationMessagesClient extends BaseClient {
         const url = `${ENDPOINT_CONVERSATION_MESSAGES}/get`
 
         if (options?.batch) {
-            return { method, url, params, schema: z.array(ConversationMessageSchema) }
+            return { method, url, params, schema: ConversationMessageListSchema }
         }
 
         return request<ConversationMessage[]>({
@@ -52,9 +56,7 @@ export class ConversationMessagesClient extends BaseClient {
             apiToken: this.apiToken,
             payload: params,
             customFetch: this.customFetch,
-        }).then((response) =>
-            response.data.map((message) => ConversationMessageSchema.parse(message)),
-        )
+        }).then((response) => ConversationMessageListSchema.parse(response.data))
     }
 
     /** Fetches a single message by ID. */
@@ -81,14 +83,14 @@ export class ConversationMessagesClient extends BaseClient {
         options?: { batch?: boolean },
     ): Promise<ConversationMessage> | BatchRequestDescriptor<ConversationMessage> {
         const params: Record<string, unknown> = {
-            conversation_id: args.conversationId,
+            conversationId: args.conversationId,
             content: args.content,
             id: resolveCreateId(args.id),
         }
         if (args.attachments) params.attachments = args.attachments
         if (args.actions) params.actions = args.actions
-        if (args.directMentions) params.direct_mentions = args.directMentions
-        if (args.directGroupMentions) params.direct_group_mentions = args.directGroupMentions
+        if (args.directMentions) params.directMentions = args.directMentions
+        if (args.directGroupMentions) params.directGroupMentions = args.directGroupMentions
         if (args.notify !== undefined) params.notify = args.notify
 
         return this.simple('POST', 'add', params, ConversationMessageSchema, options)
@@ -110,8 +112,8 @@ export class ConversationMessagesClient extends BaseClient {
         const params: Record<string, unknown> = { id: args.id, content: args.content }
         if (args.attachments) params.attachments = args.attachments
         if (args.actions) params.actions = args.actions
-        if (args.directMentions) params.direct_mentions = args.directMentions
-        if (args.directGroupMentions) params.direct_group_mentions = args.directGroupMentions
+        if (args.directMentions) params.directMentions = args.directMentions
+        if (args.directGroupMentions) params.directGroupMentions = args.directGroupMentions
 
         return this.simple('POST', 'update', params, ConversationMessageSchema, options)
     }

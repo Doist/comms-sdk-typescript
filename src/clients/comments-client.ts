@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { ENDPOINT_COMMENTS } from '../consts/endpoints'
 import { request } from '../transport/http-client'
 import type { BatchRequestDescriptor } from '../types/batch'
-import { type Comment, CommentSchema } from '../types/entities'
+import { type Comment, CommentSchema, type StatusOk, StatusOkSchema } from '../types/entities'
 import type {
     CreateCommentArgs,
     GetCommentsArgs,
@@ -12,13 +12,11 @@ import type {
 import { addCommentRequest } from './add-comment-helper'
 import { BaseClient } from './base-client'
 
-const StatusOkSchema = z.object({ status: z.string() })
-type StatusOk = z.infer<typeof StatusOkSchema>
+export const CommentListSchema = z.array(CommentSchema)
 
 /**
- * Client for `/api/v3/comments/`. Comment IDs and thread IDs are
- * base58-encoded UUIDv7 strings. The SDK auto-generates the comment `id`
- * when the caller doesn't supply one.
+ * Client for `/api/v3/comments/`. The SDK auto-generates the comment `id`
+ * on `createComment` when the caller doesn't supply one.
  */
 export class CommentsClient extends BaseClient {
     /**
@@ -32,18 +30,18 @@ export class CommentsClient extends BaseClient {
         args: GetCommentsArgs,
         options?: { batch?: boolean },
     ): Promise<Comment[]> | BatchRequestDescriptor<Comment[]> {
-        const params: Record<string, unknown> = { thread_id: args.threadId }
+        const params: Record<string, unknown> = { threadId: args.threadId }
 
         const newerThan = args.newerThan ?? args.from
-        if (newerThan) params.newer_than_ts = Math.floor(newerThan.getTime() / 1000)
-        if (args.olderThan) params.older_than_ts = Math.floor(args.olderThan.getTime() / 1000)
+        if (newerThan) params.newerThanTs = Math.floor(newerThan.getTime() / 1000)
+        if (args.olderThan) params.olderThanTs = Math.floor(args.olderThan.getTime() / 1000)
         if (args.limit) params.limit = args.limit
 
         const method = 'GET'
         const url = `${ENDPOINT_COMMENTS}/get`
 
         if (options?.batch) {
-            return { method, url, params, schema: z.array(CommentSchema) }
+            return { method, url, params, schema: CommentListSchema }
         }
 
         return request<Comment[]>({
@@ -53,7 +51,7 @@ export class CommentsClient extends BaseClient {
             apiToken: this.apiToken,
             payload: params,
             customFetch: this.customFetch,
-        }).then((response) => response.data.map((comment) => CommentSchema.parse(comment)))
+        }).then((response) => CommentListSchema.parse(response.data))
     }
 
     /** Fetches a single comment by ID. The API wraps it in `{comment: ...}`. */
@@ -169,7 +167,7 @@ export class CommentsClient extends BaseClient {
     ): Promise<StatusOk> | BatchRequestDescriptor<StatusOk> {
         const method = 'POST'
         const url = `${ENDPOINT_COMMENTS}/mark_position`
-        const params = { thread_id: args.threadId, comment_id: args.commentId }
+        const params = { threadId: args.threadId, commentId: args.commentId }
 
         if (options?.batch) {
             return { method, url, params, schema: StatusOkSchema }
