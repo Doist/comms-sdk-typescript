@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { getFullCommsURL } from '../utils/url-helpers'
-import { USER_TYPES, WORKSPACE_PLANS } from './enums'
+import { USER_TYPES } from './enums'
 
 // EVERYONE / EVERYONE_IN_THREAD / GROUP_ID_MARKERS / GroupId / GroupIdMarker
 // are defined in `./enums` (re-exported through `./index`) to keep this
@@ -87,13 +87,17 @@ export const UserSchema = BaseUserSchema.extend({
 
 export type User = z.infer<typeof UserSchema>
 
+// Workspace entity from API. `default_conversation` is a base58 UUIDv7
+// string. `avatar_id` is kept (unlike the User rename to `image_id`,
+// which is a User-only change per Comms_API_changes.md PR #125).
+// `plan` is intentionally `z.string()` — see {@link WORKSPACE_PLANS}.
 export const WorkspaceSchema = z.object({
     id: z.number(),
     name: z.string(),
-    defaultConversation: z.number().nullable().optional(),
+    defaultConversation: z.string().nullable().optional(),
     creator: z.number(),
     created: z.date(),
-    imageId: z.string().nullable().optional(),
+    avatarId: z.string().nullable().optional(),
     avatarUrls: z
         .object({
             s35: z.string(),
@@ -103,7 +107,7 @@ export const WorkspaceSchema = z.object({
         })
         .nullable()
         .optional(),
-    plan: z.enum(WORKSPACE_PLANS).nullable().optional(),
+    plan: z.string().nullable().optional(),
 })
 
 export type Workspace = z.infer<typeof WorkspaceSchema>
@@ -158,7 +162,9 @@ export const ThreadSchema = z
         lastUpdated: z.date(),
         mutedUntil: z.date().nullable().optional(),
         participants: z.array(z.number()).nullable().optional(),
-        pinned: z.boolean(),
+        // Backend wire shape only includes `pinned_ts` (epoch ms or null);
+        // derive `pinned` from `pinnedTs != null` if you need a bool.
+        pinned: z.boolean().optional(),
         pinnedTs: z.number().int().nullable().optional(),
         posted: z.date(),
         reactions: z.record(z.string(), z.unknown()).nullable().optional(),
@@ -377,7 +383,9 @@ export const InboxThreadSchema = z
         lastUpdated: z.date(),
         mutedUntil: z.date().nullable().optional(),
         participants: z.array(z.number()).nullable().optional(),
-        pinned: z.boolean(),
+        // Backend wire shape only includes `pinned_ts` (epoch ms or null);
+        // derive `pinned` from `pinnedTs != null` if you need a bool.
+        pinned: z.boolean().optional(),
         pinnedTs: z.number().int().nullable().optional(),
         posted: z.date(),
         reactions: z.record(z.string(), z.array(z.number())).nullable().optional(),

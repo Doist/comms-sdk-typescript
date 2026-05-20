@@ -34,18 +34,17 @@ export const USER_TYPES = ['USER', 'GUEST', 'ADMIN'] as const
  */
 export type UserType = (typeof USER_TYPES)[number]
 
-// Workspace plans
-export const WORKSPACE_PLANS = ['free', 'unlimited'] as const
+// Workspace plans. The known values today are `'free'`, `'unlimited'`,
+// and `'business'`, but the backend can introduce new plan names without
+// coordinating a SDK release — so the schema accepts any string and the
+// const array stays as a hint for autocomplete only.
+export const WORKSPACE_PLANS = ['free', 'unlimited', 'business'] as const
 
 /**
- * The plan type for a workspace.
- *
- * @remarks
- * Possible values:
- * - `'free'` - Free plan
- * - `'unlimited'` - Unlimited plan
+ * The plan type for a workspace. Any string accepted; the listed values
+ * are the ones the backend exposes today.
  */
-export type WorkspacePlan = (typeof WORKSPACE_PLANS)[number]
+export type WorkspacePlan = (typeof WORKSPACE_PLANS)[number] | (string & {})
 
 // Audiences that comment-creating endpoints can target alongside (or instead
 // of) individual `recipients` / custom `groups`.
