@@ -6,13 +6,8 @@ import { USER_TYPES, WORKSPACE_PLANS } from './enums'
  * Marker constants for the two "broadcast" group recipients. These appear in
  * group-bearing fields (`Thread.groups`, `Comment.groups`,
  * `Channel.defaultGroups`, `directGroupMentions`, etc.) in place of a real
- * group UUID and tell the backend to notify "everyone in the channel" or
+ * group ID and tell the backend to notify "everyone in the channel" or
  * "everyone in the thread" respectively. Input and output are symmetric.
- *
- * The string values (`'EVERYONE'`, `'EVERYONE_IN_THREAD'`) are the on-wire
- * constants the backend accepts.
- *
- * @see Comms_API_changes.md — Group Model Changes
  */
 export const EVERYONE = 'EVERYONE' as const
 export const EVERYONE_IN_THREAD = 'EVERYONE_IN_THREAD' as const
@@ -22,16 +17,23 @@ export const GROUP_ID_MARKERS = [EVERYONE, EVERYONE_IN_THREAD] as const
 export type GroupIdMarker = (typeof GROUP_ID_MARKERS)[number]
 
 /**
- * A group identifier on the wire. Either a base58-encoded UUIDv7 string for
- * a real group, or one of the {@link GROUP_ID_MARKERS} for a broadcast
- * audience.
+ * A group identifier on the wire — either an opaque group ID or one of the
+ * {@link GROUP_ID_MARKERS} for a broadcast audience.
  */
 export type GroupId = string
 
 // Reusable schema for system messages that can be either a string or an
-// object. Always nullable — the backend returns `null` when there is no
-// system message (post-PR316 it no longer returns `""`).
+// object. Nullable — the backend returns `null` when there is no system
+// message.
 export const SystemMessageSchema = z.union([z.string(), z.unknown()]).nullable().optional()
+
+/**
+ * Shared `{ status: "ok" }` response shape. Most write endpoints that
+ * don't return an entity use this — archive / unarchive / mark-read /
+ * mark-all-read / mute / clear-unread / etc.
+ */
+export const StatusOkSchema = z.object({ status: z.string() })
+export type StatusOk = z.infer<typeof StatusOkSchema>
 
 // Attachment entity from API. Mirrors the canonical backend shape produced
 // by `unify_attachments` / `validate_file_attachment_json`. Only
@@ -62,10 +64,8 @@ export const AttachmentSchema = z
 
 export type Attachment = z.infer<typeof AttachmentSchema>
 
-// Base user schema with common fields shared between User and WorkspaceUser.
-// As of the Todoist-id migration, profile fields (full_name, image_id,
-// avatar URLs) flow from Todoist rather than being owned by Comms — they're
-// still surfaced here for convenience.
+// Fields shared by `User` and `WorkspaceUser`. Profile fields
+// (`fullName`, `imageId`, avatar URLs) are sourced from Todoist-ID.
 export const BaseUserSchema = z.object({
     id: z.number(),
     fullName: z.string(),
@@ -100,8 +100,6 @@ export const UserSchema = BaseUserSchema.extend({
 
 export type User = z.infer<typeof UserSchema>
 
-// Workspace entity from API. `default_channel` / `welcome_channel` /
-// `security` were removed as part of the Todoist-model migration.
 export const WorkspaceSchema = z.object({
     id: z.number(),
     name: z.string(),
@@ -123,7 +121,6 @@ export const WorkspaceSchema = z.object({
 
 export type Workspace = z.infer<typeof WorkspaceSchema>
 
-// Channel entity from API. `id` is a base58-encoded UUIDv7 string.
 export const ChannelSchema = z
     .object({
         id: z.string(),
@@ -151,10 +148,8 @@ export const ChannelSchema = z
 
 export type Channel = z.infer<typeof ChannelSchema>
 
-// Thread entity from API. `id` / `channelId` are base58-encoded UUIDv7
-// strings. The REST shape keeps the legacy `pinned` bool for
-// Zapier/webhook compatibility alongside the canonical `pinnedTs`
-// (epoch ms or null).
+// Thread entity from API. `pinned` (boolean) and `pinnedTs` (epoch ms or
+// null) are both surfaced — `pinned` is kept for Zapier/webhook clients.
 export const ThreadSchema = z
     .object({
         id: z.string(),
@@ -230,10 +225,9 @@ export const ThreadSchema = z
 
 export type Thread = z.infer<typeof ThreadSchema>
 
-// Group entity from API. `id` is a base58-encoded UUIDv7 string. Two
-// special constants — `EVERYONE` and `EVERYONE_IN_THREAD` — can also appear
-// in place of a real `id` in group-bearing fields on threads/comments/
-// channels.
+// Group entity from API. The broadcast markers `EVERYONE` and
+// `EVERYONE_IN_THREAD` can appear in place of a real `id` in group-bearing
+// fields on threads/comments/channels.
 export const GroupSchema = z.object({
     id: z.string(),
     name: z.string(),
@@ -245,8 +239,7 @@ export const GroupSchema = z.object({
 
 export type Group = z.infer<typeof GroupSchema>
 
-// Conversation entity from API. `id` is a base58-encoded UUIDv7 string;
-// conversation_messages still use integer IDs until that migration lands.
+// Conversation entity from API.
 export const ConversationSchema = z
     .object({
         id: z.string(),
@@ -265,7 +258,7 @@ export const ConversationSchema = z
         private: z.boolean().nullable().optional(),
         lastMessage: z
             .object({
-                // Widened pending PR5 — see ConversationMessageSchema.
+                // `id` may be string or number depending on the endpoint; coerced.
                 id: z.union([z.string(), z.number()]).transform(String),
                 content: z.string(),
                 creator: z.number(),
@@ -293,8 +286,6 @@ export const ConversationSchema = z
 
 export type Conversation = z.infer<typeof ConversationSchema>
 
-// Comment entity from API. `id`, `threadId`, `channelId`, and (when
-// present) `conversationId` are base58-encoded UUIDv7 strings.
 export const CommentSchema = z
     .object({
         id: z.string(),
@@ -333,7 +324,6 @@ export const CommentSchema = z
 
 export type Comment = z.infer<typeof CommentSchema>
 
-// WorkspaceUser entity from v4 API.
 export const WorkspaceUserSchema = BaseUserSchema.extend({
     email: z.string().nullable().optional(),
     userType: z.enum(USER_TYPES),
@@ -345,15 +335,10 @@ export const WorkspaceUserSchema = BaseUserSchema.extend({
 
 export type WorkspaceUser = z.infer<typeof WorkspaceUserSchema>
 
-// ConversationMessage entity from API.
-//
-// PR5 of the UUIDv7 migration hasn't landed yet — the DB column is still
-// `int`, even though the API input layer accepts base58 strings via
-// `validate_uuid_arg`. To absorb either response shape during the
-// rollout, `id` is widened to `string | number` here (coerced to a
-// string post-parse) and the matching reaction / URL helpers accept
-// both. Tighten this to `z.string()` once PR5 ships and the response
-// serializer is confirmed to emit strings everywhere.
+// ConversationMessage entity from API. `id` is widened to `string | number`
+// (coerced to a string post-parse) because the backend currently emits
+// either shape depending on the endpoint; the URL/reaction helpers accept
+// both.
 export const ConversationMessageSchema = z
     .object({
         id: z.union([z.string(), z.number()]).transform(String),

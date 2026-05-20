@@ -11,9 +11,7 @@ import type {
 
 export const TEST_API_TOKEN = 'test-api-token'
 
-// Canonical test IDs. Real base58-encoded UUIDv7s so they pass any future
-// SDK-side validation; the prefix `7Y` is a hint that this is a v7-derived
-// timestamp in the recent past (year 2024-ish).
+// Canonical test IDs — shaped so they pass SDK-side validation.
 export const TEST_CHANNEL_ID = '7YpL3oZ4kZ9vP7Q1tR2sX3y'
 export const TEST_THREAD_ID = '7YpL3oZ4kZ9vP7Q1tR2sX3z'
 export const TEST_COMMENT_ID = '7YpL3oZ4kZ9vP7Q1tR2sX41'

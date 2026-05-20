@@ -4,6 +4,8 @@ import { request } from '../transport/http-client'
 import type { BatchRequestDescriptor } from '../types/batch'
 import {
     type Comment,
+    type StatusOk,
+    StatusOkSchema,
     type Thread,
     ThreadSchema,
     type UnreadThread,
@@ -26,8 +28,7 @@ import { resolveCreateId } from '../utils/uuidv7'
 import { addCommentRequest } from './add-comment-helper'
 import { BaseClient } from './base-client'
 
-const StatusOkSchema = z.object({ status: z.string() })
-type StatusOk = z.infer<typeof StatusOkSchema>
+const ThreadListSchema = z.array(ThreadSchema)
 
 const GetUnreadResponseSchema = z.object({
     data: z.array(UnreadThreadSchema),
@@ -36,12 +37,8 @@ const GetUnreadResponseSchema = z.object({
 })
 
 /**
- * Client for `/api/v3/threads/`.
- *
- * Thread IDs and channel IDs are base58-encoded UUIDv7 strings. The SDK
- * auto-generates the thread `id` on `createThread` when the caller doesn't
- * supply one. `is_starred` / `star` are gone — use `save` / `unsave` (a.k.a.
- * `isSaved` in JSON).
+ * Client for `/api/v3/threads/`. The SDK auto-generates the thread `id` on
+ * `createThread` when the caller doesn't supply one.
  */
 export class ThreadsClient extends BaseClient {
     /**
@@ -67,7 +64,7 @@ export class ThreadsClient extends BaseClient {
         }
 
         if (options?.batch) {
-            return { method, url, params, schema: z.array(ThreadSchema) }
+            return { method, url, params, schema: ThreadListSchema }
         }
 
         return request<Thread[]>({
@@ -77,7 +74,7 @@ export class ThreadsClient extends BaseClient {
             apiToken: this.apiToken,
             payload: params,
             customFetch: this.customFetch,
-        }).then((response) => response.data.map((thread) => ThreadSchema.parse(thread)))
+        }).then((response) => ThreadListSchema.parse(response.data))
     }
 
     /** Fetches a single thread by ID. */

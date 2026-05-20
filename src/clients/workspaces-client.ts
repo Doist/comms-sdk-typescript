@@ -1,17 +1,15 @@
+import { z } from 'zod'
 import { ENDPOINT_WORKSPACES } from '../consts/endpoints'
 import { request } from '../transport/http-client'
 import type { BatchRequestDescriptor } from '../types/batch'
 import { Channel, ChannelSchema, Workspace, WorkspaceSchema } from '../types/entities'
 import { BaseClient } from './base-client'
 
+const ChannelListSchema = z.array(ChannelSchema)
+
 /**
- * Client for `/api/v3/workspaces/`. Workspace IDs are integers (not
- * migrated to UUIDv7).
- *
- * Note: Comms' workspaces have lost their `color`, `default_channel`,
- * `welcome_channel`, and `security` fields per the Todoist-id migration
- * (`Comms_API_changes.md`). The backend currently rejects any `color` other
- * than `1` on add/update.
+ * Client for `/api/v3/workspaces/`. Workspace IDs are integers. The backend
+ * currently rejects any `color` other than `1` on add/update.
  */
 export class WorkspacesClient extends BaseClient {
     /**
@@ -125,7 +123,6 @@ export class WorkspacesClient extends BaseClient {
      * Creates a new workspace.
      *
      * @param name - The name of the new workspace.
-     * @param tempId - Optional temporary ID for the workspace.
      * @param options - Optional configuration. Set `batch: true` to return a descriptor for batch requests.
      * @returns The created workspace object.
      *
@@ -207,7 +204,6 @@ export class WorkspacesClient extends BaseClient {
      * Removes a workspace and all its data (not recoverable).
      *
      * @param id - The workspace ID.
-     * @param currentPassword - The user's current password for confirmation.
      * @param options - Optional configuration. Set `batch: true` to return a descriptor for batch requests.
      *
      * @example
@@ -263,7 +259,7 @@ export class WorkspacesClient extends BaseClient {
         const params = { id }
 
         if (options?.batch) {
-            return { method, url, params }
+            return { method, url, params, schema: ChannelListSchema }
         }
 
         return request<Channel[]>({
@@ -273,6 +269,6 @@ export class WorkspacesClient extends BaseClient {
             apiToken: this.apiToken,
             payload: params,
             customFetch: this.customFetch,
-        }).then((response) => response.data.map((channel) => ChannelSchema.parse(channel)))
+        }).then((response) => ChannelListSchema.parse(response.data))
     }
 }

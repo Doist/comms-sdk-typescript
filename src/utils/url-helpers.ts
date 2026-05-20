@@ -1,9 +1,5 @@
 /**
  * Helper functions for creating Comms permalinks (`https://comms.todoist.com/a/...`).
- *
- * As of the UUIDv7 migration, channel / thread / comment / conversation IDs
- * are base58-encoded strings. `workspaceId`, `userId`, and conversation
- * `messageId` remain numeric.
  */
 
 export type CommsURLParams = {

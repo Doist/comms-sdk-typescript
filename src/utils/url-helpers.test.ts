@@ -18,7 +18,7 @@ import {
     getUserProfileURL,
 } from './url-helpers'
 
-// Real-shaped IDs (base58-encoded UUIDv7) so assertions read like prod URLs.
+// Real-shaped IDs so assertions read like prod URLs.
 const CH = '7YpL3oZ4kZ9vP7Q1tR2sX3y'
 const TH = '7YpL3oZ4kZ9vP7Q1tR2sX3z'
 const CO = '7YpL3oZ4kZ9vP7Q1tR2sX41'

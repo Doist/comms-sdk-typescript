@@ -41,20 +41,12 @@ type MfaChallengeArgs = {
 }
 
 /**
- * Client for the `/api/v3/users/` endpoints.
- *
- * As of Comms, authentication is routed through Todoist-ID. The classic
- * email-management endpoints (`add_email`, `confirm_email`, …) and the
- * Google/Apple OAuth account-linking endpoints have been removed. `register`
- * / `login` / `login_with_google` / `login_with_token` /
- * `login_with_todoist` are the only auth entry points.
- *
- * @see Comms_API_changes.md — Removed API Endpoints
+ * Client for the `/api/v3/users/` endpoints. Authentication flows through
+ * Todoist-ID; `register` / `login` / `loginWithGoogle` / `loginWithToken` /
+ * `loginWithTodoist` are the available entry points.
  */
 export class UsersClient extends BaseClient {
-    /**
-     * Registers a new user via the Todoist-ID bridge.
-     */
+    /** Registers a new user via the Todoist-ID bridge. */
     register(args: RegisterArgs, options: { batch: true }): BatchRequestDescriptor<User>
     register(args: RegisterArgs, options?: { batch?: false }): Promise<User>
     register(
@@ -215,10 +207,7 @@ export class UsersClient extends BaseClient {
         return this.authedPost(`${ENDPOINT_USERS}/update`, args, UserSchema, options)
     }
 
-    /**
-     * Updates the user's password. Requires `currentPassword` (matches the
-     * Todoist contract; see PR #181 in `Comms_API_changes.md`).
-     */
+    /** Updates the user's password. Requires `currentPassword`. */
     updatePassword(
         args: { newPassword: string; currentPassword?: string },
         options: { batch: true },

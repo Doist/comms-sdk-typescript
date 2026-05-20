@@ -43,15 +43,11 @@ export const NOTIFY_AUDIENCES = ['channel', 'thread'] as const
 export type NotifyAudience = (typeof NOTIFY_AUDIENCES)[number]
 
 /**
- * Internal mapping from {@link NotifyAudience} to the backend marker IDs
- * that comment / thread creation endpoints use on the wire (`EVERYONE` and
- * `EVERYONE_IN_THREAD`). Exposed here so the audience constants and their
- * encoding stay in a single source of truth; SDK consumers should use
- * {@link NotifyAudience} via `notifyAudience` on the request args rather
- * than passing these IDs directly.
- *
- * Per `Comms_API_changes.md`, the prior numeric IDs `1` / `2` were replaced
- * with string constants on the wire.
+ * Internal mapping from {@link NotifyAudience} to the broadcast marker IDs
+ * (`EVERYONE` / `EVERYONE_IN_THREAD`) that comment- and thread-creation
+ * endpoints use on the wire. SDK consumers should use {@link NotifyAudience}
+ * via `notifyAudience` on the request args rather than passing these IDs
+ * directly.
  */
 export const NOTIFY_AUDIENCE_GROUP_IDS: Readonly<Record<NotifyAudience, GroupId>> = {
     channel: EVERYONE,
