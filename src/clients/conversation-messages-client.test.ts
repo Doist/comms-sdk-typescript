@@ -5,7 +5,7 @@ import { server } from '../testUtils/msw-setup'
 import { TEST_API_TOKEN, TEST_CONVERSATION_ID } from '../testUtils/test-defaults'
 import { generateId } from '../utils/uuidv7'
 
-const BASE = 'https://comms.todoist.com/api/v3'
+const BASE = 'https://comms.todoist.com/api/v1'
 
 // The transport layer parses JSON, camelCases keys, and turns `*_ts`
 // epoch seconds into Date fields. Wire fixtures here use the raw
@@ -87,20 +87,5 @@ describe('ConversationMessagesClient — wire serialization', () => {
             notify: false,
         })
         expect(body.id).toBeTypeOf('string')
-    })
-
-    it('batch descriptor carries camelCase params', () => {
-        const api = new CommsApi(TEST_API_TOKEN)
-        const descriptor = api.conversationMessages.getMessages(
-            { conversationId: TEST_CONVERSATION_ID, limit: 10 },
-            { batch: true },
-        )
-        if (!('params' in descriptor) || !descriptor.params) {
-            throw new Error('expected batch descriptor with params')
-        }
-        expect(descriptor.params).toMatchObject({
-            conversationId: TEST_CONVERSATION_ID,
-            limit: 10,
-        })
     })
 })

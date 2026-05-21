@@ -103,25 +103,6 @@ const api = new CommsApi(tokenResponse.accessToken)
 const user = await api.users.getSessionUser()
 ```
 
-### Batch requests
-
-Pass `{ batch: true }` to any API method to get a descriptor instead of
-executing the request. Hand the descriptors to `api.batch(...)` to run them
-in a single HTTP call:
-
-```typescript
-const results = await api.batch(
-    api.channels.getChannels({ workspaceId: 1 }, { batch: true }),
-    api.workspaceUsers.getUserById({ workspaceId: 1, userId: 42 }, { batch: true }),
-)
-
-if (results[0].code === 200) console.log(results[0].data.length, 'channels')
-if (results[1].code === 200) console.log(results[1].data.fullName)
-```
-
-GET-only batches run in parallel on the server. Mixed GET/POST batches run
-sequentially.
-
 ## Development
 
 - `npm install`

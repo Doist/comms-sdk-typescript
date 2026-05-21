@@ -4,7 +4,7 @@ import { CommsApi } from '../comms-api'
 import { server } from '../testUtils/msw-setup'
 import { TEST_API_TOKEN, TEST_COMMENT_ID, TEST_THREAD_ID } from '../testUtils/test-defaults'
 
-const BASE = 'https://comms.todoist.com/api/v3'
+const BASE = 'https://comms.todoist.com/api/v1'
 
 // These tests pin the wire shape of `comments-client` — every camelCase
 // field on the args side ends up snake_case on the wire (via
@@ -61,25 +61,5 @@ describe('CommentsClient — wire serialization', () => {
             thread_id: TEST_THREAD_ID,
             comment_id: TEST_COMMENT_ID,
         })
-    })
-
-    it('batch descriptors carry camelCase params (transport snake-cases on send)', () => {
-        const api = new CommsApi(TEST_API_TOKEN)
-        const descriptor = api.comments.getComments(
-            {
-                threadId: TEST_THREAD_ID,
-                newerThan: new Date('2026-01-01T00:00:00Z'),
-                limit: 10,
-            },
-            { batch: true },
-        )
-        if (!('params' in descriptor) || !descriptor.params) {
-            throw new Error('expected batch descriptor with params')
-        }
-        expect(descriptor.params).toMatchObject({
-            threadId: TEST_THREAD_ID,
-            limit: 10,
-        })
-        expect(descriptor.params.newerThanTs).toBeTypeOf('number')
     })
 })
