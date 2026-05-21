@@ -30,18 +30,22 @@ export async function getDefaultDispatcher(): Promise<Dispatcher | undefined> {
  * of waiting ~4s on keep-alive. No-op in the browser branch.
  */
 export async function closeDefaultDispatcher(): Promise<void> {
-    if (defaultDispatcherPromise) {
-        try {
-            await defaultDispatcherPromise
-        } catch {
-            // init already failed; nothing to close
-        }
-    }
-    const dispatcher = defaultDispatcher
+    // Clear the singleton *before* awaiting init, so any concurrent
+    // `getDefaultDispatcher()` after this point creates a fresh dispatcher
+    // instead of receiving a reference to the one we're about to close.
+    const initPromise = defaultDispatcherPromise
     defaultDispatcher = undefined
     defaultDispatcherPromise = undefined
-    if (dispatcher) {
-        await dispatcher.close()
+
+    if (!initPromise) return
+
+    try {
+        const dispatcher = await initPromise
+        if (dispatcher) {
+            await dispatcher.close()
+        }
+    } catch {
+        // init failed; nothing to close
     }
 }
 
