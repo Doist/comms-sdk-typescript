@@ -1,9 +1,9 @@
 import { http } from 'msw'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { CommsApi } from './comms-api'
-import { apiUrl, createSuccessResponse } from './testUtils/msw-handlers'
+import { createSuccessResponse } from './testUtils/msw-handlers'
 import { server } from './testUtils/msw-setup'
-import { mockUser, TEST_API_TOKEN } from './testUtils/test-defaults'
+import { mockUser, TEST_API_BASE_URL, TEST_API_TOKEN } from './testUtils/test-defaults'
 import type { CustomFetch, CustomFetchResponse } from './types/http'
 
 describe('Custom Fetch Core Functionality', () => {
@@ -55,7 +55,7 @@ describe('Custom Fetch Core Functionality', () => {
             await api.users.getSessionUser()
 
             expect(mockCustomFetch).toHaveBeenCalledWith(
-                apiUrl('api/v1/users/get_session_user'),
+                `${TEST_API_BASE_URL}/users/get_session_user`,
                 expect.objectContaining({
                     method: 'GET',
                     headers: expect.objectContaining({
@@ -67,7 +67,7 @@ describe('Custom Fetch Core Functionality', () => {
 
         it('should use native fetch when no custom fetch provided', async () => {
             server.use(
-                http.get(apiUrl('api/v1/users/get_session_user'), () => {
+                http.get(`${TEST_API_BASE_URL}/users/get_session_user`, () => {
                     return createSuccessResponse(mockUser)
                 }),
             )
