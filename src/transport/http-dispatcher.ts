@@ -1,12 +1,5 @@
 import type { Dispatcher } from 'undici'
 
-// Use effectively-disabled keep-alive so short-lived CLI processes do not stay
-// open waiting on idle sockets. Undici requires positive values, so we use 1ms.
-const keepAliveOptions = {
-    keepAliveTimeout: 1,
-    keepAliveMaxTimeout: 1,
-}
-
 let defaultDispatcher: Dispatcher | undefined
 let defaultDispatcherPromise: Promise<Dispatcher | undefined> | undefined
 
@@ -31,6 +24,27 @@ export async function getDefaultDispatcher(): Promise<Dispatcher | undefined> {
     return defaultDispatcherPromise
 }
 
+/**
+ * Drains the default dispatcher's connection pool. CLIs and scripts should
+ * `await` this before exit so Node's event loop empties immediately instead
+ * of waiting ~4s on keep-alive. No-op in the browser branch.
+ */
+export async function closeDefaultDispatcher(): Promise<void> {
+    if (defaultDispatcherPromise) {
+        try {
+            await defaultDispatcherPromise
+        } catch {
+            // init already failed; nothing to close
+        }
+    }
+    const dispatcher = defaultDispatcher
+    defaultDispatcher = undefined
+    defaultDispatcherPromise = undefined
+    if (dispatcher) {
+        await dispatcher.close()
+    }
+}
+
 export function resetDefaultDispatcherForTests(): void {
     defaultDispatcher = undefined
     defaultDispatcherPromise = undefined
@@ -50,21 +64,26 @@ async function createDefaultDispatcher(): Promise<Dispatcher | undefined> {
     // branch, so undici is safe to load when we get here.
     const { EnvHttpProxyAgent, interceptors } = await import('undici')
 
-    // Compose the response-decompression interceptor so gzip/deflate/br/zstd
-    // bodies are decoded before consumers parse them. Required on Node 24+:
-    // attaching any custom dispatcher to the global `fetch` strips the
-    // `content-encoding` header but does not actually decompress the body,
-    // so callers receive raw gzipped bytes and `JSON.parse` fails.
+    // `allowH2: true` opts into HTTP/2 via ALPN; undici falls back to h1.1
+    // when the server doesn't negotiate h2. Without this flag undici
+    // defaults to h1.1 even when the server supports h2.
+    //
+    // `interceptors.decompress()` decodes gzip/deflate/br/zstd bodies. On
+    // Node 24+, attaching any custom dispatcher to global `fetch` strips
+    // `content-encoding` without actually decompressing the body.
     // See https://github.com/Doist/todoist-cli/issues/318.
-    const decompress = suppressExperimentalWarningsSync(() => interceptors.decompress())
-
-    return new EnvHttpProxyAgent(keepAliveOptions).compose(decompress)
+    //
+    // Both emit ExperimentalWarning on first use; suppressed during init.
+    return suppressExperimentalWarningsSync(() => {
+        const decompress = interceptors.decompress()
+        return new EnvHttpProxyAgent({ allowH2: true }).compose(decompress)
+    })
 }
 
-// undici emits an `ExperimentalWarning` the first time `interceptors.decompress()`
-// runs. The interceptor is stable for our gzipped-JSON-over-HTTPS use case;
-// silence the warning during dispatcher init only so it does not leak to every
-// consumer's stderr on the first request.
+// `suppressExperimentalWarningsSync` is exported for direct unit testing —
+// the integration path through `getDefaultDispatcher()` can't reliably
+// exercise it because both the dispatcher singleton and undici's internal
+// `warningEmitted` flag are once-per-process.
 //
 // `fn` must be synchronous so the override covers a single critical section
 // (microseconds) — no unrelated `ExperimentalWarning` from elsewhere can
@@ -72,11 +91,6 @@ async function createDefaultDispatcher(): Promise<Dispatcher | undefined> {
 // pattern-matching the message text: the message wording is an undici
 // implementation detail (not a stable API), and the suppression window is
 // narrow enough that a coarse type filter is safe.
-//
-// Exported for direct unit testing — the integration path through
-// `getDefaultDispatcher()` cannot reliably exercise the helper because both
-// the dispatcher singleton and undici's internal `warningEmitted` flag are
-// once-per-process.
 export function suppressExperimentalWarningsSync<T>(fn: () => T): T {
     const originalEmit = process.emitWarning
     process.emitWarning = ((

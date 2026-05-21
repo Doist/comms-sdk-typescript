@@ -10,6 +10,7 @@ import { ThreadsClient } from './clients/threads-client'
 import { UsersClient } from './clients/users-client'
 import { WorkspaceUsersClient } from './clients/workspace-users-client'
 import { WorkspacesClient } from './clients/workspaces-client'
+import { closeDefaultDispatcher } from './transport/http-dispatcher'
 import type { CustomFetch } from './types/http'
 
 export type CommsApiOptions = {
@@ -69,5 +70,16 @@ export class CommsApi {
         this.inbox = new InboxClient(clientConfig)
         this.reactions = new ReactionsClient(clientConfig)
         this.search = new SearchClient(clientConfig)
+    }
+
+    /**
+     * Drains the SDK's process-global connection pool. CLIs and scripts
+     * should `await api.close()` before exit so Node's event loop empties
+     * immediately instead of waiting ~4s on keep-alive. Affects every
+     * `CommsApi` and OAuth helper in the same process — it's a
+     * process-shutdown gesture, not an instance teardown. Browser-safe.
+     */
+    async close(): Promise<void> {
+        await closeDefaultDispatcher()
     }
 }
