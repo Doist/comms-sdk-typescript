@@ -64,12 +64,12 @@ export class ThreadsClient extends BaseClient {
      * ```
      */
     getThreads(args: GetThreadsArgs): Promise<Thread[]> {
-        const { newerThan, olderThan, ...rest } = args
-        const params = {
-            ...rest,
-            ...(newerThan ? { newer_than_ts: Math.floor(newerThan.getTime() / 1000) } : {}),
-            ...(olderThan ? { older_than_ts: Math.floor(olderThan.getTime() / 1000) } : {}),
-        }
+        const params: Record<string, unknown> = { workspaceId: args.workspaceId }
+        if (args.channelId != null) params.channelId = args.channelId
+        if (args.archived != null) params.archived = args.archived
+        if (args.limit != null) params.limit = args.limit
+        if (args.newerThan) params.newer_than_ts = Math.floor(args.newerThan.getTime() / 1000)
+        if (args.olderThan) params.older_than_ts = Math.floor(args.olderThan.getTime() / 1000)
 
         return request<Thread[]>({
             httpMethod: 'GET',
