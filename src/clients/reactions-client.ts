@@ -4,14 +4,16 @@ import type { ReactionObject } from '../types/entities'
 import type { AddReactionArgs, GetReactionsArgs, RemoveReactionArgs } from '../types/requests'
 import { BaseClient } from './base-client'
 
+type ReactionTarget = { threadId: string } | { commentId: string } | { messageId: string }
+
 function reactionTarget(args: {
     threadId?: string
     commentId?: string
     messageId?: string
-}): Record<string, string> {
-    if (args.threadId) return { thread_id: args.threadId }
-    if (args.commentId) return { comment_id: args.commentId }
-    if (args.messageId) return { message_id: args.messageId }
+}): ReactionTarget {
+    if (args.threadId) return { threadId: args.threadId }
+    if (args.commentId) return { commentId: args.commentId }
+    if (args.messageId) return { messageId: args.messageId }
     throw new Error('Must provide one of: threadId, commentId, or messageId')
 }
 
@@ -19,9 +21,7 @@ function reactionTarget(args: {
  * Client for interacting with Comms reaction endpoints.
  */
 export class ReactionsClient extends BaseClient {
-    /**
-     * Adds an emoji reaction to a thread, comment, or conversation message.
-     */
+    /** Adds an emoji reaction to a thread, comment, or conversation message. */
     add(args: AddReactionArgs): Promise<void> {
         return request<void>({
             httpMethod: 'POST',
@@ -50,9 +50,7 @@ export class ReactionsClient extends BaseClient {
         }).then((response) => response.data)
     }
 
-    /**
-     * Removes an emoji reaction from a thread, comment, or conversation message.
-     */
+    /** Removes an emoji reaction from a thread, comment, or conversation message. */
     remove(args: RemoveReactionArgs): Promise<void> {
         return request<void>({
             httpMethod: 'POST',

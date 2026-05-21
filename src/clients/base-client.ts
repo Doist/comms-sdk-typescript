@@ -1,6 +1,4 @@
 import { getCommsBaseUri } from '../consts/endpoints'
-import type { ApiVersion } from '../types/api-version'
-import { DEFAULT_API_VERSION } from '../types/api-version'
 import type { CustomFetch } from '../types/http'
 
 export type ClientConfig = {
@@ -8,8 +6,6 @@ export type ClientConfig = {
     apiToken: string
     /** Optional custom base URL. If not provided, uses the default Comms API URL */
     baseUrl?: string
-    /** Optional API version. Defaults to 'v1' */
-    version?: ApiVersion
     /** Optional custom fetch implementation for cross-platform compatibility */
     customFetch?: CustomFetch
 }
@@ -21,13 +17,11 @@ export type ClientConfig = {
 export class BaseClient {
     protected readonly apiToken: string
     protected readonly baseUrl?: string
-    protected readonly defaultVersion: ApiVersion
     protected readonly customFetch?: CustomFetch
 
     constructor(config: ClientConfig) {
         this.apiToken = config.apiToken
         this.baseUrl = config.baseUrl
-        this.defaultVersion = config.version || DEFAULT_API_VERSION
         this.customFetch = config.customFetch
     }
 
@@ -35,14 +29,11 @@ export class BaseClient {
      * Returns the base URI for an API request, with a guaranteed trailing
      * slash so relative paths resolve cleanly through `URL`.
      */
-    protected getBaseUri(version?: ApiVersion): string {
-        const apiVersion = version || this.defaultVersion
-
+    protected getBaseUri(): string {
         if (this.baseUrl) {
             const normalizedBaseUrl = this.baseUrl.endsWith('/') ? this.baseUrl : `${this.baseUrl}/`
-            return `${normalizedBaseUrl}api/${apiVersion}/`
+            return `${normalizedBaseUrl}api/v1/`
         }
-
-        return getCommsBaseUri(apiVersion)
+        return getCommsBaseUri()
     }
 }

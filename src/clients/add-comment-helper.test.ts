@@ -1,12 +1,14 @@
 import { http, HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
+import { getCommsBaseUri } from '../consts/endpoints'
+import { apiUrl } from '../testUtils/msw-handlers'
 import { server } from '../testUtils/msw-setup'
 import { TEST_API_TOKEN, TEST_THREAD_ID } from '../testUtils/test-defaults'
 import { EVERYONE, EVERYONE_IN_THREAD } from '../types/enums'
 import { addCommentRequest } from './add-comment-helper'
 
-const ctx = { baseUri: 'https://comms.todoist.com/api/v1/', apiToken: TEST_API_TOKEN }
-const COMMENT_ADD = 'https://comms.todoist.com/api/v1/comments/add'
+const ctx = { baseUri: getCommsBaseUri(), apiToken: TEST_API_TOKEN }
+const COMMENT_ADD = apiUrl('api/v1/comments/add')
 
 const COMMENT_RESPONSE = {
     id: 'AAAAAAAAAAAAAAAAAAAAAA',
@@ -73,7 +75,10 @@ describe('addCommentRequest — reserved broadcast marker validation', () => {
             notifyAudience: 'channel',
         })
 
-        expect((capturedBody as Record<string, unknown> | null)?.groups).toEqual([EVERYONE])
+        const body = capturedBody as Record<string, unknown> | null
+        expect(body?.groups).toEqual([EVERYONE])
+        expect(body).not.toHaveProperty('notify_audience')
+        expect(body).not.toHaveProperty('notifyAudience')
     })
 
     it('translates notifyAudience: thread into the EVERYONE_IN_THREAD marker', async () => {
@@ -91,8 +96,9 @@ describe('addCommentRequest — reserved broadcast marker validation', () => {
             notifyAudience: 'thread',
         })
 
-        expect((capturedBody as Record<string, unknown> | null)?.groups).toEqual([
-            EVERYONE_IN_THREAD,
-        ])
+        const body = capturedBody as Record<string, unknown> | null
+        expect(body?.groups).toEqual([EVERYONE_IN_THREAD])
+        expect(body).not.toHaveProperty('notify_audience')
+        expect(body).not.toHaveProperty('notifyAudience')
     })
 })
