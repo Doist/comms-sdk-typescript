@@ -2,9 +2,12 @@ import { http, HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
 import { CommsApi } from '../comms-api'
 import { server } from '../testUtils/msw-setup'
-import { TEST_API_TOKEN, TEST_COMMENT_ID, TEST_THREAD_ID } from '../testUtils/test-defaults'
-
-const BASE = 'https://comms.todoist.com/api/v1'
+import {
+    TEST_API_BASE_URL as BASE,
+    TEST_API_TOKEN,
+    TEST_COMMENT_ID,
+    TEST_THREAD_ID,
+} from '../testUtils/test-defaults'
 
 // These tests pin the wire shape of `comments-client` — every camelCase
 // field on the args side ends up snake_case on the wire (via

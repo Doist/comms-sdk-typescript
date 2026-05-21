@@ -2,10 +2,12 @@ import { http, HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
 import { CommsApi } from '../comms-api'
 import { server } from '../testUtils/msw-setup'
-import { TEST_API_TOKEN, TEST_CONVERSATION_ID } from '../testUtils/test-defaults'
+import {
+    TEST_API_BASE_URL as BASE,
+    TEST_API_TOKEN,
+    TEST_CONVERSATION_ID,
+} from '../testUtils/test-defaults'
 import { generateId } from '../utils/uuidv7'
-
-const BASE = 'https://comms.todoist.com/api/v1'
 
 // The transport layer parses JSON, camelCases keys, and turns `*_ts`
 // epoch seconds into Date fields. Wire fixtures here use the raw

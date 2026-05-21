@@ -22,7 +22,25 @@ export const ConversationMessageListSchema = z.array(ConversationMessageSchema)
  * message `id` on `createMessage` when the caller doesn't supply one.
  */
 export class ConversationMessagesClient extends BaseClient {
-    /** Lists messages in a conversation. */
+    /**
+     * Gets all messages in a conversation.
+     *
+     * @param args - The arguments for getting messages.
+     * @param args.conversationId - The conversation ID.
+     * @param args.newerThan - Optional date to get messages newer than.
+     * @param args.olderThan - Optional date to get messages older than.
+     * @param args.limit - Optional limit on number of messages returned.
+     * @param args.cursor - Optional cursor for pagination.
+     * @returns An array of message objects.
+     *
+     * @example
+     * ```typescript
+     * const messages = await api.conversationMessages.getMessages({
+     *   conversationId: '7YpL3oZ4kZ9vP7Q1tR2sX42',
+     *   newerThan: new Date('2024-01-01'),
+     * })
+     * ```
+     */
     getMessages(args: GetConversationMessagesArgs): Promise<ConversationMessage[]> {
         const params: Record<string, unknown> = { conversationId: args.conversationId }
         if (args.newerThan) params.newerThanTs = Math.floor(args.newerThan.getTime() / 1000)
@@ -40,12 +58,40 @@ export class ConversationMessagesClient extends BaseClient {
         }).then((response) => ConversationMessageListSchema.parse(response.data))
     }
 
-    /** Fetches a single message by ID. */
+    /**
+     * Gets a single conversation message by id.
+     *
+     * @param id - The message ID.
+     * @returns The conversation message object.
+     *
+     * @example
+     * ```typescript
+     * const message = await api.conversationMessages.getMessage('7YpL3oZ4kZ9vP7Q1tR2sX43')
+     * ```
+     */
     getMessage(id: string): Promise<ConversationMessage> {
         return this.simple('GET', 'getone', { id }, ConversationMessageSchema)
     }
 
-    /** Creates a new message. `id` is auto-generated if not supplied. */
+    /**
+     * Creates a new message in a conversation. `id` is auto-generated if not
+     * supplied.
+     *
+     * @param args - The arguments for creating a message.
+     * @param args.conversationId - The conversation ID.
+     * @param args.content - The message content.
+     * @param args.attachments - Optional array of {@link Attachment} objects.
+     * @param args.actions - Optional array of action objects.
+     * @returns The created message object.
+     *
+     * @example
+     * ```typescript
+     * const message = await api.conversationMessages.createMessage({
+     *   conversationId: '7YpL3oZ4kZ9vP7Q1tR2sX42',
+     *   content: 'Thanks for the update!',
+     * })
+     * ```
+     */
     createMessage(args: CreateConversationMessageArgs): Promise<ConversationMessage> {
         const params: Record<string, unknown> = {
             conversationId: args.conversationId,
@@ -61,7 +107,23 @@ export class ConversationMessagesClient extends BaseClient {
         return this.simple('POST', 'add', params, ConversationMessageSchema)
     }
 
-    /** Updates a message. */
+    /**
+     * Updates a conversation message.
+     *
+     * @param args - The arguments for updating a message.
+     * @param args.id - The message ID.
+     * @param args.content - The new message content.
+     * @param args.attachments - Optional array of {@link Attachment} objects.
+     * @returns The updated message object.
+     *
+     * @example
+     * ```typescript
+     * const message = await api.conversationMessages.updateMessage({
+     *   id: '7YpL3oZ4kZ9vP7Q1tR2sX43',
+     *   content: 'Updated message content',
+     * })
+     * ```
+     */
     updateMessage(args: UpdateConversationMessageArgs): Promise<ConversationMessage> {
         const params: Record<string, unknown> = { id: args.id, content: args.content }
         if (args.attachments) params.attachments = args.attachments
@@ -72,7 +134,16 @@ export class ConversationMessagesClient extends BaseClient {
         return this.simple('POST', 'update', params, ConversationMessageSchema)
     }
 
-    /** Permanently deletes a message. */
+    /**
+     * Permanently deletes a conversation message.
+     *
+     * @param id - The message ID.
+     *
+     * @example
+     * ```typescript
+     * await api.conversationMessages.deleteMessage('7YpL3oZ4kZ9vP7Q1tR2sX43')
+     * ```
+     */
     deleteMessage(id: string): Promise<StatusOk> {
         return this.simple('POST', 'remove', { id }, StatusOkSchema)
     }

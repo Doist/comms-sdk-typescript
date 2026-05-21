@@ -1,14 +1,13 @@
 import { http, HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
 import { getCommsBaseUri } from '../consts/endpoints'
-import { apiUrl } from '../testUtils/msw-handlers'
 import { server } from '../testUtils/msw-setup'
-import { TEST_API_TOKEN, TEST_THREAD_ID } from '../testUtils/test-defaults'
+import { TEST_API_BASE_URL, TEST_API_TOKEN, TEST_THREAD_ID } from '../testUtils/test-defaults'
 import { EVERYONE, EVERYONE_IN_THREAD } from '../types/enums'
 import { addCommentRequest } from './add-comment-helper'
 
 const ctx = { baseUri: getCommsBaseUri(), apiToken: TEST_API_TOKEN }
-const COMMENT_ADD = apiUrl('api/v1/comments/add')
+const COMMENT_ADD = `${TEST_API_BASE_URL}/comments/add`
 
 const COMMENT_RESPONSE = {
     id: 'AAAAAAAAAAAAAAAAAAAAAA',

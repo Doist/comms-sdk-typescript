@@ -11,11 +11,14 @@ import { UsersClient } from './clients/users-client'
 import { WorkspaceUsersClient } from './clients/workspace-users-client'
 import { WorkspacesClient } from './clients/workspaces-client'
 import { closeDefaultDispatcher } from './transport/http-dispatcher'
+import type { ApiVersion } from './types/api-version'
 import type { CustomFetch } from './types/http'
 
 export type CommsApiOptions = {
     /** Optional custom API base URL. If not provided, defaults to Comms' standard API endpoint. */
     baseUrl?: string
+    /** Optional API version. Defaults to 'v1'. */
+    version?: ApiVersion
     /** Optional custom fetch implementation for cross-platform compatibility (e.g., Obsidian, React Native, Electron). */
     customFetch?: CustomFetch
 }
@@ -55,6 +58,7 @@ export class CommsApi {
         const clientConfig = {
             apiToken: authToken,
             baseUrl: options?.baseUrl,
+            version: options?.version,
             customFetch: options?.customFetch,
         }
 

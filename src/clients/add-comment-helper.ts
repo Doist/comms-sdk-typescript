@@ -55,6 +55,23 @@ function applyNotifyAudience(params: CreateCommentArgs): Omit<CreateCommentArgs,
     return { ...rest, groups: [...(groups ?? []), sentinel] }
 }
 
+/**
+ * Internal helper that powers `comments.createComment`,
+ * `threads.closeThread`, and `threads.reopenThread`.
+ *
+ * Normalizes the `notifyAudience` flag into a sentinel `groups` entry,
+ * rejects sentinel IDs passed via `groups` / `directGroupMentions`, mints a
+ * UUIDv7 `id` when the caller omits one, and posts to `/comments/add`. When
+ * `threadAction` is set (`'close'` / `'reopen'`), it is forwarded on the
+ * wire so the same request both adds the comment and transitions the
+ * parent thread.
+ *
+ * @param context - Per-call client context (base URI, API token, optional `customFetch`).
+ * @param params - The comment payload (`{@link CreateCommentArgs}`).
+ * @param options - Optional configuration.
+ * @param options.threadAction - When set, also transitions the parent thread (`'close'` or `'reopen'`).
+ * @returns The parsed {@link Comment} returned by the API.
+ */
 export function addCommentRequest(
     context: ClientContext,
     params: CreateCommentArgs,
