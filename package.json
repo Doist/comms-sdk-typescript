@@ -83,8 +83,7 @@
         "dist/cjs/**/*",
         "dist/esm/**/*",
         "dist/types/**/*",
-        "!dist/**/*.test.*",
-        "!dist/testUtils",
-        "!dist/scratch.*"
+        "!dist/**/*.test.js",
+        "!dist/**/*.test.d.ts"
     ]
 }
