@@ -1,5 +1,4 @@
 export * from './authentication'
-export { BatchBuilder } from './batch-builder'
 export { ChannelsClient } from './clients/channels-client'
 export { CommentsClient } from './clients/comments-client'
 export { ConversationMessagesClient } from './clients/conversation-messages-client'

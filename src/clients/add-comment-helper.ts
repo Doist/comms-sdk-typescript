@@ -1,6 +1,5 @@
 import { ENDPOINT_COMMENTS } from '../consts/endpoints'
 import { request } from '../transport/http-client'
-import type { BatchRequestDescriptor } from '../types/batch'
 import { type Comment, CommentSchema } from '../types/entities'
 import { NOTIFY_AUDIENCE_GROUP_IDS, NOTIFY_AUDIENCES, type NotifyAudience } from '../types/enums'
 import type { CustomFetch } from '../types/http'
@@ -59,27 +58,20 @@ function applyNotifyAudience(params: CreateCommentArgs): Omit<CreateCommentArgs,
 export function addCommentRequest(
     context: ClientContext,
     params: CreateCommentArgs,
-    options?: { batch?: boolean; threadAction?: ThreadAction },
-): Promise<Comment> | BatchRequestDescriptor<Comment> {
-    const method = 'POST'
-    const url = `${ENDPOINT_COMMENTS}/add`
+    options?: { threadAction?: ThreadAction },
+): Promise<Comment> {
     const normalized = applyNotifyAudience(params)
     const withId = { ...normalized, id: resolveCreateId(normalized.id) }
     const payload = options?.threadAction
         ? { ...withId, threadAction: options.threadAction }
         : withId
-    const schema = CommentSchema
-
-    if (options?.batch) {
-        return { method, url, params: payload, schema }
-    }
 
     return request<Comment>({
-        httpMethod: method,
+        httpMethod: 'POST',
         baseUri: context.baseUri,
-        relativePath: url,
+        relativePath: `${ENDPOINT_COMMENTS}/add`,
         apiToken: context.apiToken,
         payload,
         customFetch: context.customFetch,
-    }).then((response) => schema.parse(response.data))
+    }).then((response) => CommentSchema.parse(response.data))
 }

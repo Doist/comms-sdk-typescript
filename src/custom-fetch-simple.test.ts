@@ -55,7 +55,7 @@ describe('Custom Fetch Core Functionality', () => {
             await api.users.getSessionUser()
 
             expect(mockCustomFetch).toHaveBeenCalledWith(
-                apiUrl('api/v3/users/get_session_user'),
+                apiUrl('api/v1/users/get_session_user'),
                 expect.objectContaining({
                     method: 'GET',
                     headers: expect.objectContaining({
@@ -67,7 +67,7 @@ describe('Custom Fetch Core Functionality', () => {
 
         it('should use native fetch when no custom fetch provided', async () => {
             server.use(
-                http.get(apiUrl('api/v3/users/get_session_user'), () => {
+                http.get(apiUrl('api/v1/users/get_session_user'), () => {
                     return createSuccessResponse(mockUser)
                 }),
             )

@@ -8,7 +8,7 @@ export type ClientConfig = {
     apiToken: string
     /** Optional custom base URL. If not provided, uses the default Comms API URL */
     baseUrl?: string
-    /** Optional API version. Defaults to 'v3' */
+    /** Optional API version. Defaults to 'v1' */
     version?: ApiVersion
     /** Optional custom fetch implementation for cross-platform compatibility */
     customFetch?: CustomFetch

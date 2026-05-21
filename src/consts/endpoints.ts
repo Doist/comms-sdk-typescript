@@ -3,18 +3,12 @@ import { DEFAULT_API_VERSION } from '../types/api-version'
 
 const BASE_URI = 'https://comms.todoist.com'
 
-export const API_VERSION = DEFAULT_API_VERSION
-/**
- * @deprecated Use getCommsBaseUri() instead. This constant is kept for backward compatibility.
- */
-export const API_BASE_URI = `/api/${API_VERSION}/`
-
 /**
  * Gets the base URI for Comms API requests.
  *
- * @param version - API version ('v3' or 'v4'). Defaults to 'v3'.
+ * @param version - API version. Defaults to 'v1'.
  * @param domainBase - Custom domain base URL. Defaults to Comms' API domain.
- * @returns Complete base URI with trailing slash (e.g., 'https://comms.todoist.com/api/v3/')
+ * @returns Complete base URI with trailing slash (e.g., 'https://comms.todoist.com/api/v1/')
  */
 export function getCommsBaseUri(
     version: ApiVersion = DEFAULT_API_VERSION,

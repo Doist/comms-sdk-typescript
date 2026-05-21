@@ -1,4 +1,3 @@
-import { BatchBuilder } from './batch-builder'
 import { ChannelsClient } from './clients/channels-client'
 import { CommentsClient } from './clients/comments-client'
 import { ConversationMessagesClient } from './clients/conversation-messages-client'
@@ -11,7 +10,6 @@ import { ThreadsClient } from './clients/threads-client'
 import { UsersClient } from './clients/users-client'
 import { WorkspaceUsersClient } from './clients/workspace-users-client'
 import { WorkspacesClient } from './clients/workspaces-client'
-import type { BatchRequestDescriptor, BatchResponseArray } from './types/batch'
 import type { CustomFetch } from './types/http'
 
 export type CommsApiOptions = {
@@ -46,10 +44,6 @@ export class CommsApi {
     public reactions: ReactionsClient
     public search: SearchClient
 
-    private authToken: string
-    private baseUrl?: string
-    private customFetch?: CustomFetch
-
     /**
      * Creates a new Comms API client.
      *
@@ -57,10 +51,6 @@ export class CommsApi {
      * @param options - Optional configuration options.
      */
     constructor(authToken: string, options?: CommsApiOptions) {
-        this.authToken = authToken
-        this.baseUrl = options?.baseUrl
-        this.customFetch = options?.customFetch
-
         const clientConfig = {
             apiToken: authToken,
             baseUrl: options?.baseUrl,
@@ -79,31 +69,5 @@ export class CommsApi {
         this.inbox = new InboxClient(clientConfig)
         this.reactions = new ReactionsClient(clientConfig)
         this.search = new SearchClient(clientConfig)
-    }
-
-    /**
-     * Executes multiple API requests in a single HTTP call using the batch endpoint.
-     *
-     * @param requests - Batch request descriptors (obtained by passing `{ batch: true }` to API methods)
-     * @returns Array of batch responses with processed data
-     *
-     * @example
-     * ```typescript
-     * const results = await api.batch(
-     *   api.workspaceUsers.getUserById({ workspaceId: 123, userId: 456 }, { batch: true }),
-     *   api.workspaceUsers.getUserById({ workspaceId: 123, userId: 789 }, { batch: true })
-     * )
-     * console.log(results[0].data.fullName, results[1].data.fullName)
-     * ```
-     */
-    batch<T extends readonly BatchRequestDescriptor<unknown>[]>(
-        ...requests: T
-    ): Promise<BatchResponseArray<T>> {
-        const builder = new BatchBuilder({
-            apiToken: this.authToken,
-            baseUrl: this.baseUrl,
-            customFetch: this.customFetch,
-        })
-        return builder.execute(requests)
     }
 }
