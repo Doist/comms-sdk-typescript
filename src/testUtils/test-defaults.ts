@@ -1,3 +1,4 @@
+import { getCommsBaseUri } from '../consts/endpoints'
 import type {
     Channel,
     Comment,
@@ -10,7 +11,7 @@ import type {
 } from '../types/entities'
 
 export const TEST_API_TOKEN = 'test-api-token'
-export const TEST_API_BASE_URL = 'https://comms.todoist.com/api/v1'
+export const TEST_API_BASE_URL = getCommsBaseUri().replace(/\/$/, '')
 
 // Canonical test IDs — shaped so they pass SDK-side validation.
 export const TEST_CHANNEL_ID = '7YpL3oZ4kZ9vP7Q1tR2sX3y'

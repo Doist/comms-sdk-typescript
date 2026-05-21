@@ -89,7 +89,6 @@ export class CommentsClient extends BaseClient {
      *   `recipients` and `groups`. `'channel'` notifies everyone in the channel;
      *   `'thread'` notifies everyone who has interacted with the thread.
      * @param args.attachments - Optional array of {@link Attachment} objects.
-     * @param args.sendAsIntegration - Optional flag to send as integration.
      * @returns The created comment object.
      *
      * @example
@@ -115,8 +114,7 @@ export class CommentsClient extends BaseClient {
      *
      * @param args - The arguments for updating a comment.
      * @param args.id - The comment ID.
-     * @param args.content - Optional new comment content.
-     * @param args.recipients - Optional array of user IDs to notify.
+     * @param args.content - The new comment content.
      * @returns The updated comment object.
      */
     updateComment(args: UpdateCommentArgs): Promise<Comment> {

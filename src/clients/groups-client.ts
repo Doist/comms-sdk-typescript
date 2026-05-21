@@ -49,6 +49,7 @@ export class GroupsClient extends BaseClient {
     /**
      * Gets a single group object by id. Requires `workspaceId`.
      *
+     * @param args - The arguments for getting a group.
      * @param args.id - The group ID.
      * @param args.workspaceId - The workspace ID.
      * @returns The group object.
@@ -109,6 +110,7 @@ export class GroupsClient extends BaseClient {
     /**
      * Permanently deletes a group. Requires `workspaceId`.
      *
+     * @param args - The arguments for deleting a group.
      * @param args.id - The group ID.
      * @param args.workspaceId - The workspace ID.
      */
@@ -121,6 +123,7 @@ export class GroupsClient extends BaseClient {
      *
      * @param args - The arguments for adding a user.
      * @param args.id - The group ID.
+     * @param args.workspaceId - The workspace ID.
      * @param args.userId - The user ID to add.
      */
     addUser(args: AddGroupUserArgs): Promise<StatusOk> {
@@ -132,11 +135,16 @@ export class GroupsClient extends BaseClient {
      *
      * @param args - The arguments for adding users.
      * @param args.id - The group ID.
+     * @param args.workspaceId - The workspace ID.
      * @param args.userIds - Array of user IDs to add.
      *
      * @example
      * ```typescript
-     * await api.groups.addUsers({ id: '7YpL3oZ4kZ9vP7Q1tR2sX45', userIds: [101, 202, 303] })
+     * await api.groups.addUsers({
+     *   id: '7YpL3oZ4kZ9vP7Q1tR2sX45',
+     *   workspaceId: 123,
+     *   userIds: [101, 202, 303],
+     * })
      * ```
      */
     addUsers(args: AddGroupUsersArgs): Promise<StatusOk> {
@@ -148,6 +156,7 @@ export class GroupsClient extends BaseClient {
      *
      * @param args - The arguments for removing a user.
      * @param args.id - The group ID.
+     * @param args.workspaceId - The workspace ID.
      * @param args.userId - The user ID to remove.
      */
     removeUser(args: RemoveGroupUserArgs): Promise<StatusOk> {
@@ -159,6 +168,7 @@ export class GroupsClient extends BaseClient {
      *
      * @param args - The arguments for removing users.
      * @param args.id - The group ID.
+     * @param args.workspaceId - The workspace ID.
      * @param args.userIds - Array of user IDs to remove.
      */
     removeUsers(args: RemoveGroupUsersArgs): Promise<StatusOk> {

@@ -101,6 +101,27 @@ describe('Custom Fetch Core Functionality', () => {
                 }),
             )
         })
+
+        it('routes requests through a custom baseUrl with the configured version', async () => {
+            const mockCustomFetch = vi.fn().mockResolvedValue({
+                ok: true,
+                status: 200,
+                statusText: 'OK',
+                headers: { 'content-type': 'application/json' },
+                text: () => Promise.resolve(JSON.stringify(mockUser)),
+                json: () => Promise.resolve(mockUser),
+            } as CustomFetchResponse)
+
+            const api = new CommsApi(TEST_API_TOKEN, {
+                baseUrl: 'https://proxy.example.com/comms',
+                customFetch: mockCustomFetch,
+            })
+
+            await api.users.getSessionUser()
+
+            const calledUrl = mockCustomFetch.mock.calls[0]?.[0]
+            expect(calledUrl).toBe('https://proxy.example.com/comms/api/v1/users/get_session_user')
+        })
     })
 
     describe('Authentication with Custom Fetch', () => {

@@ -46,8 +46,8 @@ export class ThreadsClient extends BaseClient {
      * `newer_than_ts` / `older_than_ts` epoch-second params on the wire.
      *
      * @param args - The arguments for getting threads.
-     * @param args.channelId - The channel ID.
-     * @param args.workspaceId - Optional workspace ID.
+     * @param args.workspaceId - The workspace ID.
+     * @param args.channelId - Optional channel ID to narrow to a single channel.
      * @param args.archived - Optional flag to include archived threads.
      * @param args.newerThan - Optional date to get threads newer than.
      * @param args.olderThan - Optional date to get threads older than.
@@ -58,7 +58,10 @@ export class ThreadsClient extends BaseClient {
      *
      * @example
      * ```typescript
-     * const threads = await api.threads.getThreads({ channelId: '7YpL3oZ4kZ9vP7Q1tR2sX44' })
+     * const threads = await api.threads.getThreads({
+     *   workspaceId: 123,
+     *   channelId: '7YpL3oZ4kZ9vP7Q1tR2sX44',
+     * })
      * threads.forEach(t => console.log(t.title))
      * ```
      */
@@ -97,10 +100,10 @@ export class ThreadsClient extends BaseClient {
      *
      * @param args - The arguments for creating a thread.
      * @param args.channelId - The channel ID.
-     * @param args.title - The thread title.
+     * @param args.title - Optional thread title.
      * @param args.content - The thread content.
      * @param args.recipients - Optional array of user IDs to notify.
-     * @param args.sendAsIntegration - Optional flag to send as integration.
+     * @param args.groups - Optional array of custom group IDs to notify.
      * @returns The created thread object.
      *
      * @example
@@ -123,7 +126,6 @@ export class ThreadsClient extends BaseClient {
      * @param args.id - The thread ID.
      * @param args.title - Optional new thread title.
      * @param args.content - Optional new thread content.
-     * @param args.recipients - Optional array of user IDs to notify.
      * @returns The updated thread object.
      */
     updateThread(args: UpdateThreadArgs): Promise<Thread> {

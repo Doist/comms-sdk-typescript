@@ -198,7 +198,7 @@ export class UsersClient extends BaseClient {
      * @example
      * ```typescript
      * const user = await api.users.update({
-     *   fullName: 'John Doe',
+     *   name: 'John Doe',
      *   timezone: 'America/New_York',
      * })
      * ```
@@ -208,11 +208,12 @@ export class UsersClient extends BaseClient {
     }
 
     /**
-     * Updates the user's password. Requires `currentPassword`.
+     * Updates the user's password.
      *
      * @param args - Password update arguments.
      * @param args.newPassword - The new password.
-     * @param args.currentPassword - The user's existing password (required to authenticate the change).
+     * @param args.currentPassword - The user's existing password. Optional — sent for
+     *   re-authentication when the account has a password set.
      * @returns The updated user object.
      */
     updatePassword(args: { newPassword: string; currentPassword?: string }): Promise<User> {

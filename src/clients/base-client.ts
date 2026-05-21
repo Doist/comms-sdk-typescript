@@ -36,10 +36,6 @@ export class BaseClient {
      * slash so relative paths resolve cleanly through `URL`.
      */
     protected getBaseUri(): string {
-        if (this.baseUrl) {
-            const normalizedBaseUrl = this.baseUrl.endsWith('/') ? this.baseUrl : `${this.baseUrl}/`
-            return `${normalizedBaseUrl}api/${this.defaultVersion}/`
-        }
-        return getCommsBaseUri(this.defaultVersion)
+        return getCommsBaseUri(this.defaultVersion, this.baseUrl)
     }
 }
