@@ -43,12 +43,38 @@ type MfaChallengeArgs = {
  * `loginWithTodoist` are the available entry points.
  */
 export class UsersClient extends BaseClient {
-    /** Registers a new user via the Todoist-ID bridge. */
+    /**
+     * Registers a new user via the Todoist-ID bridge.
+     *
+     * @param args - Registration arguments.
+     * @param args.name - The new user's full name.
+     * @param args.email - The new user's email.
+     * @param args.password - The new user's password.
+     * @param args.lang - Optional preferred language.
+     * @param args.acceptTerms - Optional flag confirming the user accepts the terms of service.
+     * @returns The newly registered user object.
+     */
     register(args: RegisterArgs): Promise<User> {
         return this.post(`${ENDPOINT_USERS}/register`, args, UserSchema, { authed: false })
     }
 
-    /** Logs in an existing user. */
+    /**
+     * Logs in an existing user.
+     *
+     * @param args - Login credentials.
+     * @param args.email - The user's email.
+     * @param args.password - The user's password.
+     * @param args.setSessionCookie - Optional flag to set a session cookie (default: true).
+     * @returns The authenticated user object.
+     *
+     * @example
+     * ```typescript
+     * const user = await api.users.login({
+     *   email: 'user@example.com',
+     *   password: 'secret',
+     * })
+     * ```
+     */
     login(args: LoginArgs): Promise<User> {
         return this.post(`${ENDPOINT_USERS}/login`, args, UserSchema, { authed: false })
     }
@@ -56,6 +82,8 @@ export class UsersClient extends BaseClient {
     /**
      * Logs in using a valid token (sent via Authorization header). The SDK
      * client is already configured with the token, so no args are needed.
+     *
+     * @returns The authenticated user object.
      */
     loginWithToken(): Promise<User> {
         return this.post(`${ENDPOINT_USERS}/login_with_token`, undefined, UserSchema)
@@ -65,12 +93,24 @@ export class UsersClient extends BaseClient {
      * Exchanges the browser's Todoist web-session cookie for a Comms session.
      * Only useful when running in a browser context on the shared Todoist
      * registrable domain — the cookie is sent automatically by the browser.
+     *
+     * @returns The authenticated user object.
      */
     loginWithTodoist(): Promise<User> {
         return this.post(`${ENDPOINT_USERS}/login_with_todoist`, {}, UserSchema, { authed: false })
     }
 
-    /** Logs in (and auto-signs-up) via a Google ID token. */
+    /**
+     * Logs in (and auto-signs-up) via a Google ID token.
+     *
+     * @param args - Google login arguments.
+     * @param args.idToken - The Google ID token.
+     * @param args.nonce - The nonce that was sent to Google.
+     * @param args.timezone - Optional user timezone.
+     * @param args.lang - Optional preferred language.
+     * @param args.mfaToken - Optional MFA token from a prior `mfaChallenge` response.
+     * @returns The authenticated user object.
+     */
     loginWithGoogle(args: LoginWithGoogleArgs): Promise<User> {
         return this.post(`${ENDPOINT_USERS}/login_with_google`, args, UserSchema, { authed: false })
     }
@@ -78,6 +118,12 @@ export class UsersClient extends BaseClient {
     /**
      * Completes an MFA challenge issued by `loginWithGoogle` (returns an MFA
      * token to pass back to `loginWithGoogle.mfaToken`).
+     *
+     * @param args - MFA challenge arguments.
+     * @param args.challengeId - The challenge ID from the prior login attempt.
+     * @param args.factor - The MFA factor identifier.
+     * @param args.methodType - The MFA method type.
+     * @returns The MFA token to forward to `loginWithGoogle`.
      */
     mfaChallenge(args: MfaChallengeArgs): Promise<MfaChallengeResponse> {
         return request<MfaChallengeResponse>({
@@ -102,7 +148,17 @@ export class UsersClient extends BaseClient {
         }).then(() => undefined)
     }
 
-    /** Returns the user associated with the current access token. */
+    /**
+     * Gets the user associated with the current access token.
+     *
+     * @returns The authenticated user's information.
+     *
+     * @example
+     * ```typescript
+     * const user = await api.users.getSessionUser()
+     * console.log(user.fullName, user.email)
+     * ```
+     */
     getSessionUser(): Promise<User> {
         return this.get(`${ENDPOINT_USERS}/get_session_user`, undefined, UserSchema)
     }
@@ -111,12 +167,23 @@ export class UsersClient extends BaseClient {
      * Fetches a single user. Defaults to the session user when no `id` is
      * passed. Cross-workspace lookups require that the caller and the target
      * share a workspace.
+     *
+     * @param args - Optional lookup arguments.
+     * @param args.id - The user ID. Defaults to the session user.
+     * @param args.workspaceId - Optional workspace ID for cross-workspace lookups.
+     * @param args.asList - Optional flag controlling list-style response.
+     * @returns The user object.
      */
     getUser(args?: { id?: number; workspaceId?: number; asList?: boolean }): Promise<User> {
         return this.get(`${ENDPOINT_USERS}/getone`, args ?? {}, UserSchema)
     }
 
-    /** Looks up a user by their email address. */
+    /**
+     * Looks up a user by their email address.
+     *
+     * @param email - The email to look up.
+     * @returns The user object.
+     */
     getUserByEmail(email: string): Promise<User> {
         return this.get(`${ENDPOINT_USERS}/get_by_email`, { email }, UserSchema)
     }
@@ -124,17 +191,39 @@ export class UsersClient extends BaseClient {
     /**
      * Updates the logged-in user's profile. Most fields are proxied to
      * Todoist (full name, password, language, timezone, etc.).
+     *
+     * @param args - The user properties to update.
+     * @returns The updated user object.
+     *
+     * @example
+     * ```typescript
+     * const user = await api.users.update({
+     *   fullName: 'John Doe',
+     *   timezone: 'America/New_York',
+     * })
+     * ```
      */
     update(args: UpdateUserArgs): Promise<User> {
         return this.post(`${ENDPOINT_USERS}/update`, args, UserSchema)
     }
 
-    /** Updates the user's password. Requires `currentPassword`. */
+    /**
+     * Updates the user's password. Requires `currentPassword`.
+     *
+     * @param args - Password update arguments.
+     * @param args.newPassword - The new password.
+     * @param args.currentPassword - The user's existing password (required to authenticate the change).
+     * @returns The updated user object.
+     */
     updatePassword(args: { newPassword: string; currentPassword?: string }): Promise<User> {
         return this.post(`${ENDPOINT_USERS}/update_password`, args, UserSchema)
     }
 
-    /** Removes the user's avatar. */
+    /**
+     * Removes the user's avatar.
+     *
+     * @returns The updated user object.
+     */
     removeAvatar(): Promise<User> {
         return this.post(`${ENDPOINT_USERS}/remove_avatar`, undefined, UserSchema)
     }
@@ -142,6 +231,14 @@ export class UsersClient extends BaseClient {
     /**
      * Invalidates the current API token and returns the user with a fresh
      * token.
+     *
+     * @returns The user object with the new token.
+     *
+     * @example
+     * ```typescript
+     * const user = await api.users.invalidateToken()
+     * console.log('New token:', user.token)
+     * ```
      */
     invalidateToken(): Promise<User> {
         return this.post(`${ENDPOINT_USERS}/invalidate_token`, undefined, UserSchema)
@@ -151,6 +248,8 @@ export class UsersClient extends BaseClient {
      * Validates that an arbitrary token is still active. Note this is sent
      * as a GET — the token is read from the query string, not the
      * Authorization header.
+     *
+     * @param token - The token to validate.
      */
     validateToken(token: string): Promise<void> {
         return request({
@@ -163,7 +262,18 @@ export class UsersClient extends BaseClient {
         }).then(() => undefined)
     }
 
-    /** Marks the user as active on a workspace (presence beacon). */
+    /**
+     * Marks the user as active on a workspace (presence beacon).
+     *
+     * @param args - Heartbeat arguments.
+     * @param args.workspaceId - The workspace ID.
+     * @param args.platform - The platform identifier (e.g., 'mobile', 'desktop', 'api').
+     *
+     * @example
+     * ```typescript
+     * await api.users.heartbeat({ workspaceId: 123, platform: 'api' })
+     * ```
+     */
     heartbeat(args: { workspaceId: number; platform: string }): Promise<void> {
         return request({
             httpMethod: 'GET',
@@ -175,7 +285,11 @@ export class UsersClient extends BaseClient {
         }).then(() => undefined)
     }
 
-    /** Resets the user's presence for a workspace. */
+    /**
+     * Resets the user's presence for a workspace (marks the user as inactive).
+     *
+     * @param workspaceId - The workspace ID.
+     */
     resetPresence(workspaceId: number): Promise<void> {
         return request({
             httpMethod: 'POST',
@@ -187,7 +301,12 @@ export class UsersClient extends BaseClient {
         }).then(() => undefined)
     }
 
-    /** Checks whether an email address is registered (and verified). */
+    /**
+     * Checks whether an email address is registered (and verified).
+     *
+     * @param email - The email to check.
+     * @returns Object indicating whether the email exists and is verified.
+     */
     checkEmail(email: string): Promise<EmailExistsResponse> {
         return request<EmailExistsResponse>({
             httpMethod: 'POST',
@@ -202,6 +321,8 @@ export class UsersClient extends BaseClient {
     /**
      * Returns the current per-channel mail unsubscribe settings for the
      * caller's primary email.
+     *
+     * @returns Object mapping email-type keys to their opt-out flag.
      */
     getUnsubscribeSettings(): Promise<Record<string, boolean>> {
         return request<Record<string, boolean>>({
@@ -214,7 +335,12 @@ export class UsersClient extends BaseClient {
         }).then((response) => response.data)
     }
 
-    /** Toggles per-email-type opt-out settings. */
+    /**
+     * Toggles per-email-type opt-out settings.
+     *
+     * @param settings - Object mapping email-type keys to their opt-out flag.
+     * @returns Status object with `"ok"` status.
+     */
     updateUnsubscribeSettings(settings: Record<string, boolean>): Promise<{ status: string }> {
         return request<{ status: string }>({
             httpMethod: 'POST',

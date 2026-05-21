@@ -19,9 +19,26 @@ export const CommentListSchema = z.array(CommentSchema)
  */
 export class CommentsClient extends BaseClient {
     /**
-     * Lists comments in a thread. `newerThan` / `olderThan` (`Date`) are
+     * Gets all comments for a thread. `newerThan` / `olderThan` (`Date`) are
      * converted to `newer_than_ts` / `older_than_ts` epoch seconds on the
      * wire.
+     *
+     * @param args - The arguments for getting comments.
+     * @param args.threadId - The thread ID.
+     * @param args.from - @deprecated Use `newerThan` instead.
+     * @param args.newerThan - Optional date to get comments newer than.
+     * @param args.olderThan - Optional date to get comments older than.
+     * @param args.limit - Optional limit on number of comments returned.
+     * @returns An array of comment objects.
+     *
+     * @example
+     * ```typescript
+     * const comments = await api.comments.getComments({
+     *   threadId: '7YpL3oZ4kZ9vP7Q1tR2sX3z',
+     *   newerThan: new Date('2024-01-01'),
+     * })
+     * comments.forEach(c => console.log(c.content))
+     * ```
      */
     getComments(args: GetCommentsArgs): Promise<Comment[]> {
         const params: Record<string, unknown> = { threadId: args.threadId }
@@ -40,7 +57,12 @@ export class CommentsClient extends BaseClient {
         }).then((response) => CommentListSchema.parse(response.data))
     }
 
-    /** Fetches a single comment by ID. The API wraps it in `{comment: ...}`. */
+    /**
+     * Gets a single comment object by id. The API wraps it in `{comment: ...}`.
+     *
+     * @param id - The comment ID.
+     * @returns The comment object.
+     */
     getComment(id: string): Promise<Comment> {
         const wrappedSchema = z.object({ comment: CommentSchema }).transform((data) => data.comment)
         return request<Comment>({
@@ -54,7 +76,32 @@ export class CommentsClient extends BaseClient {
     }
 
     /**
-     * Creates a new comment. `id` is auto-generated if not supplied.
+     * Creates a new comment on a thread. `id` is auto-generated if not supplied.
+     *
+     * @param args - The arguments for creating a comment.
+     * @param args.threadId - The thread ID.
+     * @param args.content - The comment content.
+     * @param args.recipients - Optional array of user IDs to notify directly.
+     * @param args.groups - Optional array of custom group IDs to notify.
+     * @param args.directMentions - Optional array of user IDs that were @-mentioned in
+     *   `content`.
+     * @param args.notifyAudience - Optional broader audience to notify in addition to
+     *   `recipients` and `groups`. `'channel'` notifies everyone in the channel;
+     *   `'thread'` notifies everyone who has interacted with the thread.
+     * @param args.attachments - Optional array of {@link Attachment} objects.
+     * @param args.sendAsIntegration - Optional flag to send as integration.
+     * @returns The created comment object.
+     *
+     * @example
+     * ```typescript
+     * // Notify everyone who has interacted with the thread, plus two extra users.
+     * const comment = await api.comments.createComment({
+     *   threadId: '7YpL3oZ4kZ9vP7Q1tR2sX3z',
+     *   content: 'Great idea! Let\'s proceed.',
+     *   notifyAudience: 'thread',
+     *   recipients: [101, 202],
+     * })
+     * ```
      */
     createComment(args: CreateCommentArgs): Promise<Comment> {
         return addCommentRequest(
@@ -63,7 +110,15 @@ export class CommentsClient extends BaseClient {
         )
     }
 
-    /** Updates a comment. */
+    /**
+     * Updates a comment's properties.
+     *
+     * @param args - The arguments for updating a comment.
+     * @param args.id - The comment ID.
+     * @param args.content - Optional new comment content.
+     * @param args.recipients - Optional array of user IDs to notify.
+     * @returns The updated comment object.
+     */
     updateComment(args: UpdateCommentArgs): Promise<Comment> {
         return request<Comment>({
             httpMethod: 'POST',
@@ -75,7 +130,11 @@ export class CommentsClient extends BaseClient {
         }).then((response) => CommentSchema.parse(response.data))
     }
 
-    /** Permanently deletes a comment. */
+    /**
+     * Permanently deletes a comment.
+     *
+     * @param id - The comment ID.
+     */
     deleteComment(id: string): Promise<StatusOk> {
         return request<StatusOk>({
             httpMethod: 'POST',
@@ -88,7 +147,18 @@ export class CommentsClient extends BaseClient {
     }
 
     /**
-     * Marks the user's read position in a thread. Comment IDs are strings.
+     * Marks the user's read position in a thread. Used to track where the user has read up to,
+     * so clients can scroll to this position and show a visual indicator (blue line).
+     * Comment IDs are strings.
+     *
+     * @param args - The arguments for marking read position.
+     * @param args.threadId - The thread ID.
+     * @param args.commentId - The comment ID to mark as the last read position.
+     *
+     * @example
+     * ```typescript
+     * await api.comments.markPosition({ threadId: '7YpL3oZ4kZ9vP7Q1tR2sX3z', commentId: '7YpL3oZ4kZ9vP7Q1tR2sX41' })
+     * ```
      */
     markPosition(args: MarkCommentPositionArgs): Promise<StatusOk> {
         return request<StatusOk>({

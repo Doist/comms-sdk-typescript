@@ -15,6 +15,26 @@ import { BaseClient } from './base-client'
 export class SearchClient extends BaseClient {
     /**
      * Searches across all threads and conversations in a workspace.
+     *
+     * @param args - The arguments for searching.
+     * @param args.query - The search query string. Optional when `mentionSelf: true` is set; required otherwise.
+     * @param args.workspaceId - The workspace ID to search in.
+     * @param args.channelIds - Optional array of channel IDs to filter by.
+     * @param args.authorIds - Optional array of author user IDs to filter by.
+     * @param args.mentionSelf - Optional flag to filter by mentions of the current user. When true, `query` may be omitted.
+     * @param args.dateFrom - Optional start date for filtering (YYYY-MM-DD).
+     * @param args.dateTo - Optional end date for filtering (YYYY-MM-DD).
+     * @param args.limit - Optional limit on number of results returned.
+     * @param args.cursor - Optional cursor for pagination.
+     * @returns Search results with pagination.
+     *
+     * @example
+     * ```typescript
+     * const results = await api.search.search({
+     *   query: 'important meeting',
+     *   workspaceId: 123,
+     * })
+     * ```
      */
     search(args: SearchArgs): Promise<SearchResponse> {
         const params: Record<string, unknown> = { workspace_id: args.workspaceId }
@@ -42,6 +62,21 @@ export class SearchClient extends BaseClient {
 
     /**
      * Searches within comments of a specific thread.
+     *
+     * @param args - The arguments for searching within a thread.
+     * @param args.query - The search query string.
+     * @param args.threadId - The thread ID to search in.
+     * @param args.limit - Optional limit on number of results returned.
+     * @param args.cursor - Optional cursor for pagination.
+     * @returns Comment IDs that match the search query.
+     *
+     * @example
+     * ```typescript
+     * const results = await api.search.searchThread({
+     *   query: 'deadline',
+     *   threadId: '7YpL3oZ4kZ9vP7Q1tR2sX3z',
+     * })
+     * ```
      */
     searchThread(args: SearchThreadArgs): Promise<SearchThreadResponse> {
         const params: Record<string, unknown> = {
@@ -63,6 +98,21 @@ export class SearchClient extends BaseClient {
 
     /**
      * Searches within messages of a specific conversation.
+     *
+     * @param args - The arguments for searching within a conversation.
+     * @param args.query - The search query string.
+     * @param args.conversationId - The conversation ID to search in.
+     * @param args.limit - Optional limit on number of results returned.
+     * @param args.cursor - Optional cursor for pagination.
+     * @returns Message IDs that match the search query.
+     *
+     * @example
+     * ```typescript
+     * const results = await api.search.searchConversation({
+     *   query: 'budget',
+     *   conversationId: '7YpL3oZ4kZ9vP7Q1tR2sX42',
+     * })
+     * ```
      */
     searchConversation(args: SearchConversationArgs): Promise<SearchConversationResponse> {
         const params: Record<string, unknown> = {

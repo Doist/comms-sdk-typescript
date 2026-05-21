@@ -36,7 +36,20 @@ const GetUnreadResponseSchema = z.object({
  * already-assigned `id` and your generated one is silently dropped.
  */
 export class ConversationsClient extends BaseClient {
-    /** Lists conversations in a workspace. */
+    /**
+     * Gets all conversations for a workspace.
+     *
+     * @param args - The arguments for getting conversations.
+     * @param args.workspaceId - The workspace ID.
+     * @param args.archived - Optional flag to include archived conversations.
+     * @returns An array of conversation objects.
+     *
+     * @example
+     * ```typescript
+     * const conversations = await api.conversations.getConversations({ workspaceId: 123 })
+     * conversations.forEach(c => console.log(c.title))
+     * ```
+     */
     getConversations(args: GetConversationsArgs): Promise<Conversation[]> {
         return request<Conversation[]>({
             httpMethod: 'GET',
@@ -48,7 +61,12 @@ export class ConversationsClient extends BaseClient {
         }).then((response) => ConversationListSchema.parse(response.data))
     }
 
-    /** Fetches a single conversation by ID. */
+    /**
+     * Gets a single conversation object by id.
+     *
+     * @param id - The conversation ID.
+     * @returns The conversation object.
+     */
     getConversation(id: string): Promise<Conversation> {
         return this.simple('GET', 'getone', { id }, ConversationSchema)
     }
@@ -57,6 +75,19 @@ export class ConversationsClient extends BaseClient {
      * Gets an existing 1:1 / group conversation with `userIds`, or creates a
      * new one. `id` is auto-generated if not supplied — on dedupe, the
      * backend returns the existing conversation's `id` instead.
+     *
+     * @param args - The arguments for getting or creating a conversation.
+     * @param args.workspaceId - The workspace ID.
+     * @param args.userIds - Array of user IDs to include in the conversation.
+     * @returns The conversation object (existing or newly created).
+     *
+     * @example
+     * ```typescript
+     * const conversation = await api.conversations.getOrCreateConversation({
+     *   workspaceId: 123,
+     *   userIds: [101, 202, 303],
+     * })
+     * ```
      */
     getOrCreateConversation(args: GetOrCreateConversationArgs): Promise<Conversation> {
         return this.simple(
@@ -67,41 +98,122 @@ export class ConversationsClient extends BaseClient {
         )
     }
 
-    /** Updates a conversation's title. */
+    /**
+     * Updates a conversation's title.
+     *
+     * @param args - The arguments for updating a conversation.
+     * @param args.id - The conversation ID.
+     * @param args.title - The new title for the conversation.
+     * @param args.archived - Optional flag to archive/unarchive the conversation.
+     * @returns The updated conversation object.
+     *
+     * @example
+     * ```typescript
+     * const conversation = await api.conversations.updateConversation({
+     *   id: '7YpL3oZ4kZ9vP7Q1tR2sX42',
+     *   title: 'New Title',
+     * })
+     * ```
+     */
     updateConversation(args: UpdateConversationArgs): Promise<Conversation> {
         const params: Record<string, unknown> = { id: args.id, title: args.title }
         if (args.archived !== undefined) params.archived = args.archived
         return this.simple('POST', 'update', params, ConversationSchema)
     }
 
+    /**
+     * Archives a conversation.
+     *
+     * @param id - The conversation ID.
+     * @returns The updated conversation object.
+     */
     archiveConversation(id: string): Promise<Conversation> {
         return this.simple('GET', 'archive', { id }, ConversationSchema)
     }
 
+    /**
+     * Unarchives a conversation.
+     *
+     * @param id - The conversation ID.
+     * @returns The updated conversation object.
+     */
     unarchiveConversation(id: string): Promise<Conversation> {
         return this.simple('GET', 'unarchive', { id }, ConversationSchema)
     }
 
+    /**
+     * Adds a user to a conversation.
+     *
+     * @param args - The arguments for adding a user.
+     * @param args.id - The conversation ID.
+     * @param args.userId - The user ID to add.
+     * @returns The updated conversation object.
+     */
     addUser(args: AddConversationUserArgs): Promise<Conversation> {
         return this.simple('POST', 'add_user', { ...args }, ConversationSchema)
     }
 
+    /**
+     * Adds multiple users to a conversation.
+     *
+     * @param args - The arguments for adding users.
+     * @param args.id - The conversation ID.
+     * @param args.userIds - Array of user IDs to add.
+     * @returns The updated conversation object.
+     *
+     * @example
+     * ```typescript
+     * await api.conversations.addUsers({ id: '7YpL3oZ4kZ9vP7Q1tR2sX42', userIds: [101, 202] })
+     * ```
+     */
     addUsers(args: AddConversationUsersArgs): Promise<Conversation> {
         return this.simple('POST', 'add_users', { ...args }, ConversationSchema)
     }
 
+    /**
+     * Removes a user from a conversation.
+     *
+     * @param args - The arguments for removing a user.
+     * @param args.id - The conversation ID.
+     * @param args.userId - The user ID to remove.
+     * @returns The updated conversation object.
+     */
     removeUser(args: RemoveConversationUserArgs): Promise<Conversation> {
         return this.simple('POST', 'remove_user', { ...args }, ConversationSchema)
     }
 
+    /**
+     * Removes multiple users from a conversation.
+     *
+     * @param args - The arguments for removing users.
+     * @param args.id - The conversation ID.
+     * @param args.userIds - Array of user IDs to remove.
+     * @returns The updated conversation object.
+     */
     removeUsers(args: RemoveConversationUsersArgs): Promise<Conversation> {
         return this.simple('POST', 'remove_users', { ...args }, ConversationSchema)
     }
 
+    /**
+     * Marks a conversation as read.
+     *
+     * @param args - The arguments for marking as read.
+     * @param args.id - The conversation ID.
+     * @param args.objIndex - Optional index of the message to mark as last read.
+     * @param args.messageId - Optional message ID to mark as last read.
+     */
     markRead(args: { id: string; objIndex?: number; messageId?: string }): Promise<StatusOk> {
         return this.simple('POST', 'mark_read', { ...args }, StatusOkSchema)
     }
 
+    /**
+     * Marks a conversation as unread.
+     *
+     * @param args - The arguments for marking as unread.
+     * @param args.id - The conversation ID.
+     * @param args.objIndex - Optional index of the message to mark as last unread.
+     * @param args.messageId - Optional message ID to mark as last unread.
+     */
     markUnread(args: { id: string; objIndex?: number; messageId?: string }): Promise<StatusOk> {
         return this.simple('POST', 'mark_unread', { ...args }, StatusOkSchema)
     }
@@ -109,19 +221,47 @@ export class ConversationsClient extends BaseClient {
     /**
      * Returns unread conversations for a workspace, paired with the unread
      * version counter.
+     *
+     * @param workspaceId - The workspace ID.
+     * @returns Object containing the array of unread conversation references and a version counter.
      */
     getUnread(workspaceId: number): Promise<{ data: UnreadConversation[]; version: number }> {
         return this.simple('GET', 'get_unread', { workspaceId }, GetUnreadResponseSchema)
     }
 
+    /**
+     * Clears all unread conversations for a workspace.
+     *
+     * @param workspaceId - The workspace ID.
+     */
     clearUnread(workspaceId: number): Promise<StatusOk> {
         return this.simple('GET', 'clear_unread', { workspaceId }, StatusOkSchema)
     }
 
+    /**
+     * Mutes a conversation for a specified number of minutes.
+     * The user will receive no notifications from this conversation during that period.
+     *
+     * @param args - The arguments for muting a conversation.
+     * @param args.id - The conversation ID.
+     * @param args.minutes - Number of minutes to mute the conversation.
+     * @returns The updated conversation object.
+     *
+     * @example
+     * ```typescript
+     * const conversation = await api.conversations.muteConversation({ id: '7YpL3oZ4kZ9vP7Q1tR2sX42', minutes: 30 })
+     * ```
+     */
     muteConversation(args: MuteConversationArgs): Promise<Conversation> {
         return this.simple('GET', 'mute', { ...args }, ConversationSchema)
     }
 
+    /**
+     * Unmutes a conversation.
+     *
+     * @param id - The conversation ID.
+     * @returns The updated conversation object.
+     */
     unmuteConversation(id: string): Promise<Conversation> {
         return this.simple('GET', 'unmute', { id }, ConversationSchema)
     }

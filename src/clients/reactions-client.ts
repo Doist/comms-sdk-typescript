@@ -21,7 +21,20 @@ function reactionTarget(args: {
  * Client for interacting with Comms reaction endpoints.
  */
 export class ReactionsClient extends BaseClient {
-    /** Adds an emoji reaction to a thread, comment, or conversation message. */
+    /**
+     * Adds an emoji reaction to a thread, comment, or conversation message.
+     *
+     * @param args - The arguments for adding a reaction.
+     * @param args.threadId - Optional thread ID.
+     * @param args.commentId - Optional comment ID.
+     * @param args.messageId - Optional message ID (for conversation messages).
+     * @param args.reaction - The reaction emoji to add.
+     *
+     * @example
+     * ```typescript
+     * await api.reactions.add({ threadId: '7YpL3oZ4kZ9vP7Q1tR2sX3z', reaction: '👍' })
+     * ```
+     */
     add(args: AddReactionArgs): Promise<void> {
         return request<void>({
             httpMethod: 'POST',
@@ -38,6 +51,18 @@ export class ReactionsClient extends BaseClient {
      *
      * Returns an object with emoji reactions as keys and arrays of user IDs as
      * values, or null if no reactions.
+     *
+     * @param args - The arguments for getting reactions.
+     * @param args.threadId - Optional thread ID.
+     * @param args.commentId - Optional comment ID.
+     * @param args.messageId - Optional message ID (for conversation messages).
+     * @returns A reaction object with emoji reactions as keys and arrays of user IDs as values, or null if no reactions.
+     *
+     * @example
+     * ```typescript
+     * const reactions = await api.reactions.get({ threadId: '7YpL3oZ4kZ9vP7Q1tR2sX3z' })
+     * // Returns: { "👍": [101, 202, 303], "❤️": [101, 202] }
+     * ```
      */
     get(args: GetReactionsArgs): Promise<ReactionObject> {
         return request<ReactionObject>({
@@ -50,7 +75,20 @@ export class ReactionsClient extends BaseClient {
         }).then((response) => response.data)
     }
 
-    /** Removes an emoji reaction from a thread, comment, or conversation message. */
+    /**
+     * Removes an emoji reaction from a thread, comment, or conversation message.
+     *
+     * @param args - The arguments for removing a reaction.
+     * @param args.threadId - Optional thread ID.
+     * @param args.commentId - Optional comment ID.
+     * @param args.messageId - Optional message ID (for conversation messages).
+     * @param args.reaction - The reaction emoji to remove.
+     *
+     * @example
+     * ```typescript
+     * await api.reactions.remove({ threadId: '7YpL3oZ4kZ9vP7Q1tR2sX3z', reaction: '👍' })
+     * ```
+     */
     remove(args: RemoveReactionArgs): Promise<void> {
         return request<void>({
             httpMethod: 'POST',
