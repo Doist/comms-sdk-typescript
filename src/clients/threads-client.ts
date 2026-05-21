@@ -51,8 +51,6 @@ export class ThreadsClient extends BaseClient {
      * @param args.archived - Optional flag to include archived threads.
      * @param args.newerThan - Optional date to get threads newer than.
      * @param args.olderThan - Optional date to get threads older than.
-     * @param args.newer_than_ts - @deprecated Use `newerThan` instead.
-     * @param args.older_than_ts - @deprecated Use `olderThan` instead.
      * @param args.limit - Optional limit on number of threads returned.
      * @returns An array of thread objects.
      *
@@ -66,13 +64,11 @@ export class ThreadsClient extends BaseClient {
      * ```
      */
     getThreads(args: GetThreadsArgs): Promise<Thread[]> {
-        const { newerThan, olderThan, newer_than_ts, older_than_ts, ...rest } = args
-        const resolvedNewerThan = newerThan ? Math.floor(newerThan.getTime() / 1000) : newer_than_ts
-        const resolvedOlderThan = olderThan ? Math.floor(olderThan.getTime() / 1000) : older_than_ts
+        const { newerThan, olderThan, ...rest } = args
         const params = {
             ...rest,
-            ...(resolvedNewerThan != null ? { newer_than_ts: resolvedNewerThan } : {}),
-            ...(resolvedOlderThan != null ? { older_than_ts: resolvedOlderThan } : {}),
+            ...(newerThan ? { newer_than_ts: Math.floor(newerThan.getTime() / 1000) } : {}),
+            ...(olderThan ? { older_than_ts: Math.floor(olderThan.getTime() / 1000) } : {}),
         }
 
         return request<Thread[]>({
