@@ -1,3 +1,9 @@
+## [0.2.0](https://github.com/Doist/comms-sdk-typescript/compare/v0.1.1...v0.2.0) (2026-05-21)
+
+### Features
+
+* Update README to trigger release ([#9](https://github.com/Doist/comms-sdk-typescript/issues/9)) ([8cfa533](https://github.com/Doist/comms-sdk-typescript/commit/8cfa533c4a36ea461806ee8c278f78268b196aec))
+
 ## [0.1.1](https://github.com/Doist/comms-sdk-typescript/compare/v0.1.0...v0.1.1) (2026-05-21)
 
 ### Bug Fixes
