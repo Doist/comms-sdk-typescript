@@ -51,8 +51,6 @@ export class ThreadsClient extends BaseClient {
      * @param args.archived - Optional flag to include archived threads.
      * @param args.newerThan - Optional date to get threads newer than.
      * @param args.olderThan - Optional date to get threads older than.
-     * @param args.newer_than_ts - @deprecated Use `newerThan` instead.
-     * @param args.older_than_ts - @deprecated Use `olderThan` instead.
      * @param args.limit - Optional limit on number of threads returned.
      * @returns An array of thread objects.
      *
@@ -66,14 +64,12 @@ export class ThreadsClient extends BaseClient {
      * ```
      */
     getThreads(args: GetThreadsArgs): Promise<Thread[]> {
-        const { newerThan, olderThan, newer_than_ts, older_than_ts, ...rest } = args
-        const resolvedNewerThan = newerThan ? Math.floor(newerThan.getTime() / 1000) : newer_than_ts
-        const resolvedOlderThan = olderThan ? Math.floor(olderThan.getTime() / 1000) : older_than_ts
-        const params = {
-            ...rest,
-            ...(resolvedNewerThan != null ? { newer_than_ts: resolvedNewerThan } : {}),
-            ...(resolvedOlderThan != null ? { older_than_ts: resolvedOlderThan } : {}),
-        }
+        const params: Record<string, unknown> = { workspaceId: args.workspaceId }
+        if (args.channelId != null) params.channelId = args.channelId
+        if (args.archived != null) params.archived = args.archived
+        if (args.limit != null) params.limit = args.limit
+        if (args.newerThan) params.newer_than_ts = Math.floor(args.newerThan.getTime() / 1000)
+        if (args.olderThan) params.older_than_ts = Math.floor(args.olderThan.getTime() / 1000)
 
         return request<Thread[]>({
             httpMethod: 'GET',

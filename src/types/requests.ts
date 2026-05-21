@@ -127,30 +127,16 @@ export const GetThreadsArgsSchema = z.object({
     limit: z.number().nullable().optional(),
 })
 
-export type GetThreadsArgs = Omit<
-    z.infer<typeof GetThreadsArgsSchema>,
-    'newerThan' | 'olderThan'
-> & {
-    newerThan?: Date | null
-    olderThan?: Date | null
-    /** @deprecated Use `newerThan` instead. */
-    newer_than_ts?: number | null
-    /** @deprecated Use `olderThan` instead. */
-    older_than_ts?: number | null
-}
+export type GetThreadsArgs = z.infer<typeof GetThreadsArgsSchema>
 
 export const GetCommentsArgsSchema = z.object({
     threadId: z.string(),
-    from: z.date().nullable().optional(),
     newerThan: z.date().nullable().optional(),
     olderThan: z.date().nullable().optional(),
     limit: z.number().nullable().optional(),
 })
 
-export type GetCommentsArgs = Omit<z.infer<typeof GetCommentsArgsSchema>, 'from'> & {
-    /** @deprecated Use `newerThan` instead. */
-    from?: Date | null
-}
+export type GetCommentsArgs = z.infer<typeof GetCommentsArgsSchema>
 
 export const GetConversationsArgsSchema = z.object({
     workspaceId: z.number(),
@@ -248,10 +234,6 @@ export type GetInboxArgs = {
     workspaceId: number
     newerThan?: Date
     olderThan?: Date
-    /** @deprecated Use `newerThan` instead. */
-    since?: Date
-    /** @deprecated Use `olderThan` instead. */
-    until?: Date
     limit?: number
     cursor?: string
     archiveFilter?: ArchiveFilter
@@ -261,10 +243,6 @@ export type ArchiveAllArgs = {
     workspaceId: number
     channelIds?: string[]
     olderThan?: Date
-    /** @deprecated Use `olderThan` instead. */
-    until?: Date
-    /** @deprecated Not supported by the archive_all endpoint — this value is ignored. */
-    since?: Date
 }
 
 // Reactions.

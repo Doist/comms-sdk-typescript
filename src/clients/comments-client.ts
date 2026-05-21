@@ -25,7 +25,6 @@ export class CommentsClient extends BaseClient {
      *
      * @param args - The arguments for getting comments.
      * @param args.threadId - The thread ID.
-     * @param args.from - @deprecated Use `newerThan` instead.
      * @param args.newerThan - Optional date to get comments newer than.
      * @param args.olderThan - Optional date to get comments older than.
      * @param args.limit - Optional limit on number of comments returned.
@@ -42,8 +41,7 @@ export class CommentsClient extends BaseClient {
      */
     getComments(args: GetCommentsArgs): Promise<Comment[]> {
         const params: Record<string, unknown> = { threadId: args.threadId }
-        const newerThan = args.newerThan ?? args.from
-        if (newerThan) params.newerThanTs = Math.floor(newerThan.getTime() / 1000)
+        if (args.newerThan) params.newerThanTs = Math.floor(args.newerThan.getTime() / 1000)
         if (args.olderThan) params.olderThanTs = Math.floor(args.olderThan.getTime() / 1000)
         if (args.limit) params.limit = args.limit
 
