@@ -103,6 +103,28 @@ const api = new CommsApi(tokenResponse.accessToken)
 const user = await api.users.getSessionUser()
 ```
 
+### Short-lived processes (CLIs, scripts)
+
+On Node, the SDK keeps a connection pool alive across requests so HTTP/2
+multiplexing and TLS reuse actually work. Long-running processes don't
+need to think about it. **Short-lived processes should `await api.close()`
+before exit**, otherwise Node's event loop waits ~4 seconds for idle
+sockets to time out:
+
+```typescript
+const api = new CommsApi('YOUR_API_TOKEN')
+try {
+    await api.users.getSessionUser()
+} finally {
+    await api.close()
+}
+```
+
+`api.close()` drains the process-global pool, so it also covers code
+paths that only use the standalone OAuth helpers (`getAuthToken`,
+`revokeAuthToken`, `registerClient`). Those flows can also import
+`closeDefaultDispatcher` directly.
+
 ## Development
 
 - `npm install`

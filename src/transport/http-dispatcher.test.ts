@@ -2,6 +2,7 @@ import { createServer, type Server } from 'node:http'
 import type { AddressInfo } from 'node:net'
 import { gzipSync } from 'node:zlib'
 import {
+    closeDefaultDispatcher,
     getDefaultDispatcher,
     resetDefaultDispatcherForTests,
     suppressExperimentalWarningsSync,
@@ -137,6 +138,33 @@ describe('httpDispatcher', () => {
         } finally {
             await new Promise<void>((resolve) => httpServer.close(() => resolve()))
         }
+    })
+
+    it('close() invokes the dispatcher close and lets a new one be created', async () => {
+        const closeCalls: number[] = []
+
+        vi.doMock('undici', () => ({
+            EnvHttpProxyAgent: class {
+                compose() {
+                    return this
+                }
+                async close() {
+                    closeCalls.push(1)
+                }
+            },
+            interceptors: {
+                decompress: () => (dispatch: unknown) => dispatch,
+            },
+        }))
+
+        const first = await getDefaultDispatcher()
+        expect(first).toBeDefined()
+
+        await closeDefaultDispatcher()
+        expect(closeCalls).toHaveLength(1)
+
+        const second = await getDefaultDispatcher()
+        expect(second).not.toBe(first)
     })
 })
 
