@@ -1,4 +1,4 @@
-# Comms SDK for TypeScript
+# Comms SDK TypeScript
 
 The official TypeScript SDK for the Comms REST API.
 
