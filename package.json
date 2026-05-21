@@ -36,7 +36,7 @@
         "type-check": "npx tsc --noEmit",
         "check": "oxlint src && oxfmt --check",
         "check:fix": "oxlint src --fix && oxfmt",
-        "attw": "npx @arethetypeswrong/cli --pack --ignore-rules fallback-condition false-esm",
+        "attw": "attw --pack --ignore-rules fallback-condition false-esm",
         "audit": "npm audit --audit-level=moderate",
         "integrity-checks": "npm-run-all clean check test build attw",
         "prepublishOnly": "npm run integrity-checks",
@@ -50,6 +50,7 @@
         "zod": "4.1.12"
     },
     "devDependencies": {
+        "@arethetypeswrong/cli": "0.18.2",
         "@semantic-release/changelog": "6.0.3",
         "@semantic-release/git": "10.0.1",
         "conventional-changelog-conventionalcommits": "9.3.0",
@@ -69,6 +70,9 @@
     },
     "peerDependencies": {
         "type-fest": "^4.12.0 || ^5.1.0"
+    },
+    "overrides": {
+        "fflate": "0.8.2"
     },
     "husky": {
         "hooks": {
