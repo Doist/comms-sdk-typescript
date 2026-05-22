@@ -4,6 +4,7 @@ import { request } from '../transport/http-client'
 import {
     type Conversation,
     ConversationSchema,
+    createConversationSchema,
     type StatusOk,
     StatusOkSchema,
     type UnreadConversation,
@@ -36,6 +37,15 @@ const GetUnreadResponseSchema = z.object({
  * already-assigned `id` and your generated one is silently dropped.
  */
 export class ConversationsClient extends BaseClient {
+    private readonly linkBaseUrl = this.getLinkBaseUrl()
+    // Reuse the shared singletons when no custom base is configured.
+    private readonly conversationSchema = this.linkBaseUrl
+        ? createConversationSchema(this.linkBaseUrl)
+        : ConversationSchema
+    private readonly conversationListSchema = this.linkBaseUrl
+        ? z.array(this.conversationSchema)
+        : ConversationListSchema
+
     /**
      * Gets all conversations for a workspace.
      *
@@ -58,7 +68,7 @@ export class ConversationsClient extends BaseClient {
             apiToken: this.apiToken,
             payload: args,
             customFetch: this.customFetch,
-        }).then((response) => ConversationListSchema.parse(response.data))
+        }).then((response) => this.conversationListSchema.parse(response.data))
     }
 
     /**
@@ -68,7 +78,7 @@ export class ConversationsClient extends BaseClient {
      * @returns The conversation object.
      */
     getConversation(id: string): Promise<Conversation> {
-        return this.simple('GET', 'getone', { id }, ConversationSchema)
+        return this.simple('GET', 'getone', { id }, this.conversationSchema)
     }
 
     /**
@@ -94,7 +104,7 @@ export class ConversationsClient extends BaseClient {
             'GET',
             'get_or_create',
             { ...args, id: resolveCreateId(args.id) },
-            ConversationSchema,
+            this.conversationSchema,
         )
     }
 
@@ -118,7 +128,7 @@ export class ConversationsClient extends BaseClient {
     updateConversation(args: UpdateConversationArgs): Promise<Conversation> {
         const params: Record<string, unknown> = { id: args.id, title: args.title }
         if (args.archived !== undefined) params.archived = args.archived
-        return this.simple('POST', 'update', params, ConversationSchema)
+        return this.simple('POST', 'update', params, this.conversationSchema)
     }
 
     /**
@@ -128,7 +138,7 @@ export class ConversationsClient extends BaseClient {
      * @returns The updated conversation object.
      */
     archiveConversation(id: string): Promise<Conversation> {
-        return this.simple('GET', 'archive', { id }, ConversationSchema)
+        return this.simple('GET', 'archive', { id }, this.conversationSchema)
     }
 
     /**
@@ -138,7 +148,7 @@ export class ConversationsClient extends BaseClient {
      * @returns The updated conversation object.
      */
     unarchiveConversation(id: string): Promise<Conversation> {
-        return this.simple('GET', 'unarchive', { id }, ConversationSchema)
+        return this.simple('GET', 'unarchive', { id }, this.conversationSchema)
     }
 
     /**
@@ -150,7 +160,7 @@ export class ConversationsClient extends BaseClient {
      * @returns The updated conversation object.
      */
     addUser(args: AddConversationUserArgs): Promise<Conversation> {
-        return this.simple('POST', 'add_user', { ...args }, ConversationSchema)
+        return this.simple('POST', 'add_user', { ...args }, this.conversationSchema)
     }
 
     /**
@@ -167,7 +177,7 @@ export class ConversationsClient extends BaseClient {
      * ```
      */
     addUsers(args: AddConversationUsersArgs): Promise<Conversation> {
-        return this.simple('POST', 'add_users', { ...args }, ConversationSchema)
+        return this.simple('POST', 'add_users', { ...args }, this.conversationSchema)
     }
 
     /**
@@ -179,7 +189,7 @@ export class ConversationsClient extends BaseClient {
      * @returns The updated conversation object.
      */
     removeUser(args: RemoveConversationUserArgs): Promise<Conversation> {
-        return this.simple('POST', 'remove_user', { ...args }, ConversationSchema)
+        return this.simple('POST', 'remove_user', { ...args }, this.conversationSchema)
     }
 
     /**
@@ -191,7 +201,7 @@ export class ConversationsClient extends BaseClient {
      * @returns The updated conversation object.
      */
     removeUsers(args: RemoveConversationUsersArgs): Promise<Conversation> {
-        return this.simple('POST', 'remove_users', { ...args }, ConversationSchema)
+        return this.simple('POST', 'remove_users', { ...args }, this.conversationSchema)
     }
 
     /**
@@ -253,7 +263,7 @@ export class ConversationsClient extends BaseClient {
      * ```
      */
     muteConversation(args: MuteConversationArgs): Promise<Conversation> {
-        return this.simple('GET', 'mute', { ...args }, ConversationSchema)
+        return this.simple('GET', 'mute', { ...args }, this.conversationSchema)
     }
 
     /**
@@ -263,7 +273,7 @@ export class ConversationsClient extends BaseClient {
      * @returns The updated conversation object.
      */
     unmuteConversation(id: string): Promise<Conversation> {
-        return this.simple('GET', 'unmute', { id }, ConversationSchema)
+        return this.simple('GET', 'unmute', { id }, this.conversationSchema)
     }
 
     private simple<T>(

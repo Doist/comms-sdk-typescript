@@ -1,8 +1,11 @@
+import { z } from 'zod'
 import { ENDPOINT_INBOX } from '../consts/endpoints'
 import { request } from '../transport/http-client'
-import { type InboxThread, InboxThreadSchema } from '../types/entities'
+import { createInboxThreadSchema, type InboxThread, InboxThreadSchema } from '../types/entities'
 import type { ArchiveAllArgs, GetInboxArgs } from '../types/requests'
 import { BaseClient } from './base-client'
+
+export const InboxThreadListSchema = z.array(InboxThreadSchema)
 
 type InboxCountResponse = {
     data: number
@@ -11,6 +14,15 @@ type InboxCountResponse = {
 
 /** Client for `/api/v1/inbox/`. */
 export class InboxClient extends BaseClient {
+    private readonly linkBaseUrl = this.getLinkBaseUrl()
+    // Reuse the shared singletons when no custom base is configured.
+    private readonly inboxThreadSchema = this.linkBaseUrl
+        ? createInboxThreadSchema(this.linkBaseUrl)
+        : InboxThreadSchema
+    private readonly inboxThreadListSchema = this.linkBaseUrl
+        ? z.array(this.inboxThreadSchema)
+        : InboxThreadListSchema
+
     /**
      * Gets inbox items (threads).
      *
@@ -52,7 +64,7 @@ export class InboxClient extends BaseClient {
             apiToken: this.apiToken,
             payload: params,
             customFetch: this.customFetch,
-        }).then((response) => response.data.map((thread) => InboxThreadSchema.parse(thread)))
+        }).then((response) => this.inboxThreadListSchema.parse(response.data))
     }
 
     /**

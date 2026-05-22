@@ -1,7 +1,13 @@
 import { z } from 'zod'
 import { ENDPOINT_COMMENTS } from '../consts/endpoints'
 import { request } from '../transport/http-client'
-import { type Comment, CommentSchema, type StatusOk, StatusOkSchema } from '../types/entities'
+import {
+    type Comment,
+    CommentSchema,
+    createCommentSchema,
+    type StatusOk,
+    StatusOkSchema,
+} from '../types/entities'
 import type {
     CreateCommentArgs,
     GetCommentsArgs,
@@ -18,6 +24,19 @@ export const CommentListSchema = z.array(CommentSchema)
  * on `createComment` when the caller doesn't supply one.
  */
 export class CommentsClient extends BaseClient {
+    private readonly linkBaseUrl = this.getLinkBaseUrl()
+    // Reuse the shared singletons when no custom base is configured.
+    private readonly commentSchema = this.linkBaseUrl
+        ? createCommentSchema(this.linkBaseUrl)
+        : CommentSchema
+    private readonly commentListSchema = this.linkBaseUrl
+        ? z.array(this.commentSchema)
+        : CommentListSchema
+    // `getone` wraps the comment in `{ comment: ... }`; built once per client.
+    private readonly wrappedCommentSchema = z
+        .object({ comment: this.commentSchema })
+        .transform((data) => data.comment)
+
     /**
      * Gets all comments for a thread. `newerThan` / `olderThan` (`Date`) are
      * converted to `newer_than_ts` / `older_than_ts` epoch seconds on the
@@ -52,7 +71,7 @@ export class CommentsClient extends BaseClient {
             apiToken: this.apiToken,
             payload: params,
             customFetch: this.customFetch,
-        }).then((response) => CommentListSchema.parse(response.data))
+        }).then((response) => this.commentListSchema.parse(response.data))
     }
 
     /**
@@ -62,7 +81,6 @@ export class CommentsClient extends BaseClient {
      * @returns The comment object.
      */
     getComment(id: string): Promise<Comment> {
-        const wrappedSchema = z.object({ comment: CommentSchema }).transform((data) => data.comment)
         return request<Comment>({
             httpMethod: 'GET',
             baseUri: this.getBaseUri(),
@@ -70,7 +88,7 @@ export class CommentsClient extends BaseClient {
             apiToken: this.apiToken,
             payload: { id },
             customFetch: this.customFetch,
-        }).then((response) => wrappedSchema.parse(response.data))
+        }).then((response) => this.wrappedCommentSchema.parse(response.data))
     }
 
     /**
@@ -102,7 +120,12 @@ export class CommentsClient extends BaseClient {
      */
     createComment(args: CreateCommentArgs): Promise<Comment> {
         return addCommentRequest(
-            { baseUri: this.getBaseUri(), apiToken: this.apiToken, customFetch: this.customFetch },
+            {
+                baseUri: this.getBaseUri(),
+                apiToken: this.apiToken,
+                customFetch: this.customFetch,
+                schema: this.commentSchema,
+            },
             args,
         )
     }
@@ -123,7 +146,7 @@ export class CommentsClient extends BaseClient {
             apiToken: this.apiToken,
             payload: { ...args },
             customFetch: this.customFetch,
-        }).then((response) => CommentSchema.parse(response.data))
+        }).then((response) => this.commentSchema.parse(response.data))
     }
 
     /**

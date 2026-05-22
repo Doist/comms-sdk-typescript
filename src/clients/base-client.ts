@@ -38,4 +38,13 @@ export class BaseClient {
     protected getBaseUri(): string {
         return getCommsBaseUri(this.defaultVersion, this.baseUrl)
     }
+
+    /**
+     * Base URL for entity web links, or `undefined` to use getFullCommsURL's
+     * default web app. Trailing-slash normalization happens in
+     * `getFullCommsURL`, so the configured value is returned verbatim.
+     */
+    protected getLinkBaseUrl(): string | undefined {
+        return this.baseUrl
+    }
 }

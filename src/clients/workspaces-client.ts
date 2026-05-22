@@ -1,7 +1,13 @@
 import { z } from 'zod'
 import { ENDPOINT_WORKSPACES } from '../consts/endpoints'
 import { request } from '../transport/http-client'
-import { Channel, ChannelSchema, Workspace, WorkspaceSchema } from '../types/entities'
+import {
+    Channel,
+    ChannelSchema,
+    createChannelSchema,
+    Workspace,
+    WorkspaceSchema,
+} from '../types/entities'
 import { BaseClient } from './base-client'
 
 export const ChannelListSchema = z.array(ChannelSchema)
@@ -11,6 +17,12 @@ export const ChannelListSchema = z.array(ChannelSchema)
  * currently rejects any `color` other than `1` on add/update.
  */
 export class WorkspacesClient extends BaseClient {
+    private readonly linkBaseUrl = this.getLinkBaseUrl()
+    // Reuse the shared singleton when no custom base is configured.
+    private readonly channelListSchema = this.linkBaseUrl
+        ? z.array(createChannelSchema(this.linkBaseUrl))
+        : ChannelListSchema
+
     /**
      * Gets all the user's workspaces.
      *
@@ -165,6 +177,6 @@ export class WorkspacesClient extends BaseClient {
             apiToken: this.apiToken,
             payload: { id },
             customFetch: this.customFetch,
-        }).then((response) => ChannelListSchema.parse(response.data))
+        }).then((response) => this.channelListSchema.parse(response.data))
     }
 }

@@ -4,6 +4,7 @@ import { request } from '../transport/http-client'
 import {
     type ConversationMessage,
     ConversationMessageSchema,
+    createConversationMessageSchema,
     type StatusOk,
     StatusOkSchema,
 } from '../types/entities'
@@ -22,6 +23,15 @@ export const ConversationMessageListSchema = z.array(ConversationMessageSchema)
  * message `id` on `createMessage` when the caller doesn't supply one.
  */
 export class ConversationMessagesClient extends BaseClient {
+    private readonly linkBaseUrl = this.getLinkBaseUrl()
+    // Reuse the shared singletons when no custom base is configured.
+    private readonly messageSchema = this.linkBaseUrl
+        ? createConversationMessageSchema(this.linkBaseUrl)
+        : ConversationMessageSchema
+    private readonly messageListSchema = this.linkBaseUrl
+        ? z.array(this.messageSchema)
+        : ConversationMessageListSchema
+
     /**
      * Gets all messages in a conversation.
      *
@@ -55,7 +65,7 @@ export class ConversationMessagesClient extends BaseClient {
             apiToken: this.apiToken,
             payload: params,
             customFetch: this.customFetch,
-        }).then((response) => ConversationMessageListSchema.parse(response.data))
+        }).then((response) => this.messageListSchema.parse(response.data))
     }
 
     /**
@@ -70,7 +80,7 @@ export class ConversationMessagesClient extends BaseClient {
      * ```
      */
     getMessage(id: string): Promise<ConversationMessage> {
-        return this.simple('GET', 'getone', { id }, ConversationMessageSchema)
+        return this.simple('GET', 'getone', { id }, this.messageSchema)
     }
 
     /**
@@ -104,7 +114,7 @@ export class ConversationMessagesClient extends BaseClient {
         if (args.directGroupMentions) params.directGroupMentions = args.directGroupMentions
         if (args.notify !== undefined) params.notify = args.notify
 
-        return this.simple('POST', 'add', params, ConversationMessageSchema)
+        return this.simple('POST', 'add', params, this.messageSchema)
     }
 
     /**
@@ -131,7 +141,7 @@ export class ConversationMessagesClient extends BaseClient {
         if (args.directMentions) params.directMentions = args.directMentions
         if (args.directGroupMentions) params.directGroupMentions = args.directGroupMentions
 
-        return this.simple('POST', 'update', params, ConversationMessageSchema)
+        return this.simple('POST', 'update', params, this.messageSchema)
     }
 
     /**

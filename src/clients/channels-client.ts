@@ -1,7 +1,13 @@
 import { z } from 'zod'
 import { ENDPOINT_CHANNELS } from '../consts/endpoints'
 import { request } from '../transport/http-client'
-import { type Channel, ChannelSchema, type StatusOk, StatusOkSchema } from '../types/entities'
+import {
+    type Channel,
+    ChannelSchema,
+    createChannelSchema,
+    type StatusOk,
+    StatusOkSchema,
+} from '../types/entities'
 import type {
     AddChannelUserArgs,
     AddChannelUsersArgs,
@@ -22,6 +28,15 @@ export const ChannelListSchema = z.array(ChannelSchema)
  * to keep an optimistic-UI ID stable through the round-trip.
  */
 export class ChannelsClient extends BaseClient {
+    private readonly linkBaseUrl = this.getLinkBaseUrl()
+    // Reuse the shared singletons when no custom base is configured.
+    private readonly channelSchema = this.linkBaseUrl
+        ? createChannelSchema(this.linkBaseUrl)
+        : ChannelSchema
+    private readonly channelListSchema = this.linkBaseUrl
+        ? z.array(this.channelSchema)
+        : ChannelListSchema
+
     /**
      * Gets all channels for a given workspace.
      *
@@ -44,7 +59,7 @@ export class ChannelsClient extends BaseClient {
             apiToken: this.apiToken,
             payload: args,
             customFetch: this.customFetch,
-        }).then((response) => ChannelListSchema.parse(response.data))
+        }).then((response) => this.channelListSchema.parse(response.data))
     }
 
     /**
@@ -54,7 +69,7 @@ export class ChannelsClient extends BaseClient {
      * @returns The channel object.
      */
     getChannel(id: string): Promise<Channel> {
-        return this.simple('GET', 'getone', { id }, ChannelSchema)
+        return this.simple('GET', 'getone', { id }, this.channelSchema)
     }
 
     /**
@@ -80,7 +95,12 @@ export class ChannelsClient extends BaseClient {
      * ```
      */
     createChannel(args: CreateChannelArgs): Promise<Channel> {
-        return this.simple('POST', 'add', { ...args, id: resolveCreateId(args.id) }, ChannelSchema)
+        return this.simple(
+            'POST',
+            'add',
+            { ...args, id: resolveCreateId(args.id) },
+            this.channelSchema,
+        )
     }
 
     /**
@@ -95,7 +115,7 @@ export class ChannelsClient extends BaseClient {
      * @returns The updated channel object.
      */
     updateChannel(args: UpdateChannelArgs): Promise<Channel> {
-        return this.simple('POST', 'update', { ...args }, ChannelSchema)
+        return this.simple('POST', 'update', { ...args }, this.channelSchema)
     }
 
     /**
@@ -170,7 +190,7 @@ export class ChannelsClient extends BaseClient {
      * ```
      */
     addUser(args: AddChannelUserArgs): Promise<Channel> {
-        return this.simple('POST', 'add_user', { ...args }, ChannelSchema)
+        return this.simple('POST', 'add_user', { ...args }, this.channelSchema)
     }
 
     /**
@@ -186,7 +206,7 @@ export class ChannelsClient extends BaseClient {
      * ```
      */
     addUsers(args: AddChannelUsersArgs): Promise<Channel> {
-        return this.simple('POST', 'add_users', { ...args }, ChannelSchema)
+        return this.simple('POST', 'add_users', { ...args }, this.channelSchema)
     }
 
     /**
@@ -197,7 +217,7 @@ export class ChannelsClient extends BaseClient {
      * @param args.userId - The user ID to remove.
      */
     removeUser(args: RemoveChannelUserArgs): Promise<Channel> {
-        return this.simple('POST', 'remove_user', { ...args }, ChannelSchema)
+        return this.simple('POST', 'remove_user', { ...args }, this.channelSchema)
     }
 
     /**
@@ -208,7 +228,7 @@ export class ChannelsClient extends BaseClient {
      * @param args.userIds - Array of user IDs to remove.
      */
     removeUsers(args: RemoveChannelUsersArgs): Promise<Channel> {
-        return this.simple('POST', 'remove_users', { ...args }, ChannelSchema)
+        return this.simple('POST', 'remove_users', { ...args }, this.channelSchema)
     }
 
     private simple<T>(
