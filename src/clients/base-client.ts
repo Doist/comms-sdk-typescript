@@ -38,4 +38,16 @@ export class BaseClient {
     protected getBaseUri(): string {
         return getCommsBaseUri(this.defaultVersion, this.baseUrl)
     }
+
+    /**
+     * Base URL for entity web links, or `undefined` to use getFullCommsURL's
+     * default web app.
+     */
+    protected getLinkBaseUrl(): string | undefined {
+        if (!this.baseUrl) {
+            return undefined
+        }
+        // Strip a trailing slash so links don't double up, since entity paths start with '/'.
+        return this.baseUrl.endsWith('/') ? this.baseUrl.slice(0, -1) : this.baseUrl
+    }
 }

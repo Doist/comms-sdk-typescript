@@ -66,3 +66,64 @@ describe('CommentsClient — wire serialization', () => {
         })
     })
 })
+
+describe('CommentsClient — baseUrl in entity links', () => {
+    it('roots the returned comment url at the configured baseUrl', async () => {
+        const customBase = 'https://comms.example.com'
+        const responseChannelId = '7YpL3oZ4kZ9vP7Q1tR2sX3y'
+        const responseCommentId = '7YpL3oZ4kZ9vP7Q1tR2sX41'
+        server.use(
+            http.post(`${customBase}/api/v1/comments/add`, () =>
+                HttpResponse.json({
+                    id: responseCommentId,
+                    thread_id: TEST_THREAD_ID,
+                    channel_id: responseChannelId,
+                    creator: 1,
+                    content: 'hello',
+                    posted_ts: Math.floor(Date.now() / 1000),
+                    workspace_id: 1,
+                    system_message: null,
+                }),
+            ),
+        )
+
+        const api = new CommsApi(TEST_API_TOKEN, { baseUrl: customBase })
+        const comment = await api.comments.createComment({
+            threadId: TEST_THREAD_ID,
+            content: 'hello',
+        })
+
+        expect(comment.url).toBe(
+            `${customBase}/a/1/ch/${responseChannelId}/t/${TEST_THREAD_ID}/c/${responseCommentId}`,
+        )
+    })
+
+    it('strips a trailing slash on baseUrl so links do not double up', async () => {
+        const responseChannelId = '7YpL3oZ4kZ9vP7Q1tR2sX3y'
+        const responseCommentId = '7YpL3oZ4kZ9vP7Q1tR2sX41'
+        server.use(
+            http.post('https://comms.example.com/api/v1/comments/add', () =>
+                HttpResponse.json({
+                    id: responseCommentId,
+                    thread_id: TEST_THREAD_ID,
+                    channel_id: responseChannelId,
+                    creator: 1,
+                    content: 'hello',
+                    posted_ts: Math.floor(Date.now() / 1000),
+                    workspace_id: 1,
+                    system_message: null,
+                }),
+            ),
+        )
+
+        const api = new CommsApi(TEST_API_TOKEN, { baseUrl: 'https://comms.example.com/' })
+        const comment = await api.comments.createComment({
+            threadId: TEST_THREAD_ID,
+            content: 'hello',
+        })
+
+        expect(comment.url).toBe(
+            `https://comms.example.com/a/1/ch/${responseChannelId}/t/${TEST_THREAD_ID}/c/${responseCommentId}`,
+        )
+    })
+})

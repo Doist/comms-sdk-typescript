@@ -1,4 +1,4 @@
-import { AttachmentSchema } from './entities'
+import { AttachmentSchema, createChannelSchema, createInboxThreadSchema } from './entities'
 
 describe('AttachmentSchema', () => {
     it('parses a minimal payload (only required fields)', () => {
@@ -90,5 +90,75 @@ describe('AttachmentSchema', () => {
                 fileSize: -1,
             }),
         ).toThrow()
+    })
+})
+
+describe('entity url factories', () => {
+    const base = 'https://comms.example.com'
+    const channelId = '7YpL3oZ4kZ9vP7Q1tR2sX44'
+    const threadId = '7YpL3oZ4kZ9vP7Q1tR2sX3z'
+    const commentThreadId = '7YpL3oZ4kZ9vP7Q1tR2sX55'
+    const commentId = '7YpL3oZ4kZ9vP7Q1tR2sX41'
+
+    it('threads the link base into the generated url', () => {
+        const channel = {
+            id: channelId,
+            name: 'Engineering',
+            creator: 1,
+            public: true,
+            workspaceId: 1,
+            archived: false,
+            created: new Date(),
+            version: 1,
+        }
+        expect(createChannelSchema(base).parse(channel).url).toBe(`${base}/a/1/ch/${channelId}/`)
+    })
+
+    it('falls back to the default web app when no base is given', () => {
+        const channel = {
+            id: channelId,
+            name: 'Engineering',
+            creator: 1,
+            public: true,
+            workspaceId: 1,
+            archived: false,
+            created: new Date(),
+            version: 1,
+        }
+        expect(createChannelSchema().parse(channel).url).toBe(
+            `https://comms.todoist.com/a/1/ch/${channelId}/`,
+        )
+    })
+
+    it('propagates the base to a nested lastComment on an inbox thread', () => {
+        const parsed = createInboxThreadSchema(base).parse({
+            id: threadId,
+            title: 't',
+            content: 'c',
+            creator: 1,
+            channelId,
+            workspaceId: 1,
+            commentCount: 0,
+            lastUpdated: new Date(),
+            posted: new Date(),
+            snippet: 's',
+            snippetCreator: 1,
+            isArchived: false,
+            inInbox: true,
+            closed: false,
+            lastComment: {
+                id: commentId,
+                content: 'hi',
+                creator: 1,
+                threadId: commentThreadId,
+                channelId,
+                workspaceId: 1,
+                posted: new Date(),
+            },
+        })
+        expect(parsed.url).toBe(`${base}/a/1/ch/${channelId}/t/${threadId}/`)
+        expect(parsed.lastComment?.url).toBe(
+            `${base}/a/1/ch/${channelId}/t/${commentThreadId}/c/${commentId}`,
+        )
     })
 })

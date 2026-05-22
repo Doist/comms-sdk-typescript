@@ -1,6 +1,6 @@
 import { ENDPOINT_INBOX } from '../consts/endpoints'
 import { request } from '../transport/http-client'
-import { type InboxThread, InboxThreadSchema } from '../types/entities'
+import { createInboxThreadSchema, type InboxThread } from '../types/entities'
 import type { ArchiveAllArgs, GetInboxArgs } from '../types/requests'
 import { BaseClient } from './base-client'
 
@@ -11,6 +11,8 @@ type InboxCountResponse = {
 
 /** Client for `/api/v1/inbox/`. */
 export class InboxClient extends BaseClient {
+    private readonly inboxThreadSchema = createInboxThreadSchema(this.getLinkBaseUrl())
+
     /**
      * Gets inbox items (threads).
      *
@@ -52,7 +54,7 @@ export class InboxClient extends BaseClient {
             apiToken: this.apiToken,
             payload: params,
             customFetch: this.customFetch,
-        }).then((response) => response.data.map((thread) => InboxThreadSchema.parse(thread)))
+        }).then((response) => response.data.map((thread) => this.inboxThreadSchema.parse(thread)))
     }
 
     /**

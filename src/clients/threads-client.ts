@@ -3,6 +3,8 @@ import { ENDPOINT_THREADS } from '../consts/endpoints'
 import { request } from '../transport/http-client'
 import {
     type Comment,
+    createCommentSchema,
+    createThreadSchema,
     type StatusOk,
     StatusOkSchema,
     type Thread,
@@ -40,6 +42,10 @@ const GetUnreadResponseSchema = z.object({
  * `createThread` when the caller doesn't supply one.
  */
 export class ThreadsClient extends BaseClient {
+    private readonly threadSchema = createThreadSchema(this.getLinkBaseUrl())
+    private readonly threadListSchema = z.array(this.threadSchema)
+    private readonly commentSchema = createCommentSchema(this.getLinkBaseUrl())
+
     /**
      * Gets threads. At least one of `channelId` / `workspaceId` is required.
      * `newerThan` / `olderThan` (`Date`) are converted to the
@@ -78,7 +84,7 @@ export class ThreadsClient extends BaseClient {
             apiToken: this.apiToken,
             payload: params,
             customFetch: this.customFetch,
-        }).then((response) => ThreadListSchema.parse(response.data))
+        }).then((response) => this.threadListSchema.parse(response.data))
     }
 
     /**
@@ -88,7 +94,7 @@ export class ThreadsClient extends BaseClient {
      * @returns The thread object.
      */
     getThread(id: string): Promise<Thread> {
-        return this.simple('GET', 'getone', { id }, ThreadSchema)
+        return this.simple('GET', 'getone', { id }, this.threadSchema)
     }
 
     /**
@@ -112,7 +118,12 @@ export class ThreadsClient extends BaseClient {
      * ```
      */
     createThread(args: CreateThreadArgs): Promise<Thread> {
-        return this.simple('POST', 'add', { ...args, id: resolveCreateId(args.id) }, ThreadSchema)
+        return this.simple(
+            'POST',
+            'add',
+            { ...args, id: resolveCreateId(args.id) },
+            this.threadSchema,
+        )
     }
 
     /**
@@ -125,7 +136,7 @@ export class ThreadsClient extends BaseClient {
      * @returns The updated thread object.
      */
     updateThread(args: UpdateThreadArgs): Promise<Thread> {
-        return this.simple('POST', 'update', { ...args }, ThreadSchema)
+        return this.simple('POST', 'update', { ...args }, this.threadSchema)
     }
 
     /**
@@ -182,7 +193,7 @@ export class ThreadsClient extends BaseClient {
      * @returns The updated thread object.
      */
     moveToChannel(args: MoveThreadToChannelArgs): Promise<Thread> {
-        return this.simple('GET', 'move_to_channel', { ...args }, ThreadSchema)
+        return this.simple('GET', 'move_to_channel', { ...args }, this.threadSchema)
     }
 
     /**
@@ -281,7 +292,7 @@ export class ThreadsClient extends BaseClient {
      * ```
      */
     muteThread(args: MuteThreadArgs): Promise<Thread> {
-        return this.simple('GET', 'mute', { ...args }, ThreadSchema)
+        return this.simple('GET', 'mute', { ...args }, this.threadSchema)
     }
 
     /**
@@ -292,7 +303,7 @@ export class ThreadsClient extends BaseClient {
      * @returns The updated thread object.
      */
     unmuteThread(id: string): Promise<Thread> {
-        return this.simple('GET', 'unmute', { id }, ThreadSchema)
+        return this.simple('GET', 'unmute', { id }, this.threadSchema)
     }
 
     /**
@@ -359,7 +370,12 @@ export class ThreadsClient extends BaseClient {
     ): Promise<Comment> {
         const { id, ...rest } = args
         return addCommentRequest(
-            { baseUri: this.getBaseUri(), apiToken: this.apiToken, customFetch: this.customFetch },
+            {
+                baseUri: this.getBaseUri(),
+                apiToken: this.apiToken,
+                customFetch: this.customFetch,
+                schema: this.commentSchema,
+            },
             { threadId: id, ...rest },
             { threadAction },
         )
