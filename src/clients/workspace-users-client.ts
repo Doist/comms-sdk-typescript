@@ -18,9 +18,13 @@ export class WorkspaceUsersClient extends BaseClient {
     /**
      * Returns a list of workspace user objects for the given workspace id.
      *
+     * Removed users are excluded by default; set `args.includeRemoved` to `true` to include them.
+     * The Comms API always returns removed users, so the filtering happens client-side.
+     *
      * @param args - The arguments for getting workspace users.
      * @param args.workspaceId - The workspace ID.
      * @param args.archived - Optional flag to filter archived users.
+     * @param args.includeRemoved - Include users removed from the workspace. Defaults to `false`.
      * @returns An array of workspace user objects.
      *
      * @example
@@ -30,6 +34,7 @@ export class WorkspaceUsersClient extends BaseClient {
      * ```
      */
     getWorkspaceUsers(args: GetWorkspaceUsersArgs): Promise<WorkspaceUser[]> {
+        const includeRemoved = args.includeRemoved ?? false
         return request<WorkspaceUser[]>({
             httpMethod: 'GET',
             baseUri: this.getBaseUri(),
@@ -37,7 +42,10 @@ export class WorkspaceUsersClient extends BaseClient {
             apiToken: this.apiToken,
             payload: { id: args.workspaceId, archived: args.archived },
             customFetch: this.customFetch,
-        }).then((response) => response.data.map((user) => WorkspaceUserSchema.parse(user)))
+        }).then((response) => {
+            const users = response.data.map((user) => WorkspaceUserSchema.parse(user))
+            return includeRemoved ? users : users.filter((user) => !user.removed)
+        })
     }
 
     /**
