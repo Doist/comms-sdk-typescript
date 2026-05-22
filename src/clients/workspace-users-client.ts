@@ -43,8 +43,10 @@ export class WorkspaceUsersClient extends BaseClient {
             payload: { id: args.workspaceId, archived: args.archived },
             customFetch: this.customFetch,
         }).then((response) => {
-            const users = response.data.map((user) => WorkspaceUserSchema.parse(user))
-            return includeRemoved ? users : users.filter((user) => !user.removed)
+            const rawUsers = includeRemoved
+                ? response.data
+                : response.data.filter((user) => !user.removed)
+            return rawUsers.map((user) => WorkspaceUserSchema.parse(user))
         })
     }
 

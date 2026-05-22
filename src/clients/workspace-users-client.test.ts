@@ -39,11 +39,15 @@ describe('WorkspaceUsersClient', () => {
             expect(result.some((user) => user.removed)).toBe(false)
         })
 
-        it('includes removed users when includeRemoved is true', async () => {
+        it('includes removed users when includeRemoved is true and sends no server-side filter param', async () => {
             server.use(
-                http.get(apiUrl('api/v1/workspace_users/get'), () =>
-                    HttpResponse.json([mockWorkspaceUser, removedWorkspaceUser]),
-                ),
+                http.get(apiUrl('api/v1/workspace_users/get'), ({ request }) => {
+                    const url = new URL(request.url)
+                    expect(url.searchParams.get('id')).toBe('123')
+                    expect(url.searchParams.has('include_removed')).toBe(false)
+                    expect(url.searchParams.has('with_removed')).toBe(false)
+                    return HttpResponse.json([mockWorkspaceUser, removedWorkspaceUser])
+                }),
             )
 
             const result = await client.getWorkspaceUsers({
