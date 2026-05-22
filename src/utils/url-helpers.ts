@@ -59,7 +59,9 @@ export function getCommsURL(params: CommsURLParams): string {
  * @param baseUrl - Optional base URL (defaults to 'https://comms.todoist.com')
  */
 export function getFullCommsURL(params: CommsURLParams, baseUrl = COMMS_BASE_URL): string {
-    return `${baseUrl}${getCommsURL(params)}`
+    // Strip a trailing slash so links don't double up — `getCommsURL` paths start with '/'.
+    const normalizedBase = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl
+    return `${normalizedBase}${getCommsURL(params)}`
 }
 
 /** Returns the URL for a thread in a channel. */

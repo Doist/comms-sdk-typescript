@@ -23,8 +23,14 @@ export const ConversationMessageListSchema = z.array(ConversationMessageSchema)
  * message `id` on `createMessage` when the caller doesn't supply one.
  */
 export class ConversationMessagesClient extends BaseClient {
-    private readonly messageSchema = createConversationMessageSchema(this.getLinkBaseUrl())
-    private readonly messageListSchema = z.array(this.messageSchema)
+    private readonly linkBaseUrl = this.getLinkBaseUrl()
+    // Reuse the shared singletons when no custom base is configured.
+    private readonly messageSchema = this.linkBaseUrl
+        ? createConversationMessageSchema(this.linkBaseUrl)
+        : ConversationMessageSchema
+    private readonly messageListSchema = this.linkBaseUrl
+        ? z.array(this.messageSchema)
+        : ConversationMessageListSchema
 
     /**
      * Gets all messages in a conversation.

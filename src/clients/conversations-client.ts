@@ -37,8 +37,14 @@ const GetUnreadResponseSchema = z.object({
  * already-assigned `id` and your generated one is silently dropped.
  */
 export class ConversationsClient extends BaseClient {
-    private readonly conversationSchema = createConversationSchema(this.getLinkBaseUrl())
-    private readonly conversationListSchema = z.array(this.conversationSchema)
+    private readonly linkBaseUrl = this.getLinkBaseUrl()
+    // Reuse the shared singletons when no custom base is configured.
+    private readonly conversationSchema = this.linkBaseUrl
+        ? createConversationSchema(this.linkBaseUrl)
+        : ConversationSchema
+    private readonly conversationListSchema = this.linkBaseUrl
+        ? z.array(this.conversationSchema)
+        : ConversationListSchema
 
     /**
      * Gets all conversations for a workspace.

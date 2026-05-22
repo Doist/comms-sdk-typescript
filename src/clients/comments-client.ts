@@ -24,8 +24,18 @@ export const CommentListSchema = z.array(CommentSchema)
  * on `createComment` when the caller doesn't supply one.
  */
 export class CommentsClient extends BaseClient {
-    private readonly commentSchema = createCommentSchema(this.getLinkBaseUrl())
-    private readonly commentListSchema = z.array(this.commentSchema)
+    private readonly linkBaseUrl = this.getLinkBaseUrl()
+    // Reuse the shared singletons when no custom base is configured.
+    private readonly commentSchema = this.linkBaseUrl
+        ? createCommentSchema(this.linkBaseUrl)
+        : CommentSchema
+    private readonly commentListSchema = this.linkBaseUrl
+        ? z.array(this.commentSchema)
+        : CommentListSchema
+    // `getone` wraps the comment in `{ comment: ... }`; built once per client.
+    private readonly wrappedCommentSchema = z
+        .object({ comment: this.commentSchema })
+        .transform((data) => data.comment)
 
     /**
      * Gets all comments for a thread. `newerThan` / `olderThan` (`Date`) are
@@ -71,9 +81,6 @@ export class CommentsClient extends BaseClient {
      * @returns The comment object.
      */
     getComment(id: string): Promise<Comment> {
-        const wrappedSchema = z
-            .object({ comment: this.commentSchema })
-            .transform((data) => data.comment)
         return request<Comment>({
             httpMethod: 'GET',
             baseUri: this.getBaseUri(),
@@ -81,7 +88,7 @@ export class CommentsClient extends BaseClient {
             apiToken: this.apiToken,
             payload: { id },
             customFetch: this.customFetch,
-        }).then((response) => wrappedSchema.parse(response.data))
+        }).then((response) => this.wrappedCommentSchema.parse(response.data))
     }
 
     /**

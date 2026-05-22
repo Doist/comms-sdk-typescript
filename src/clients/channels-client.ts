@@ -28,8 +28,14 @@ export const ChannelListSchema = z.array(ChannelSchema)
  * to keep an optimistic-UI ID stable through the round-trip.
  */
 export class ChannelsClient extends BaseClient {
-    private readonly channelSchema = createChannelSchema(this.getLinkBaseUrl())
-    private readonly channelListSchema = z.array(this.channelSchema)
+    private readonly linkBaseUrl = this.getLinkBaseUrl()
+    // Reuse the shared singletons when no custom base is configured.
+    private readonly channelSchema = this.linkBaseUrl
+        ? createChannelSchema(this.linkBaseUrl)
+        : ChannelSchema
+    private readonly channelListSchema = this.linkBaseUrl
+        ? z.array(this.channelSchema)
+        : ChannelListSchema
 
     /**
      * Gets all channels for a given workspace.

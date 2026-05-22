@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { getCommsBaseUri } from '../consts/endpoints'
 import { server } from '../testUtils/msw-setup'
 import { TEST_API_BASE_URL, TEST_API_TOKEN, TEST_THREAD_ID } from '../testUtils/test-defaults'
-import { CommentSchema } from '../types/entities'
+import { CommentSchema, createCommentSchema } from '../types/entities'
 import { EVERYONE, EVERYONE_IN_THREAD } from '../types/enums'
 import { addCommentRequest } from './add-comment-helper'
 
@@ -20,6 +20,22 @@ const COMMENT_RESPONSE = {
     workspace_id: 1,
     system_message: null,
 }
+
+describe('addCommentRequest — base-bound schema', () => {
+    it('roots the returned comment url at the schema base (close/reopen path)', async () => {
+        const customBase = 'https://comms.example.com'
+        server.use(http.post(COMMENT_ADD, () => HttpResponse.json(COMMENT_RESPONSE)))
+
+        const comment = await addCommentRequest(
+            { ...ctx, schema: createCommentSchema(customBase) },
+            { threadId: TEST_THREAD_ID, content: 'hello' },
+        )
+
+        expect(comment.url).toBe(
+            `${customBase}/a/1/ch/BBBBBBBBBBBBBBBBBBBBBB/t/${TEST_THREAD_ID}/c/AAAAAAAAAAAAAAAAAAAAAA`,
+        )
+    })
+})
 
 describe('addCommentRequest — reserved broadcast marker validation', () => {
     it('throws when a marker is passed in `groups`', () => {

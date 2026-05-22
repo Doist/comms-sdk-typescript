@@ -395,7 +395,7 @@ export const ConversationMessageSchema = createConversationMessageSchema()
 export type ConversationMessage = z.infer<typeof ConversationMessageSchema>
 
 // InboxThread entity from API - returns full Thread objects with additional inbox metadata.
-function createInboxThreadObjectSchema(linkBaseUrl?: string) {
+export function createInboxThreadObjectSchema(linkBaseUrl?: string) {
     return z.object({
         id: z.string(),
         title: z.string(),

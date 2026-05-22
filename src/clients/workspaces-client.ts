@@ -17,7 +17,11 @@ export const ChannelListSchema = z.array(ChannelSchema)
  * currently rejects any `color` other than `1` on add/update.
  */
 export class WorkspacesClient extends BaseClient {
-    private readonly channelListSchema = z.array(createChannelSchema(this.getLinkBaseUrl()))
+    private readonly linkBaseUrl = this.getLinkBaseUrl()
+    // Reuse the shared singleton when no custom base is configured.
+    private readonly channelListSchema = this.linkBaseUrl
+        ? z.array(createChannelSchema(this.linkBaseUrl))
+        : ChannelListSchema
 
     /**
      * Gets all the user's workspaces.

@@ -41,13 +41,10 @@ export class BaseClient {
 
     /**
      * Base URL for entity web links, or `undefined` to use getFullCommsURL's
-     * default web app.
+     * default web app. Trailing-slash normalization happens in
+     * `getFullCommsURL`, so the configured value is returned verbatim.
      */
     protected getLinkBaseUrl(): string | undefined {
-        if (!this.baseUrl) {
-            return undefined
-        }
-        // Strip a trailing slash so links don't double up, since entity paths start with '/'.
-        return this.baseUrl.endsWith('/') ? this.baseUrl.slice(0, -1) : this.baseUrl
+        return this.baseUrl
     }
 }

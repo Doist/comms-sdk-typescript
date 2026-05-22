@@ -114,6 +114,22 @@ describe('entity url factories', () => {
         expect(createChannelSchema(base).parse(channel).url).toBe(`${base}/a/1/ch/${channelId}/`)
     })
 
+    it('normalizes a trailing slash on the link base', () => {
+        const channel = {
+            id: channelId,
+            name: 'Engineering',
+            creator: 1,
+            public: true,
+            workspaceId: 1,
+            archived: false,
+            created: new Date(),
+            version: 1,
+        }
+        expect(createChannelSchema(`${base}/`).parse(channel).url).toBe(
+            `${base}/a/1/ch/${channelId}/`,
+        )
+    })
+
     it('falls back to the default web app when no base is given', () => {
         const channel = {
             id: channelId,

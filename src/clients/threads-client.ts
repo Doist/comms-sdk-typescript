@@ -3,6 +3,7 @@ import { ENDPOINT_THREADS } from '../consts/endpoints'
 import { request } from '../transport/http-client'
 import {
     type Comment,
+    CommentSchema,
     createCommentSchema,
     createThreadSchema,
     type StatusOk,
@@ -42,9 +43,17 @@ const GetUnreadResponseSchema = z.object({
  * `createThread` when the caller doesn't supply one.
  */
 export class ThreadsClient extends BaseClient {
-    private readonly threadSchema = createThreadSchema(this.getLinkBaseUrl())
-    private readonly threadListSchema = z.array(this.threadSchema)
-    private readonly commentSchema = createCommentSchema(this.getLinkBaseUrl())
+    private readonly linkBaseUrl = this.getLinkBaseUrl()
+    // Reuse the shared singletons when no custom base is configured.
+    private readonly threadSchema = this.linkBaseUrl
+        ? createThreadSchema(this.linkBaseUrl)
+        : ThreadSchema
+    private readonly threadListSchema = this.linkBaseUrl
+        ? z.array(this.threadSchema)
+        : ThreadListSchema
+    private readonly commentSchema = this.linkBaseUrl
+        ? createCommentSchema(this.linkBaseUrl)
+        : CommentSchema
 
     /**
      * Gets threads. At least one of `channelId` / `workspaceId` is required.
