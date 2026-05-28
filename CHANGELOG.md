@@ -1,3 +1,9 @@
+## [0.3.0](https://github.com/Doist/comms-sdk-typescript/compare/v0.2.1...v0.3.0) (2026-05-28)
+
+### Features
+
+* **workspace-users:** exclude removed users by default ([#13](https://github.com/Doist/comms-sdk-typescript/issues/13)) ([a3904c6](https://github.com/Doist/comms-sdk-typescript/commit/a3904c6637a5133dfc86e64e4d0d7456012592e8))
+
 ## [0.2.1](https://github.com/Doist/comms-sdk-typescript/compare/v0.2.0...v0.2.1) (2026-05-22)
 
 ### Bug Fixes
