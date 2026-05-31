@@ -29,6 +29,11 @@ type UploadMultipartFileArgs = {
     contentType?: string
     /** Extra multipart fields to send alongside the file metadata fields. */
     additionalFields?: Record<string, string | number | boolean | undefined | null>
+    /**
+     * Network-error retry count. Defaults to `0` — unlike JSON requests, a retry here
+     * resends the entire file body, so large uploads aren't retried automatically.
+     */
+    maxRetries?: number
     /** Optional request ID for tracing. */
     requestId?: string
     /** Optional custom fetch implementation. */
@@ -41,23 +46,67 @@ type UploadMultipartFileArgs = {
  */
 export function getContentTypeFromFileName(fileName: string): string {
     const extension = fileName.toLowerCase().split('.').pop()
-    switch (extension) {
-        case 'png':
-            return 'image/png'
-        case 'jpg':
-        case 'jpeg':
-            return 'image/jpeg'
-        case 'gif':
-            return 'image/gif'
-        case 'webp':
-            return 'image/webp'
-        case 'svg':
-            return 'image/svg+xml'
-        case 'pdf':
-            return 'application/pdf'
-        default:
-            return 'application/octet-stream'
-    }
+    return extension ? (MIME_BY_EXTENSION[extension] ?? DEFAULT_MIME_TYPE) : DEFAULT_MIME_TYPE
+}
+
+const DEFAULT_MIME_TYPE = 'application/octet-stream'
+
+/**
+ * Extension → MIME map covering the formats commonly attached to messages.
+ * Anything not listed falls back to {@link DEFAULT_MIME_TYPE}; callers can
+ * always override via the `contentType` argument.
+ */
+const MIME_BY_EXTENSION: Readonly<Record<string, string>> = {
+    // Images
+    png: 'image/png',
+    jpg: 'image/jpeg',
+    jpeg: 'image/jpeg',
+    gif: 'image/gif',
+    webp: 'image/webp',
+    svg: 'image/svg+xml',
+    bmp: 'image/bmp',
+    ico: 'image/x-icon',
+    tif: 'image/tiff',
+    tiff: 'image/tiff',
+    heic: 'image/heic',
+    heif: 'image/heif',
+    avif: 'image/avif',
+    // Documents / text
+    pdf: 'application/pdf',
+    txt: 'text/plain',
+    md: 'text/markdown',
+    csv: 'text/csv',
+    json: 'application/json',
+    xml: 'application/xml',
+    html: 'text/html',
+    htm: 'text/html',
+    rtf: 'application/rtf',
+    doc: 'application/msword',
+    docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    xls: 'application/vnd.ms-excel',
+    xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    ppt: 'application/vnd.ms-powerpoint',
+    pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    // Archives
+    zip: 'application/zip',
+    gz: 'application/gzip',
+    tar: 'application/x-tar',
+    '7z': 'application/x-7z-compressed',
+    rar: 'application/vnd.rar',
+    // Audio
+    mp3: 'audio/mpeg',
+    wav: 'audio/wav',
+    ogg: 'audio/ogg',
+    m4a: 'audio/mp4',
+    flac: 'audio/flac',
+    aac: 'audio/aac',
+    // Video
+    mp4: 'video/mp4',
+    m4v: 'video/mp4',
+    mov: 'video/quicktime',
+    avi: 'video/x-msvideo',
+    webm: 'video/webm',
+    mkv: 'video/x-matroska',
 }
 
 /**
@@ -71,11 +120,11 @@ function toBlob(
     contentType: string | undefined,
 ): { blob: Blob; fileName: string; contentType: string } {
     if (file instanceof Blob) {
-        // `File` is not a global in Node 18, so guard the check before using it.
-        const name =
-            fileName ||
-            (typeof File !== 'undefined' && file instanceof File ? file.name : undefined) ||
-            'upload'
+        // Duck-type the name rather than `instanceof File`: `File` isn't a global in
+        // Node 18, so a `node:buffer` `File` (which carries a real `name`) would
+        // otherwise fall back to `'upload'` and lose its inferred file name.
+        const blobName = (file as { name?: unknown }).name
+        const name = fileName || (typeof blobName === 'string' ? blobName : undefined) || 'upload'
         const type = contentType || file.type || getContentTypeFromFileName(name)
         // Re-wrap only when stamping a type the Blob doesn't already carry.
         const blob = file.type === type ? file : new Blob([file], { type })
@@ -117,6 +166,7 @@ export async function uploadMultipartFile<T>(args: UploadMultipartFileArgs): Pro
         fileName,
         contentType,
         additionalFields,
+        maxRetries = 0,
         requestId,
         customFetch,
     } = args
@@ -160,7 +210,7 @@ export async function uploadMultipartFile<T>(args: UploadMultipartFileArgs): Pro
             // Don't set Content-Type — the runtime adds the multipart boundary.
             timeout: 30000,
         },
-        3,
+        maxRetries,
         customFetch,
     )
 

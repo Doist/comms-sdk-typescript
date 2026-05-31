@@ -1,5 +1,4 @@
 import { z } from 'zod'
-import type { UploadFile } from '../utils/multipart-upload'
 import { type Attachment, AttachmentSchema } from './entities'
 import { NOTIFY_AUDIENCES } from './enums'
 
@@ -425,19 +424,30 @@ export type GetUserLocalTimeArgs = {
 }
 
 // Attachments
-export type UploadAttachmentArgs = {
-    /**
-     * The file to upload. Accepts a `Blob`/`File` (browser) or a `Uint8Array` of raw
-     * bytes. A Node `Buffer` is a `Uint8Array`, so `await readFile(path)` works directly.
-     */
-    file: UploadFile
-    /**
-     * File name. Required when `file` is a `Uint8Array`; inferred from the `File.name`
-     * otherwise.
-     */
-    fileName?: string
+type UploadAttachmentCommonArgs = {
     /** MIME type. Defaults to the `Blob`'s type or one inferred from the file extension. */
     contentType?: string
     /** Attachment ID to use. A random ID is generated when omitted. */
     attachmentId?: string
 }
+
+/**
+ * Arguments for `attachments.upload`. A discriminated union on `file` enforces, at
+ * compile time, that raw `Uint8Array` bytes are accompanied by a `fileName` (there is
+ * no name to infer), while a `Blob`/`File` may omit it.
+ */
+export type UploadAttachmentArgs = UploadAttachmentCommonArgs &
+    (
+        | {
+              /** The file to upload — a `Blob`/`File` (browser, or any runtime with a global `Blob`). */
+              file: Blob
+              /** File name. Inferred from the `File.name` when omitted. */
+              fileName?: string
+          }
+        | {
+              /** Raw bytes to upload. A Node `Buffer` is a `Uint8Array`, so `await readFile(path)` works directly. */
+              file: Uint8Array
+              /** File name. Required for raw bytes — there is no name to infer. */
+              fileName: string
+          }
+    )

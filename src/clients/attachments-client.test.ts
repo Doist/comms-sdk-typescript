@@ -87,7 +87,7 @@ describe('AttachmentsClient', () => {
             expect(result.attachmentId).toBe(callerId)
         })
 
-        it('uploads a Blob and infers the file name and type', async () => {
+        it('uploads a File and infers the file name and type', async () => {
             let capturedForm: FormData | undefined
 
             server.use(
@@ -106,6 +106,47 @@ describe('AttachmentsClient', () => {
             expect(capturedForm?.get('file_name')).toBe('photo.jpg')
             expect(capturedForm?.get('file_size')).toBe('4')
             expect(capturedForm?.get('underlying_type')).toBe('image/jpeg')
+        })
+
+        it('uploads a plain Blob (non-File) and falls back to a default name', async () => {
+            let capturedForm: FormData | undefined
+
+            server.use(
+                http.post(UPLOAD_URL, async ({ request }) => {
+                    capturedForm = await request.formData()
+                    return HttpResponse.json(mockAttachmentResponse)
+                }),
+            )
+
+            // A bare Blob has no `name`, so the helper falls back to `upload` and
+            // infers the type from the Blob's own `type`.
+            const blob = new Blob([new Uint8Array([1, 2, 3])], { type: 'image/png' })
+
+            await client.upload({ file: blob })
+
+            expect(capturedForm?.get('file')).toBeInstanceOf(Blob)
+            expect(capturedForm?.get('file_name')).toBe('upload')
+            expect(capturedForm?.get('underlying_type')).toBe('image/png')
+        })
+
+        it('honors an explicit contentType override', async () => {
+            let capturedForm: FormData | undefined
+
+            server.use(
+                http.post(UPLOAD_URL, async ({ request }) => {
+                    capturedForm = await request.formData()
+                    return HttpResponse.json(mockAttachmentResponse)
+                }),
+            )
+
+            // `data.bin` would infer application/octet-stream; the override wins.
+            await client.upload({
+                file: new Uint8Array([1, 2, 3]),
+                fileName: 'data.bin',
+                contentType: 'text/csv',
+            })
+
+            expect(capturedForm?.get('underlying_type')).toBe('text/csv')
         })
 
         it('uploads a Uint8Array', async () => {
@@ -127,9 +168,32 @@ describe('AttachmentsClient', () => {
         })
 
         it('throws when uploading raw bytes without a fileName', async () => {
-            await expect(client.upload({ file: Buffer.from('x') })).rejects.toThrow(
-                'fileName is required when uploading raw bytes',
+            await expect(
+                // @ts-expect-error — the discriminated union requires `fileName` for raw
+                // bytes at compile time; this asserts the runtime guard still fires.
+                client.upload({ file: Buffer.from('x') }),
+            ).rejects.toThrow('fileName is required when uploading raw bytes')
+        })
+
+        it('rejects an invalid attachmentId before sending the request', async () => {
+            let handlerCalled = false
+
+            server.use(
+                http.post(UPLOAD_URL, () => {
+                    handlerCalled = true
+                    return HttpResponse.json(mockAttachmentResponse)
+                }),
             )
+
+            await expect(
+                client.upload({
+                    file: Buffer.from('x'),
+                    fileName: 'notes.txt',
+                    attachmentId: 'not-a-valid-id',
+                }),
+            ).rejects.toThrow(/invalid attachmentId/)
+
+            expect(handlerCalled).toBe(false)
         })
     })
 })

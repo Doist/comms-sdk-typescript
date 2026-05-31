@@ -2,8 +2,23 @@ import { ENDPOINT_ATTACHMENTS } from '../consts/endpoints'
 import { type Attachment, AttachmentSchema } from '../types/entities'
 import type { UploadAttachmentArgs } from '../types/requests'
 import { uploadMultipartFile } from '../utils/multipart-upload'
-import { resolveCreateId } from '../utils/uuidv7'
+import { isValidUuidV7Base58, resolveCreateId, UuidV7Error } from '../utils/uuidv7'
 import { BaseClient } from './base-client'
+
+/**
+ * Resolve the `attachment_id`: validate a caller-supplied value (throwing an
+ * {@link UuidV7Error} that names `attachmentId` rather than the generic `id`) or
+ * mint a fresh one. Wraps {@link resolveCreateId} so the error contract matches the
+ * client's actual parameter.
+ */
+function resolveAttachmentId(attachmentId: string | undefined): string {
+    if (attachmentId !== undefined && !isValidUuidV7Base58(attachmentId)) {
+        throw new UuidV7Error(
+            `invalid attachmentId ${JSON.stringify(attachmentId)} — use generateId() or omit \`attachmentId\` and let the SDK mint one.`,
+        )
+    }
+    return resolveCreateId(attachmentId)
+}
 
 /**
  * Client for uploading file attachments to Comms.
@@ -48,7 +63,7 @@ export class AttachmentsClient extends BaseClient {
             fileName: args.fileName,
             contentType: args.contentType,
             additionalFields: {
-                attachment_id: resolveCreateId(args.attachmentId),
+                attachment_id: resolveAttachmentId(args.attachmentId),
             },
             customFetch: this.customFetch,
         })
