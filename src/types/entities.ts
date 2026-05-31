@@ -28,28 +28,35 @@ export type StatusOk = z.infer<typeof StatusOkSchema>
 // the attachment kind (file vs image vs link preview vs unfurled GIF).
 // Loose: unknown keys from the backend pass through rather than being
 // stripped, so newly-added or off-spec fields stay accessible to callers.
-export const AttachmentSchema = z
-    .object({
-        attachmentId: z.string(),
-        urlType: z.string(),
-        title: z.string().nullable().optional(),
-        url: z.string().nullable().optional(),
-        fileName: z.string().nullable().optional(),
-        fileSize: z.number().int().nonnegative().nullable().optional(),
-        underlyingType: z.string().nullable().optional(),
-        description: z.string().nullable().optional(),
-        image: z.string().nullable().optional(),
-        imageWidth: z.number().int().nonnegative().nullable().optional(),
-        imageHeight: z.number().int().nonnegative().nullable().optional(),
-        duration: z.string().nullable().optional(),
-        uploadState: z.string().nullable().optional(),
-        video: z.string().nullable().optional(),
-        videoType: z.string().nullable().optional(),
-        videoAutoPlay: z.boolean().nullable().optional(),
-    })
-    .loose()
+const attachmentShape = {
+    attachmentId: z.string(),
+    urlType: z.string(),
+    title: z.string().nullable().optional(),
+    url: z.string().nullable().optional(),
+    fileName: z.string().nullable().optional(),
+    fileSize: z.number().int().nonnegative().nullable().optional(),
+    underlyingType: z.string().nullable().optional(),
+    description: z.string().nullable().optional(),
+    image: z.string().nullable().optional(),
+    imageWidth: z.number().int().nonnegative().nullable().optional(),
+    imageHeight: z.number().int().nonnegative().nullable().optional(),
+    duration: z.string().nullable().optional(),
+    uploadState: z.string().nullable().optional(),
+    video: z.string().nullable().optional(),
+    videoType: z.string().nullable().optional(),
+    videoAutoPlay: z.boolean().nullable().optional(),
+}
+
+export const AttachmentSchema = z.object(attachmentShape).loose()
 
 export type Attachment = z.infer<typeof AttachmentSchema>
+
+// Request-side attachment schema. Unlike the loose response `AttachmentSchema`,
+// this strips unknown keys so caller typos / off-spec fields are dropped instead
+// of being forwarded on the wire. Use this for `*Args` request schemas.
+export const RequestAttachmentSchema = z.object(attachmentShape)
+
+export type RequestAttachment = z.infer<typeof RequestAttachmentSchema>
 
 // Fields shared by `User` and `WorkspaceUser`. Profile fields
 // (`fullName`, `imageId`, avatar URLs) are sourced from Todoist-ID.

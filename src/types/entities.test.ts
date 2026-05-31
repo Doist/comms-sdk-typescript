@@ -1,4 +1,9 @@
-import { AttachmentSchema, createChannelSchema, createInboxThreadSchema } from './entities'
+import {
+    AttachmentSchema,
+    createChannelSchema,
+    createInboxThreadSchema,
+    RequestAttachmentSchema,
+} from './entities'
 
 describe('AttachmentSchema', () => {
     it('parses a minimal payload (only required fields)', () => {
@@ -90,6 +95,23 @@ describe('AttachmentSchema', () => {
                 fileSize: -1,
             }),
         ).toThrow()
+    })
+})
+
+describe('RequestAttachmentSchema', () => {
+    it('strips unknown keys so caller typos are not forwarded on the wire', () => {
+        const result = RequestAttachmentSchema.parse({
+            attachmentId: 'abc',
+            urlType: 'file',
+            // Off-spec / typo'd field a caller might pass by mistake
+            fileNam: 'oops.pdf',
+        }) as Record<string, unknown>
+        expect(result).not.toHaveProperty('fileNam')
+    })
+
+    it('still requires attachmentId and urlType', () => {
+        expect(() => RequestAttachmentSchema.parse({ urlType: 'file' })).toThrow()
+        expect(() => RequestAttachmentSchema.parse({ attachmentId: 'x' })).toThrow()
     })
 })
 
