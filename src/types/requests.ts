@@ -422,3 +422,32 @@ export type GetUserLocalTimeArgs = {
     workspaceId: number
     userId: number
 }
+
+// Attachments
+type UploadAttachmentCommonArgs = {
+    /** MIME type. Defaults to the `Blob`'s type or one inferred from the file extension. */
+    contentType?: string
+    /** Attachment ID to use. A random ID is generated when omitted. */
+    attachmentId?: string
+}
+
+/**
+ * Arguments for `attachments.upload`. A discriminated union on `file` enforces, at
+ * compile time, that raw `Uint8Array` bytes are accompanied by a `fileName` (there is
+ * no name to infer), while a `Blob`/`File` may omit it.
+ */
+export type UploadAttachmentArgs = UploadAttachmentCommonArgs &
+    (
+        | {
+              /** The file to upload — a `Blob`/`File` (browser, or any runtime with a global `Blob`). */
+              file: Blob
+              /** File name. Inferred from the `File.name` when omitted. */
+              fileName?: string
+          }
+        | {
+              /** Raw bytes to upload. A Node `Buffer` is a `Uint8Array`, so `await readFile(path)` works directly. */
+              file: Uint8Array
+              /** File name. Required for raw bytes — there is no name to infer. */
+              fileName: string
+          }
+    )
