@@ -1,3 +1,4 @@
+import { AttachmentsClient } from './clients/attachments-client'
 import { ChannelsClient } from './clients/channels-client'
 import { CommentsClient } from './clients/comments-client'
 import { ConversationMessagesClient } from './clients/conversation-messages-client'
@@ -47,6 +48,7 @@ export class CommsApi {
     public inbox: InboxClient
     public reactions: ReactionsClient
     public search: SearchClient
+    public attachments: AttachmentsClient
 
     /**
      * Creates a new Comms API client.
@@ -74,6 +76,7 @@ export class CommsApi {
         this.inbox = new InboxClient(clientConfig)
         this.reactions = new ReactionsClient(clientConfig)
         this.search = new SearchClient(clientConfig)
+        this.attachments = new AttachmentsClient(clientConfig)
     }
 
     /**

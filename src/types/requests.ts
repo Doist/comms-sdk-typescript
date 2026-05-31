@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import type { UploadFile } from '../utils/multipart-upload'
 import { type Attachment, AttachmentSchema } from './entities'
 import { NOTIFY_AUDIENCES } from './enums'
 
@@ -421,4 +422,22 @@ export type GetUserInfoArgs = {
 export type GetUserLocalTimeArgs = {
     workspaceId: number
     userId: number
+}
+
+// Attachments
+export type UploadAttachmentArgs = {
+    /**
+     * The file to upload. Accepts a `Blob`/`File` (browser) or a `Uint8Array` of raw
+     * bytes. A Node `Buffer` is a `Uint8Array`, so `await readFile(path)` works directly.
+     */
+    file: UploadFile
+    /**
+     * File name. Required when `file` is a `Uint8Array`; inferred from the `File.name`
+     * otherwise.
+     */
+    fileName?: string
+    /** MIME type. Defaults to the `Blob`'s type or one inferred from the file extension. */
+    contentType?: string
+    /** Attachment ID to use. A random ID is generated when omitted. */
+    attachmentId?: string
 }

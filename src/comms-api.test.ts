@@ -17,6 +17,7 @@ describe('CommsApi', () => {
         expect(api.inbox).toBeDefined()
         expect(api.reactions).toBeDefined()
         expect(api.search).toBeDefined()
+        expect(api.attachments).toBeDefined()
     })
 
     it('accepts a custom base URL', () => {
