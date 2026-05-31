@@ -47,6 +47,7 @@ export const CreateThreadArgsSchema = z.object({
     id: z.string().optional(),
     recipients: z.array(z.number()).nullable().optional(),
     groups: z.array(z.string()).nullable().optional(),
+    attachments: z.array(AttachmentSchema).nullable().optional(),
 })
 
 export type CreateThreadArgs = z.infer<typeof CreateThreadArgsSchema>
