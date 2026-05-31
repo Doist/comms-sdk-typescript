@@ -1,6 +1,6 @@
 {
     "name": "@doist/comms-sdk",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "description": "A TypeScript wrapper for the Comms REST API.",
     "author": "Doist developers",
     "homepage": "https://doist.github.io/comms-sdk-typescript/",

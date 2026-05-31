@@ -1,3 +1,9 @@
+## [0.4.0](https://github.com/Doist/comms-sdk-typescript/compare/v0.3.0...v0.4.0) (2026-05-31)
+
+### Features
+
+* **attachments:** add client for uploading file attachments ([#15](https://github.com/Doist/comms-sdk-typescript/issues/15)) ([87e49c4](https://github.com/Doist/comms-sdk-typescript/commit/87e49c437e91126a1042470ce53d5a517ff06213))
+
 ## [0.3.0](https://github.com/Doist/comms-sdk-typescript/compare/v0.2.1...v0.3.0) (2026-05-28)
 
 ### Features
