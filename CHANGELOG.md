@@ -1,3 +1,9 @@
+## [0.4.1](https://github.com/Doist/comms-sdk-typescript/compare/v0.4.0...v0.4.1) (2026-05-31)
+
+### Bug Fixes
+
+* **threads:** accept attachments when creating a thread ([#16](https://github.com/Doist/comms-sdk-typescript/issues/16)) ([f4e862b](https://github.com/Doist/comms-sdk-typescript/commit/f4e862b36d915d89c07ef74fe9136254de8aaaec)), closes [Doist/twist-sdk-typescript#142](https://github.com/Doist/twist-sdk-typescript/issues/142) [twist-sdk#142](https://github.com/Doist/twist-sdk/issues/142)
+
 ## [0.4.0](https://github.com/Doist/comms-sdk-typescript/compare/v0.3.0...v0.4.0) (2026-05-31)
 
 ### Features
