@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { type Attachment, AttachmentSchema } from './entities'
+import { type Attachment, RequestAttachmentSchema } from './entities'
 import { NOTIFY_AUDIENCES } from './enums'
 
 /**
@@ -47,6 +47,7 @@ export const CreateThreadArgsSchema = z.object({
     id: z.string().optional(),
     recipients: z.array(z.number()).nullable().optional(),
     groups: z.array(z.string()).nullable().optional(),
+    attachments: z.array(RequestAttachmentSchema).nullable().optional(),
 })
 
 export type CreateThreadArgs = z.infer<typeof CreateThreadArgsSchema>
@@ -63,7 +64,7 @@ export const CreateCommentArgsSchema = z.object({
     threadId: z.string(),
     content: z.string(),
     id: z.string().optional(),
-    attachments: z.array(AttachmentSchema).nullable().optional(),
+    attachments: z.array(RequestAttachmentSchema).nullable().optional(),
     actions: z.unknown().nullable().optional(),
     recipients: z.array(z.number()).nullable().optional(),
     groups: z.array(z.string()).nullable().optional(),
@@ -96,7 +97,7 @@ export const CreateMessageArgsSchema = z
         threadId: z.string().nullable().optional(),
         content: z.string(),
         id: z.string().optional(),
-        attachments: z.array(AttachmentSchema).nullable().optional(),
+        attachments: z.array(RequestAttachmentSchema).nullable().optional(),
     })
     .refine(
         (data) => {

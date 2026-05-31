@@ -63,4 +63,60 @@ describe('ThreadsClient — wire serialization', () => {
         expect(params.get('newer_than_ts')).toBeNull()
         expect(params.get('older_than_ts')).toBeNull()
     })
+
+    it('createThread sends attachments as a snake_cased array in the POST body', async () => {
+        let body: Record<string, unknown> | undefined
+        server.use(
+            http.post(`${BASE}/threads/add`, async ({ request }) => {
+                body = (await request.json()) as Record<string, unknown>
+                return HttpResponse.json({
+                    id: '7YpL3oZ4kZ9vP7Q1tR2sX3z',
+                    title: 'Release notes',
+                    content: 'See attached',
+                    creator: 1,
+                    channel_id: '7YpL3oZ4kZ9vP7Q1tR2sX44',
+                    workspace_id: 1,
+                    comment_count: 0,
+                    last_updated_ts: 1609459200,
+                    pinned: false,
+                    posted_ts: 1609459200,
+                    snippet: 'See attached',
+                    snippet_creator: 1,
+                    is_archived: false,
+                })
+            }),
+        )
+
+        const api = new CommsApi(TEST_API_TOKEN)
+        await api.threads.createThread({
+            channelId: '7YpL3oZ4kZ9vP7Q1tR2sX44',
+            title: 'Release notes',
+            content: 'See attached',
+            attachments: [
+                {
+                    attachmentId: 'abc123',
+                    urlType: 'file',
+                    fileName: 'spec.pdf',
+                    fileSize: 12345,
+                    underlyingType: 'application/pdf',
+                    uploadState: 'uploaded',
+                    url: 'https://files.comms.todoist.com/abc/spec.pdf',
+                },
+            ],
+        })
+
+        expect(body?.channel_id).toBe('7YpL3oZ4kZ9vP7Q1tR2sX44')
+        expect(body?.content).toBe('See attached')
+        expect(body?.attachments).toEqual([
+            {
+                attachment_id: 'abc123',
+                url_type: 'file',
+                file_name: 'spec.pdf',
+                file_size: 12345,
+                underlying_type: 'application/pdf',
+                upload_state: 'uploaded',
+                url: 'https://files.comms.todoist.com/abc/spec.pdf',
+            },
+        ])
+    })
 })

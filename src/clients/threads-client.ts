@@ -115,6 +115,7 @@ export class ThreadsClient extends BaseClient {
      * @param args.content - The thread content.
      * @param args.recipients - Optional array of user IDs to notify.
      * @param args.groups - Optional array of custom group IDs to notify.
+     * @param args.attachments - Optional array of {@link Attachment}s (from `attachments.upload`).
      * @returns The created thread object.
      *
      * @example
