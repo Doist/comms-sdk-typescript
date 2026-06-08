@@ -1,3 +1,9 @@
+## [0.4.2](https://github.com/Doist/comms-sdk-typescript/compare/v0.4.1...v0.4.2) (2026-06-08)
+
+### Bug Fixes
+
+* pin undici to 7.24.8 and block renovate updates ([#18](https://github.com/Doist/comms-sdk-typescript/issues/18)) ([874de5a](https://github.com/Doist/comms-sdk-typescript/commit/874de5a1b2633c0db2b9a803baf1651a170ed7a3))
+
 ## [0.4.1](https://github.com/Doist/comms-sdk-typescript/compare/v0.4.0...v0.4.1) (2026-05-31)
 
 ### Bug Fixes
