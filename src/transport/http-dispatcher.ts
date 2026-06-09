@@ -68,19 +68,32 @@ async function createDefaultDispatcher(): Promise<Dispatcher | undefined> {
     // branch, so undici is safe to load when we get here.
     const { EnvHttpProxyAgent, interceptors } = await import('undici')
 
-    // `allowH2: true` opts into HTTP/2 via ALPN; undici falls back to h1.1
-    // when the server doesn't negotiate h2. Without this flag undici
-    // defaults to h1.1 even when the server supports h2.
-    //
-    // `interceptors.decompress()` decodes gzip/deflate/br/zstd bodies. On
-    // Node 24+, attaching any custom dispatcher to global `fetch` strips
-    // `content-encoding` without actually decompressing the body.
-    // See https://github.com/Doist/todoist-cli/issues/318.
-    //
-    // Both emit ExperimentalWarning on first use; suppressed during init.
+    // `EnvHttpProxyAgent` (with `allowH2`) and `interceptors.decompress()` both
+    // emit an ExperimentalWarning on first use, so build the whole dispatcher
+    // inside the suppression block.
     return suppressExperimentalWarningsSync(() => {
+        // `allowH2: true` opts into HTTP/2 via ALPN; undici falls back to h1.1
+        // when the server doesn't negotiate h2. Without this flag undici
+        // defaults to h1.1 even when the server supports h2.
+        const agent = new EnvHttpProxyAgent({ allowH2: true })
+
+        // Some runtimes report `process.versions.node` (so `isNodeEnvironment()`
+        // passes) but ship only a partial undici: `interceptors.decompress` is
+        // absent and dispatchers have no `.compose`. Bun is the common case.
+        // There the proxy agent alone is enough — Bun's `fetch` decompresses
+        // gzip/deflate/br/zstd natively — so skip the interceptor instead of
+        // crashing on the missing API. Optional chaining also guards a runtime
+        // that omits the `interceptors` export entirely.
+        if (typeof interceptors?.decompress !== 'function') {
+            return agent
+        }
+
+        // `interceptors.decompress()` decodes gzip/deflate/br/zstd bodies. On
+        // Node 24+, attaching any custom dispatcher to global `fetch` strips
+        // `content-encoding` without actually decompressing the body.
+        // See https://github.com/Doist/todoist-cli/issues/318.
         const decompress = interceptors.decompress()
-        return new EnvHttpProxyAgent({ allowH2: true }).compose(decompress)
+        return agent.compose(decompress)
     })
 }
 
