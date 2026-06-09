@@ -1,3 +1,9 @@
+## [0.4.3](https://github.com/Doist/comms-sdk-typescript/compare/v0.4.2...v0.4.3) (2026-06-09)
+
+### Bug Fixes
+
+* build a working dispatcher on runtimes without undici's decompress interceptor (e.g. Bun) ([#20](https://github.com/Doist/comms-sdk-typescript/issues/20)) ([e415e07](https://github.com/Doist/comms-sdk-typescript/commit/e415e07539d27c00c07dbe70e767025d28964742))
+
 ## [0.4.2](https://github.com/Doist/comms-sdk-typescript/compare/v0.4.1...v0.4.2) (2026-06-08)
 
 ### Bug Fixes
