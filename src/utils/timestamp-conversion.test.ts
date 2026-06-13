@@ -48,18 +48,30 @@ describe('timestampConversion', () => {
 
         it('should use *Date suffix when stripping Ts would collide with an existing key', () => {
             const input = {
+                posted: 'already set',
+                postedTs: 1700000000,
+            }
+            const result = transformTimestamps(input) as Record<string, unknown>
+            expect(result.posted).toBe('already set')
+            expect(result.postedDate).toEqual(new Date(1700000000 * 1000))
+        })
+
+        it('should preserve pinnedTs instead of converting it to pinned', () => {
+            const input = {
                 pinned: true,
                 pinnedTs: 1700000000,
             }
             const result = transformTimestamps(input) as Record<string, unknown>
             expect(result.pinned).toBe(true)
-            expect(result.pinnedDate).toEqual(new Date(1700000000 * 1000))
+            expect(result.pinnedTs).toBe(1700000000)
+            expect(result.pinnedDate).toBeUndefined()
         })
 
-        it('should not collide when the base key does not exist', () => {
+        it('should preserve pinnedTs when the base key does not exist', () => {
             const input = { pinnedTs: 1700000000 }
             const result = transformTimestamps(input) as Record<string, unknown>
-            expect(result.pinned).toEqual(new Date(1700000000 * 1000))
+            expect(result.pinned).toBeUndefined()
+            expect(result.pinnedTs).toBe(1700000000)
             expect(result.pinnedDate).toBeUndefined()
         })
 

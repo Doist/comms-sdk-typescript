@@ -7,9 +7,11 @@ export function timestampToDate(timestamp: number): Date {
     return new Date(timestamp * 1000)
 }
 
+const timestampFieldsToPreserve = new Set(['pinnedTs'])
+
 /**
- * Recursively transforms all timestamp fields (ending in 'Ts') in an object to Date objects.
- * Also renames the fields by removing the 'Ts' suffix.
+ * Recursively transforms timestamp fields (ending in 'Ts') in an object to Date objects.
+ * Also renames converted fields by removing the 'Ts' suffix.
  * @param obj - The object to transform
  * @returns The transformed object with Date fields
  */
@@ -28,6 +30,11 @@ export function transformTimestamps<T>(obj: T): T {
         for (const [key, value] of Object.entries(obj)) {
             // Check if the key ends with 'Ts' and the value is a number
             if (key.endsWith('Ts') && typeof value === 'number') {
+                if (timestampFieldsToPreserve.has(key)) {
+                    result[key] = value
+                    continue
+                }
+
                 // Remove 'Ts' suffix and convert to Date
                 const newKey = key.slice(0, -2)
                 // If the base key already exists in the original object, use *Date suffix
