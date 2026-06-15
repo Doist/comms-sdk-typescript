@@ -1,3 +1,9 @@
+## [0.4.6](https://github.com/Doist/comms-sdk-typescript/compare/v0.4.5...v0.4.6) (2026-06-15)
+
+### Bug Fixes
+
+* **urls:** drop legacy /a/ prefix from Comms permalinks ([#27](https://github.com/Doist/comms-sdk-typescript/issues/27)) ([37ee9d0](https://github.com/Doist/comms-sdk-typescript/commit/37ee9d02b2a66ca34644e58e10b267171deb14e6))
+
 ## [0.4.5](https://github.com/Doist/comms-sdk-typescript/compare/v0.4.4...v0.4.5) (2026-06-15)
 
 ### Bug Fixes
