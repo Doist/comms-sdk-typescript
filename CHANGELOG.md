@@ -1,3 +1,9 @@
+## [0.4.5](https://github.com/Doist/comms-sdk-typescript/compare/v0.4.4...v0.4.5) (2026-06-15)
+
+### Bug Fixes
+
+* parse bare comment object from comments/getone ([#26](https://github.com/Doist/comms-sdk-typescript/issues/26)) ([f738991](https://github.com/Doist/comms-sdk-typescript/commit/f738991dfb906caf92f69b9efbaab6241b1f0d38))
+
 ## [0.4.4](https://github.com/Doist/comms-sdk-typescript/compare/v0.4.3...v0.4.4) (2026-06-15)
 
 ### Bug Fixes
