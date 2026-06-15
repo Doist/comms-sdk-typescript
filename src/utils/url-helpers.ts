@@ -1,5 +1,5 @@
 /**
- * Helper functions for creating Comms permalinks (`https://comms.todoist.com/a/...`).
+ * Helper functions for creating Comms permalinks (`https://comms.todoist.com/...`).
  */
 
 export type CommsURLParams = {
@@ -20,12 +20,12 @@ const COMMS_BASE_URL = 'https://comms.todoist.com'
  * @returns A relative URL path
  * @example
  * getCommsURL({ workspaceId: 1, channelId: '7Yp...', threadId: '7Yq...' })
- * // returns '/a/1/ch/7Yp.../t/7Yq.../'
+ * // returns '/1/ch/7Yp.../t/7Yq.../'
  */
 export function getCommsURL(params: CommsURLParams): string {
     const { workspaceId, channelId, conversationId, threadId, commentId, messageId, userId } =
         params
-    let url = `/a/${workspaceId}/`
+    let url = `/${workspaceId}/`
 
     if (channelId) {
         url += `ch/${channelId}/`
@@ -107,53 +107,53 @@ export function getCommentURL(params: {
 
 /** Returns the URL for the threads root (channels view). */
 export function getThreadsRootURL(workspaceId: number): string {
-    return `/a/${workspaceId}/ch`
+    return `/${workspaceId}/ch`
 }
 
 /** Returns the URL for the inbox. */
 export function getInboxURL(workspaceId: number, tab?: 'done' | 'mentions'): string {
     const tabParam = tab ? `/${tab}` : ''
-    return `/a/${workspaceId}/inbox${tabParam}`
+    return `/${workspaceId}/inbox${tabParam}`
 }
 
 /** Returns the URL for the messages/conversations root. */
 export function getMessagesRootURL(workspaceId: number): string {
-    return `/a/${workspaceId}/msg`
+    return `/${workspaceId}/msg`
 }
 
 /** Returns the URL for a user profile. */
 export function getUserProfileURL(params: { workspaceId: number; userId: number }): string {
-    return `/a/${params.workspaceId}/people/u/${params.userId}`
+    return `/${params.workspaceId}/people/u/${params.userId}`
 }
 
 /** Returns the URL for the saved threads view. */
 export function getSavedThreadsRootURL(workspaceId: number): string {
-    return `/a/${workspaceId}/saved`
+    return `/${workspaceId}/saved`
 }
 
 /** Returns the URL for a saved thread. */
 export function getSavedThreadURL(params: { workspaceId: number; threadId: string }): string {
-    return `/a/${params.workspaceId}/saved/t/${params.threadId}`
+    return `/${params.workspaceId}/saved/t/${params.threadId}`
 }
 
 /** Returns the URL for the search root. */
 export function getSearchRootURL(workspaceId: number): string {
-    return `/a/${workspaceId}/search`
+    return `/${workspaceId}/search`
 }
 
 /** Returns the URL for a search with a query. */
 export function getSearchQueryURL(params: { workspaceId: number; query: string }): string {
-    return `/a/${params.workspaceId}/search?q=${decodeURIComponent(params.query)}`
+    return `/${params.workspaceId}/search?q=${decodeURIComponent(params.query)}`
 }
 
 /** Returns the URL for settings. */
 export function getSettingsURL(params: { workspaceId: number; initialLocation?: string }): string {
     return params.initialLocation
-        ? `/a/${params.workspaceId}/settings/${params.initialLocation}`
-        : `/a/${params.workspaceId}/settings`
+        ? `/${params.workspaceId}/settings/${params.initialLocation}`
+        : `/${params.workspaceId}/settings`
 }
 
 /** Returns the URL for the team members root. */
 export function getTeamMembersRootURL(workspaceId: number): string {
-    return `/a/${workspaceId}/people/u`
+    return `/${workspaceId}/people/u`
 }

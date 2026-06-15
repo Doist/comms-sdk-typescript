@@ -32,7 +32,7 @@ describe('addCommentRequest — base-bound schema', () => {
         )
 
         expect(comment.url).toBe(
-            `${customBase}/a/1/ch/BBBBBBBBBBBBBBBBBBBBBB/t/${TEST_THREAD_ID}/c/AAAAAAAAAAAAAAAAAAAAAA`,
+            `${customBase}/1/ch/BBBBBBBBBBBBBBBBBBBBBB/t/${TEST_THREAD_ID}/c/AAAAAAAAAAAAAAAAAAAAAA`,
         )
     })
 })

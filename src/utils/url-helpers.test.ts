@@ -28,54 +28,54 @@ const MS = '7YpL3oZ4kZ9vP7Q1tR2sX43'
 describe('URL helpers', () => {
     describe('getCommsURL', () => {
         test('workspace only', () => {
-            expect(getCommsURL({ workspaceId: 1 })).toBe('/a/1/')
+            expect(getCommsURL({ workspaceId: 1 })).toBe('/1/')
         })
 
         test('workspace + channel', () => {
-            expect(getCommsURL({ workspaceId: 1, channelId: CH })).toBe(`/a/1/ch/${CH}/`)
+            expect(getCommsURL({ workspaceId: 1, channelId: CH })).toBe(`/1/ch/${CH}/`)
         })
 
         test('workspace + channel + thread', () => {
             expect(getCommsURL({ workspaceId: 1, channelId: CH, threadId: TH })).toBe(
-                `/a/1/ch/${CH}/t/${TH}/`,
+                `/1/ch/${CH}/t/${TH}/`,
             )
         })
 
         test('workspace + channel + thread + comment', () => {
             expect(
                 getCommsURL({ workspaceId: 1, channelId: CH, threadId: TH, commentId: CO }),
-            ).toBe(`/a/1/ch/${CH}/t/${TH}/c/${CO}`)
+            ).toBe(`/1/ch/${CH}/t/${TH}/c/${CO}`)
         })
 
         test('inbox thread', () => {
-            expect(getCommsURL({ workspaceId: 1, threadId: TH })).toBe(`/a/1/inbox/t/${TH}/`)
+            expect(getCommsURL({ workspaceId: 1, threadId: TH })).toBe(`/1/inbox/t/${TH}/`)
         })
 
         test('inbox thread + comment', () => {
             expect(getCommsURL({ workspaceId: 1, threadId: TH, commentId: CO })).toBe(
-                `/a/1/inbox/t/${TH}/c/${CO}`,
+                `/1/inbox/t/${TH}/c/${CO}`,
             )
         })
 
         test('conversation', () => {
-            expect(getCommsURL({ workspaceId: 1, conversationId: CN })).toBe(`/a/1/msg/${CN}/`)
+            expect(getCommsURL({ workspaceId: 1, conversationId: CN })).toBe(`/1/msg/${CN}/`)
         })
 
         test('conversation + message', () => {
             expect(getCommsURL({ workspaceId: 1, conversationId: CN, messageId: MS })).toBe(
-                `/a/1/msg/${CN}/m/${MS}`,
+                `/1/msg/${CN}/m/${MS}`,
             )
         })
 
         test('user', () => {
-            expect(getCommsURL({ workspaceId: 1, userId: 1001 })).toBe('/a/1/people/u/1001')
+            expect(getCommsURL({ workspaceId: 1, userId: 1001 })).toBe('/1/people/u/1001')
         })
     })
 
     describe('getFullCommsURL', () => {
         test('default base', () => {
             expect(getFullCommsURL({ workspaceId: 1, channelId: CH })).toBe(
-                `https://comms.todoist.com/a/1/ch/${CH}/`,
+                `https://comms.todoist.com/1/ch/${CH}/`,
             )
         })
 
@@ -85,93 +85,93 @@ describe('URL helpers', () => {
                     { workspaceId: 1, channelId: CH },
                     'https://staging.comms.todoist.com',
                 ),
-            ).toBe(`https://staging.comms.todoist.com/a/1/ch/${CH}/`)
+            ).toBe(`https://staging.comms.todoist.com/1/ch/${CH}/`)
         })
     })
 
     test('getThreadURL', () => {
         expect(getThreadURL({ workspaceId: 1, channelId: CH, threadId: TH })).toBe(
-            `/a/1/ch/${CH}/t/${TH}/`,
+            `/1/ch/${CH}/t/${TH}/`,
         )
     })
 
     test('getChannelURL', () => {
-        expect(getChannelURL({ workspaceId: 1, channelId: CH })).toBe(`/a/1/ch/${CH}/`)
+        expect(getChannelURL({ workspaceId: 1, channelId: CH })).toBe(`/1/ch/${CH}/`)
     })
 
     test('getConversationURL', () => {
-        expect(getConversationURL({ workspaceId: 1, conversationId: CN })).toBe(`/a/1/msg/${CN}/`)
+        expect(getConversationURL({ workspaceId: 1, conversationId: CN })).toBe(`/1/msg/${CN}/`)
     })
 
     test('getMessageURL', () => {
         expect(getMessageURL({ workspaceId: 1, conversationId: CN, messageId: MS })).toBe(
-            `/a/1/msg/${CN}/m/${MS}`,
+            `/1/msg/${CN}/m/${MS}`,
         )
     })
 
     test('getCommentURL', () => {
         expect(getCommentURL({ workspaceId: 1, channelId: CH, threadId: TH, commentId: CO })).toBe(
-            `/a/1/ch/${CH}/t/${TH}/c/${CO}`,
+            `/1/ch/${CH}/t/${TH}/c/${CO}`,
         )
     })
 
     test('getThreadsRootURL', () => {
-        expect(getThreadsRootURL(1)).toBe('/a/1/ch')
+        expect(getThreadsRootURL(1)).toBe('/1/ch')
     })
 
     describe('getInboxURL', () => {
         test('no tab', () => {
-            expect(getInboxURL(1)).toBe('/a/1/inbox')
+            expect(getInboxURL(1)).toBe('/1/inbox')
         })
 
         test('done tab', () => {
-            expect(getInboxURL(1, 'done')).toBe('/a/1/inbox/done')
+            expect(getInboxURL(1, 'done')).toBe('/1/inbox/done')
         })
 
         test('mentions tab', () => {
-            expect(getInboxURL(1, 'mentions')).toBe('/a/1/inbox/mentions')
+            expect(getInboxURL(1, 'mentions')).toBe('/1/inbox/mentions')
         })
     })
 
     test('getMessagesRootURL', () => {
-        expect(getMessagesRootURL(1)).toBe('/a/1/msg')
+        expect(getMessagesRootURL(1)).toBe('/1/msg')
     })
 
     test('getUserProfileURL', () => {
-        expect(getUserProfileURL({ workspaceId: 1, userId: 1001 })).toBe('/a/1/people/u/1001')
+        expect(getUserProfileURL({ workspaceId: 1, userId: 1001 })).toBe('/1/people/u/1001')
     })
 
     test('getSavedThreadsRootURL', () => {
-        expect(getSavedThreadsRootURL(1)).toBe('/a/1/saved')
+        expect(getSavedThreadsRootURL(1)).toBe('/1/saved')
     })
 
     test('getSavedThreadURL', () => {
-        expect(getSavedThreadURL({ workspaceId: 1, threadId: TH })).toBe(`/a/1/saved/t/${TH}`)
+        expect(getSavedThreadURL({ workspaceId: 1, threadId: TH })).toBe(`/1/saved/t/${TH}`)
     })
 
     test('getSearchRootURL', () => {
-        expect(getSearchRootURL(1)).toBe('/a/1/search')
+        expect(getSearchRootURL(1)).toBe('/1/search')
     })
 
     test('getSearchQueryURL', () => {
         expect(getSearchQueryURL({ workspaceId: 1, query: 'test query' })).toBe(
-            '/a/1/search?q=test query',
+            '/1/search?q=test query',
         )
     })
 
     describe('getSettingsURL', () => {
         test('no location', () => {
-            expect(getSettingsURL({ workspaceId: 1 })).toBe('/a/1/settings')
+            expect(getSettingsURL({ workspaceId: 1 })).toBe('/1/settings')
         })
 
         test('with location', () => {
             expect(getSettingsURL({ workspaceId: 1, initialLocation: 'general' })).toBe(
-                '/a/1/settings/general',
+                '/1/settings/general',
             )
         })
     })
 
     test('getTeamMembersRootURL', () => {
-        expect(getTeamMembersRootURL(1)).toBe('/a/1/people/u')
+        expect(getTeamMembersRootURL(1)).toBe('/1/people/u')
     })
 })

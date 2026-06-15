@@ -133,7 +133,7 @@ describe('entity url factories', () => {
             created: new Date(),
             version: 1,
         }
-        expect(createChannelSchema(base).parse(channel).url).toBe(`${base}/a/1/ch/${channelId}/`)
+        expect(createChannelSchema(base).parse(channel).url).toBe(`${base}/1/ch/${channelId}/`)
     })
 
     it('normalizes a trailing slash on the link base', () => {
@@ -148,7 +148,7 @@ describe('entity url factories', () => {
             version: 1,
         }
         expect(createChannelSchema(`${base}/`).parse(channel).url).toBe(
-            `${base}/a/1/ch/${channelId}/`,
+            `${base}/1/ch/${channelId}/`,
         )
     })
 
@@ -164,7 +164,7 @@ describe('entity url factories', () => {
             version: 1,
         }
         expect(createChannelSchema().parse(channel).url).toBe(
-            `https://comms.todoist.com/a/1/ch/${channelId}/`,
+            `https://comms.todoist.com/1/ch/${channelId}/`,
         )
     })
 
@@ -194,9 +194,9 @@ describe('entity url factories', () => {
                 posted: new Date(),
             },
         })
-        expect(parsed.url).toBe(`${base}/a/1/ch/${channelId}/t/${threadId}/`)
+        expect(parsed.url).toBe(`${base}/1/ch/${channelId}/t/${threadId}/`)
         expect(parsed.lastComment?.url).toBe(
-            `${base}/a/1/ch/${channelId}/t/${commentThreadId}/c/${commentId}`,
+            `${base}/1/ch/${channelId}/t/${commentThreadId}/c/${commentId}`,
         )
     })
 })
