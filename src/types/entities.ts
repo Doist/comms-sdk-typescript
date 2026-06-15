@@ -150,8 +150,8 @@ export const ChannelSchema = createChannelSchema()
 
 export type Channel = z.infer<typeof ChannelSchema>
 
-// Thread entity from API. `pinned` (boolean) and `pinnedTs` (epoch ms or
-// null) are both surfaced — `pinned` is kept for Zapier/webhook clients.
+// Thread entity from API. `pinned` (boolean) and `pinnedDate` are both
+// surfaced — `pinned` is kept for Zapier/webhook clients.
 export const ThreadObjectSchema = z.object({
     id: z.string(),
     title: z.string(),
@@ -172,10 +172,10 @@ export const ThreadObjectSchema = z.object({
     lastUpdated: z.date(),
     mutedUntil: z.date().nullable().optional(),
     participants: z.array(z.number()).nullable().optional(),
-    // Backend wire shape only includes `pinned_ts` (epoch ms or null);
-    // derive `pinned` from `pinnedTs != null` if you need a bool.
+    // Backend wire shape only includes `pinned_ts` (epoch seconds or null);
+    // response normalization exposes that timestamp as `pinnedDate`.
     pinned: z.boolean().optional(),
-    pinnedTs: z.number().int().nullable().optional(),
+    pinnedDate: z.date().nullable().optional(),
     posted: z.date(),
     reactions: z.record(z.string(), z.unknown()).nullable().optional(),
     recipients: z.array(z.number()).nullable().optional(),
@@ -422,10 +422,10 @@ export function createInboxThreadObjectSchema(linkBaseUrl?: string) {
         lastUpdated: z.date(),
         mutedUntil: z.date().nullable().optional(),
         participants: z.array(z.number()).nullable().optional(),
-        // Backend wire shape only includes `pinned_ts` (epoch ms or null);
-        // derive `pinned` from `pinnedTs != null` if you need a bool.
+        // Backend wire shape only includes `pinned_ts` (epoch seconds or null);
+        // response normalization exposes that timestamp as `pinnedDate`.
         pinned: z.boolean().optional(),
-        pinnedTs: z.number().int().nullable().optional(),
+        pinnedDate: z.date().nullable().optional(),
         posted: z.date(),
         reactions: z.record(z.string(), z.array(z.number())).nullable().optional(),
         recipients: z.array(z.number()).nullable().optional(),
