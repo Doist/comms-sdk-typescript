@@ -45,7 +45,7 @@ describe('InboxClient — wire serialization', () => {
         expect(params.get('archive_filter')).toBe('all')
     })
 
-    it('accepts pinned_ts without rewriting it to pinned', async () => {
+    it('exposes pinned_ts as pinnedDate without rewriting pinned', async () => {
         server.use(
             http.get(`${BASE}/inbox/get`, () => {
                 return HttpResponse.json([
@@ -66,6 +66,24 @@ describe('InboxClient — wire serialization', () => {
                         in_inbox: true,
                         closed: false,
                     },
+                    {
+                        id: `${TEST_THREAD_ID}-with-pinned`,
+                        title: 'Pinned thread with boolean',
+                        content: 'Thread body',
+                        creator: 1,
+                        channel_id: TEST_CHANNEL_ID,
+                        workspace_id: 1,
+                        comment_count: 0,
+                        last_updated_ts: 1700000001,
+                        pinned: true,
+                        pinned_ts: 1700000000,
+                        posted_ts: 1700000000,
+                        snippet: 'Thread body',
+                        snippet_creator: 1,
+                        is_archived: false,
+                        in_inbox: true,
+                        closed: false,
+                    },
                 ])
             }),
         )
@@ -73,9 +91,13 @@ describe('InboxClient — wire serialization', () => {
         const api = new CommsApi(TEST_API_TOKEN)
         const inbox = await api.inbox.getInbox({ workspaceId: 1 })
 
-        expect(inbox).toHaveLength(1)
+        expect(inbox).toHaveLength(2)
         expect(inbox[0].pinned).toBeUndefined()
-        expect(inbox[0].pinnedTs).toBe(1700000000)
+        expect(inbox[0].pinnedDate).toEqual(new Date(1700000000 * 1000))
+        expect(inbox[0]).not.toHaveProperty('pinnedTs')
+        expect(inbox[1].pinned).toBe(true)
+        expect(inbox[1].pinnedDate).toEqual(new Date(1700000000 * 1000))
+        expect(inbox[1]).not.toHaveProperty('pinnedTs')
     })
 
     it('archiveAll POSTs workspace_id and older_than_ts as snake_case', async () => {

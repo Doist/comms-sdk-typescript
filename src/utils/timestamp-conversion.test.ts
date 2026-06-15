@@ -56,29 +56,35 @@ describe('timestampConversion', () => {
             expect(result.postedDate).toEqual(new Date(1700000000 * 1000))
         })
 
-        it('should preserve pinnedTs instead of converting it to pinned', () => {
+        it('should convert pinnedTs to pinnedDate without overwriting pinned', () => {
             const input = {
                 pinned: true,
                 pinnedTs: 1700000000,
             }
             const result = transformTimestamps(input) as Record<string, unknown>
             expect(result.pinned).toBe(true)
-            expect(result.pinnedTs).toBe(1700000000)
-            expect(result.pinnedDate).toBeUndefined()
+            expect(result.pinnedTs).toBeUndefined()
+            expect(result.pinnedDate).toEqual(new Date(1700000000 * 1000))
         })
 
-        it('should preserve pinnedTs when the base key does not exist', () => {
+        it('should convert pinnedTs to pinnedDate when the base key does not exist', () => {
             const input = { pinnedTs: 1700000000 }
             const result = transformTimestamps(input) as Record<string, unknown>
             expect(result.pinned).toBeUndefined()
-            expect(result.pinnedTs).toBe(1700000000)
-            expect(result.pinnedDate).toBeUndefined()
+            expect(result.pinnedTs).toBeUndefined()
+            expect(result.pinnedDate).toEqual(new Date(1700000000 * 1000))
+        })
+
+        it('should convert null pinnedTs to null pinnedDate', () => {
+            const input = { pinnedTs: null, title: 'test' }
+            const result = transformTimestamps(input)
+            expect(result).toEqual({ pinnedDate: null, title: 'test' })
         })
 
         it('should skip Ts fields that are not numbers', () => {
-            const input = { pinnedTs: null, title: 'test' }
+            const input = { postedTs: null, title: 'test' }
             const result = transformTimestamps(input)
-            expect(result).toEqual({ pinnedTs: null, title: 'test' })
+            expect(result).toEqual({ postedTs: null, title: 'test' })
         })
     })
 })
