@@ -45,6 +45,33 @@ describe('CommentsClient — wire serialization', () => {
         expect(params.get('limit')).toBe('50')
     })
 
+    it('getComment parses the bare comment object returned by getone', async () => {
+        const responseChannelId = '7YpL3oZ4kZ9vP7Q1tR2sX3y'
+        server.use(
+            http.get(`${BASE}/comments/getone`, ({ request }) => {
+                expect(new URL(request.url).searchParams.get('id')).toBe(TEST_COMMENT_ID)
+                // `getone` returns the comment at the top level, not wrapped in `{ comment }`.
+                return HttpResponse.json({
+                    id: TEST_COMMENT_ID,
+                    thread_id: TEST_THREAD_ID,
+                    channel_id: responseChannelId,
+                    creator: 1,
+                    content: 'hello',
+                    posted_ts: Math.floor(Date.now() / 1000),
+                    workspace_id: 1,
+                    system_message: null,
+                })
+            }),
+        )
+
+        const api = new CommsApi(TEST_API_TOKEN)
+        const comment = await api.comments.getComment(TEST_COMMENT_ID)
+
+        expect(comment.id).toBe(TEST_COMMENT_ID)
+        expect(comment.content).toBe('hello')
+        expect(comment.threadId).toBe(TEST_THREAD_ID)
+    })
+
     it('markPosition POSTs thread_id and comment_id as snake_case', async () => {
         let capturedBody: Record<string, unknown> | null = null
         server.use(

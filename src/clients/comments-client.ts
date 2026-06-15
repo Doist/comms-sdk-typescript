@@ -32,10 +32,6 @@ export class CommentsClient extends BaseClient {
     private readonly commentListSchema = this.linkBaseUrl
         ? z.array(this.commentSchema)
         : CommentListSchema
-    // `getone` wraps the comment in `{ comment: ... }`; built once per client.
-    private readonly wrappedCommentSchema = z
-        .object({ comment: this.commentSchema })
-        .transform((data) => data.comment)
 
     /**
      * Gets all comments for a thread. `newerThan` / `olderThan` (`Date`) are
@@ -75,7 +71,8 @@ export class CommentsClient extends BaseClient {
     }
 
     /**
-     * Gets a single comment object by id. The API wraps it in `{comment: ...}`.
+     * Gets a single comment object by id. The `getone` endpoint returns the
+     * comment object directly (the same shape as `add`), not wrapped.
      *
      * @param id - The comment ID.
      * @returns The comment object.
@@ -88,7 +85,7 @@ export class CommentsClient extends BaseClient {
             apiToken: this.apiToken,
             payload: { id },
             customFetch: this.customFetch,
-        }).then((response) => this.wrappedCommentSchema.parse(response.data))
+        }).then((response) => this.commentSchema.parse(response.data))
     }
 
     /**
