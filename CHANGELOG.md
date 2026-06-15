@@ -1,3 +1,9 @@
+## [0.4.4](https://github.com/Doist/comms-sdk-typescript/compare/v0.4.3...v0.4.4) (2026-06-15)
+
+### Bug Fixes
+
+* expose pinned timestamp as pinnedDate ([#24](https://github.com/Doist/comms-sdk-typescript/issues/24)) ([41f0074](https://github.com/Doist/comms-sdk-typescript/commit/41f00744f0d7a14ecadf250a2f4b2011c18a42eb))
+
 ## [0.4.3](https://github.com/Doist/comms-sdk-typescript/compare/v0.4.2...v0.4.3) (2026-06-09)
 
 ### Bug Fixes
