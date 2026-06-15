@@ -47,7 +47,7 @@ export const mockChannel: Channel = {
     archived: false,
     created: new Date('2021-01-01T00:00:00Z'),
     version: 0,
-    url: `https://comms.todoist.com/a/1/ch/${TEST_CHANNEL_ID}/`,
+    url: `https://comms.todoist.com/1/ch/${TEST_CHANNEL_ID}/`,
 }
 
 export const mockThread: Thread = {
@@ -64,7 +64,7 @@ export const mockThread: Thread = {
     snippet: 'This is a test thread',
     snippetCreator: 1,
     isArchived: false,
-    url: `https://comms.todoist.com/a/1/ch/${TEST_CHANNEL_ID}/t/${TEST_THREAD_ID}/`,
+    url: `https://comms.todoist.com/1/ch/${TEST_CHANNEL_ID}/t/${TEST_THREAD_ID}/`,
 }
 
 export const mockGroup: Group = {
@@ -87,7 +87,7 @@ export const mockConversation: Conversation = {
     archived: false,
     created: new Date('2021-01-01T00:00:00Z'),
     creator: 1,
-    url: `https://comms.todoist.com/a/1/msg/${TEST_CONVERSATION_ID}/`,
+    url: `https://comms.todoist.com/1/msg/${TEST_CONVERSATION_ID}/`,
 }
 
 export const mockComment: Comment = {
@@ -98,7 +98,7 @@ export const mockComment: Comment = {
     workspaceId: 1,
     channelId: TEST_CHANNEL_ID,
     posted: new Date('2021-01-01T00:00:00Z'),
-    url: `https://comms.todoist.com/a/1/ch/${TEST_CHANNEL_ID}/t/${TEST_THREAD_ID}/c/${TEST_COMMENT_ID}`,
+    url: `https://comms.todoist.com/1/ch/${TEST_CHANNEL_ID}/t/${TEST_THREAD_ID}/c/${TEST_COMMENT_ID}`,
 }
 
 export const mockWorkspaceUser: WorkspaceUser = {

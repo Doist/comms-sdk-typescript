@@ -121,7 +121,7 @@ describe('CommentsClient — baseUrl in entity links', () => {
         })
 
         expect(comment.url).toBe(
-            `${customBase}/a/1/ch/${responseChannelId}/t/${TEST_THREAD_ID}/c/${responseCommentId}`,
+            `${customBase}/1/ch/${responseChannelId}/t/${TEST_THREAD_ID}/c/${responseCommentId}`,
         )
     })
 
@@ -150,7 +150,7 @@ describe('CommentsClient — baseUrl in entity links', () => {
         })
 
         expect(comment.url).toBe(
-            `https://comms.example.com/a/1/ch/${responseChannelId}/t/${TEST_THREAD_ID}/c/${responseCommentId}`,
+            `https://comms.example.com/1/ch/${responseChannelId}/t/${TEST_THREAD_ID}/c/${responseCommentId}`,
         )
     })
 })
