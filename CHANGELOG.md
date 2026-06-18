@@ -1,3 +1,9 @@
+## [0.5.0](https://github.com/Doist/comms-sdk-typescript/compare/v0.4.6...v0.5.0) (2026-06-18)
+
+### Features
+
+* add refreshAuthToken + point OAuth at the Todoist authorization server ([#29](https://github.com/Doist/comms-sdk-typescript/issues/29)) ([bd169f9](https://github.com/Doist/comms-sdk-typescript/commit/bd169f9b4c39506b0c4c8081b0289c002bd8d040))
+
 ## [0.4.6](https://github.com/Doist/comms-sdk-typescript/compare/v0.4.5...v0.4.6) (2026-06-15)
 
 ### Bug Fixes
