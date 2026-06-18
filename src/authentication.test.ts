@@ -174,6 +174,31 @@ describe('authentication', () => {
             expect(result.expiresIn).toBe(3600)
         })
 
+        it('should refresh public client tokens without a client secret', async () => {
+            server.use(
+                http.post('https://todoist.com/oauth/access_token', async ({ request }) => {
+                    const body = await request.json()
+                    expect(body).toEqual({
+                        client_id: 'public-client-id',
+                        refresh_token: 'refresh-token-456',
+                        grant_type: 'refresh_token',
+                    })
+                    expect(body).not.toHaveProperty('client_secret')
+                    return HttpResponse.json({
+                        access_token: 'new-access-token-123',
+                        token_type: 'Bearer',
+                    })
+                }),
+            )
+
+            const result = await refreshAuthToken({
+                clientId: 'public-client-id',
+                refreshToken: 'refresh-token-456',
+            })
+
+            expect(result.accessToken).toBe('new-access-token-123')
+        })
+
         it('should use custom base URL if provided', async () => {
             server.use(
                 http.post('https://staging.comms.todoist.com/oauth/access_token', () => {

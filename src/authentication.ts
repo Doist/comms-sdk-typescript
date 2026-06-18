@@ -131,7 +131,7 @@ export type AuthTokenResponse = {
 
 export type RefreshAuthTokenRequestArgs = {
     clientId: string
-    clientSecret: string
+    clientSecret?: string
     refreshToken: string
 }
 
