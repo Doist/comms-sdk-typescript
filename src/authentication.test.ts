@@ -3,6 +3,7 @@ import {
     getAuthorizationUrl,
     getAuthStateParameter,
     getAuthToken,
+    refreshAuthToken,
     registerClient,
     revokeAuthToken,
     CommsScope,
@@ -136,6 +137,95 @@ describe('authentication', () => {
             }
 
             await getAuthToken(args)
+        })
+    })
+
+    describe('refreshAuthToken', () => {
+        it('should exchange refresh token for a new access token', async () => {
+            const mockResponse = {
+                access_token: 'new-access-token-123',
+                token_type: 'Bearer',
+                refresh_token: 'new-refresh-token-456',
+                expires_in: 3600,
+            }
+
+            server.use(
+                http.post('https://comms.todoist.com/oauth/token', async ({ request }) => {
+                    const body = await request.json()
+                    expect(body).toEqual({
+                        client_id: 'client-id',
+                        client_secret: 'client-secret',
+                        refresh_token: 'refresh-token-456',
+                        grant_type: 'refresh_token',
+                    })
+                    return HttpResponse.json(mockResponse)
+                }),
+            )
+
+            const result = await refreshAuthToken({
+                clientId: 'client-id',
+                clientSecret: 'client-secret',
+                refreshToken: 'refresh-token-456',
+            })
+
+            expect(result.accessToken).toBe('new-access-token-123')
+            expect(result.tokenType).toBe('Bearer')
+            expect(result.refreshToken).toBe('new-refresh-token-456')
+            expect(result.expiresIn).toBe(3600)
+        })
+
+        it('should use custom base URL if provided', async () => {
+            server.use(
+                http.post('https://staging.comms.todoist.com/oauth/token', () => {
+                    return HttpResponse.json({
+                        access_token: 'new-access-token-123',
+                        token_type: 'Bearer',
+                    })
+                }),
+            )
+
+            const result = await refreshAuthToken(
+                {
+                    clientId: 'client-id',
+                    clientSecret: 'client-secret',
+                    refreshToken: 'refresh-token-456',
+                },
+                { baseUrl: 'https://staging.comms.todoist.com' },
+            )
+
+            expect(result.accessToken).toBe('new-access-token-123')
+        })
+
+        it('should throw error on non-2xx response', async () => {
+            server.use(
+                http.post('https://comms.todoist.com/oauth/token', () => {
+                    return HttpResponse.json({ error: 'invalid_grant' }, { status: 400 })
+                }),
+            )
+
+            await expect(
+                refreshAuthToken({
+                    clientId: 'client-id',
+                    clientSecret: 'client-secret',
+                    refreshToken: 'expired-refresh-token',
+                }),
+            ).rejects.toThrow(CommsRequestError)
+        })
+
+        it('should throw if response has no access token', async () => {
+            server.use(
+                http.post('https://comms.todoist.com/oauth/token', () => {
+                    return HttpResponse.json({ token_type: 'Bearer' })
+                }),
+            )
+
+            await expect(
+                refreshAuthToken({
+                    clientId: 'client-id',
+                    clientSecret: 'client-secret',
+                    refreshToken: 'refresh-token-456',
+                }),
+            ).rejects.toThrow('Authentication token refresh failed.')
         })
     })
 

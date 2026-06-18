@@ -114,6 +114,12 @@ export type AuthTokenResponse = {
     scope?: string
 }
 
+export type RefreshAuthTokenRequestArgs = {
+    clientId: string
+    clientSecret: string
+    refreshToken: string
+}
+
 export type RevokeAuthTokenRequestArgs = {
     clientId: string
     clientSecret: string
@@ -241,6 +247,57 @@ export async function getAuthToken(
     if (!isSuccess(response) || !response.data?.accessToken) {
         throw new CommsRequestError(
             'Authentication token exchange failed.',
+            response.status,
+            response.data,
+        )
+    }
+
+    return response.data
+}
+
+/**
+ * Exchanges a refresh token for a new access token using the OAuth2
+ * `refresh_token` grant.
+ *
+ * @example
+ * ```typescript
+ * const { accessToken, refreshToken } = await refreshAuthToken({
+ *   clientId: 'client-id',
+ *   clientSecret: 'client-secret',
+ *   refreshToken: storedRefreshToken,
+ * })
+ * ```
+ *
+ * @returns The refreshed token. The response may include a new `refreshToken`
+ * (rotated by the server); persist it in place of the previous one when present.
+ * @throws {@link CommsRequestError} If the refresh fails
+ */
+export async function refreshAuthToken(
+    args: RefreshAuthTokenRequestArgs,
+    options?: AuthOptions,
+): Promise<AuthTokenResponse> {
+    const tokenUrl = options?.baseUrl
+        ? `${options.baseUrl}/oauth/token`
+        : 'https://comms.todoist.com/oauth/token'
+
+    const payload = {
+        clientId: args.clientId,
+        clientSecret: args.clientSecret,
+        refreshToken: args.refreshToken,
+        grantType: 'refresh_token',
+    }
+
+    const response = await request<AuthTokenResponse>({
+        httpMethod: 'POST',
+        baseUri: tokenUrl,
+        relativePath: '',
+        payload,
+        customFetch: options?.customFetch,
+    })
+
+    if (!isSuccess(response) || !response.data?.accessToken) {
+        throw new CommsRequestError(
+            'Authentication token refresh failed.',
             response.status,
             response.data,
         )
