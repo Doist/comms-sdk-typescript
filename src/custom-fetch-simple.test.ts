@@ -154,7 +154,7 @@ describe('Custom Fetch Core Functionality', () => {
             )
 
             expect(mockCustomFetch).toHaveBeenCalledWith(
-                expect.stringContaining('/oauth/token'),
+                expect.stringContaining('/oauth/access_token'),
                 expect.objectContaining({
                     method: 'POST',
                 }),

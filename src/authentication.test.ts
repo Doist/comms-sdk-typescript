@@ -39,7 +39,7 @@ describe('authentication', () => {
             const url = getAuthorizationUrl(clientId, scopes, state)
 
             expect(url).toBe(
-                'https://comms.todoist.com/oauth/authorize?client_id=test-client-id&response_type=code&scope=user%3Aread+channels%3Awrite&state=test-state',
+                'https://todoist.com/oauth/authorize?client_id=test-client-id&response_type=code&scope=user%3Aread+channels%3Awrite&state=test-state',
             )
         })
 
@@ -82,7 +82,7 @@ describe('authentication', () => {
             }
 
             server.use(
-                http.post('https://comms.todoist.com/oauth/token', async ({ request }) => {
+                http.post('https://todoist.com/oauth/access_token', async ({ request }) => {
                     const body = await request.json()
                     expect(body).toEqual({
                         client_id: 'client-id',
@@ -116,7 +116,7 @@ describe('authentication', () => {
             }
 
             server.use(
-                http.post('https://comms.todoist.com/oauth/token', async ({ request }) => {
+                http.post('https://todoist.com/oauth/access_token', async ({ request }) => {
                     const body = await request.json()
                     expect(body).toEqual({
                         client_id: 'client-id',
@@ -150,7 +150,7 @@ describe('authentication', () => {
             }
 
             server.use(
-                http.post('https://comms.todoist.com/oauth/token', async ({ request }) => {
+                http.post('https://todoist.com/oauth/access_token', async ({ request }) => {
                     const body = await request.json()
                     expect(body).toEqual({
                         client_id: 'client-id',
@@ -176,7 +176,7 @@ describe('authentication', () => {
 
         it('should use custom base URL if provided', async () => {
             server.use(
-                http.post('https://staging.comms.todoist.com/oauth/token', () => {
+                http.post('https://staging.comms.todoist.com/oauth/access_token', () => {
                     return HttpResponse.json({
                         access_token: 'new-access-token-123',
                         token_type: 'Bearer',
@@ -198,7 +198,7 @@ describe('authentication', () => {
 
         it('should throw error on non-2xx response', async () => {
             server.use(
-                http.post('https://comms.todoist.com/oauth/token', () => {
+                http.post('https://todoist.com/oauth/access_token', () => {
                     return HttpResponse.json({ error: 'invalid_grant' }, { status: 400 })
                 }),
             )
@@ -214,7 +214,7 @@ describe('authentication', () => {
 
         it('should throw if response has no access token', async () => {
             server.use(
-                http.post('https://comms.todoist.com/oauth/token', () => {
+                http.post('https://todoist.com/oauth/access_token', () => {
                     return HttpResponse.json({ token_type: 'Bearer' })
                 }),
             )
@@ -251,7 +251,7 @@ describe('authentication', () => {
 
         it('should return registered client details', async () => {
             server.use(
-                http.post('https://comms.todoist.com/oauth/register', () => {
+                http.post('https://todoist.com/oauth/register', () => {
                     return HttpResponse.json(successfulRegistrationResponse)
                 }),
             )
@@ -274,7 +274,7 @@ describe('authentication', () => {
 
         it('should throw error on non-2xx response', async () => {
             server.use(
-                http.post('https://comms.todoist.com/oauth/register', () => {
+                http.post('https://todoist.com/oauth/register', () => {
                     return HttpResponse.json({ error: 'invalid_client_metadata' }, { status: 400 })
                 }),
             )
@@ -286,7 +286,7 @@ describe('authentication', () => {
 
         it('should throw error if clientId not present in response', async () => {
             server.use(
-                http.post('https://comms.todoist.com/oauth/register', () => {
+                http.post('https://todoist.com/oauth/register', () => {
                     return HttpResponse.json(
                         { ...successfulRegistrationResponse, client_id: undefined },
                         { status: 200 },
@@ -317,7 +317,7 @@ describe('authentication', () => {
     describe('revokeAuthToken', () => {
         it('should revoke access token', async () => {
             server.use(
-                http.post('https://comms.todoist.com/oauth/revoke', async ({ request }) => {
+                http.post('https://todoist.com/api/v1/revoke', async ({ request }) => {
                     const body = await request.json()
                     expect(body).toEqual({
                         client_id: 'client-id',
