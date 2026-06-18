@@ -11,6 +11,21 @@ export type AuthOptions = {
 }
 
 /**
+ * Default origin of the Comms authorization server.
+ *
+ * The authorization server for Comms is Todoist (`todoist.com`), not the
+ * resource server (`comms.todoist.com`). Tokens are issued by Todoist and
+ * accepted by the Comms API. Paths match Todoist's published
+ * `/.well-known/oauth-authorization-server` metadata.
+ */
+const DEFAULT_AUTH_BASE_URL = 'https://todoist.com'
+
+function getAuthBaseUrl(baseUrl?: string): string {
+    const base = baseUrl ?? DEFAULT_AUTH_BASE_URL
+    return base.endsWith('/') ? base.slice(0, -1) : base
+}
+
+/**
  * OAuth scopes for the Comms API.
  *
  * @remarks
@@ -114,6 +129,12 @@ export type AuthTokenResponse = {
     scope?: string
 }
 
+export type RefreshAuthTokenRequestArgs = {
+    clientId: string
+    clientSecret: string
+    refreshToken: string
+}
+
 export type RevokeAuthTokenRequestArgs = {
     clientId: string
     clientSecret: string
@@ -198,7 +219,7 @@ export function getAuthorizationUrl(
         throw new Error('At least one scope value is required.')
     }
 
-    const authBaseUrl = baseUrl ? `${baseUrl}/oauth` : 'https://comms.todoist.com/oauth'
+    const authBaseUrl = `${getAuthBaseUrl(baseUrl)}/oauth`
     const scope = scopes.join(' ')
     const params = new URLSearchParams({
         client_id: clientId,
@@ -218,9 +239,7 @@ export async function getAuthToken(
     args: AuthTokenRequestArgs,
     options?: AuthOptions,
 ): Promise<AuthTokenResponse> {
-    const tokenUrl = options?.baseUrl
-        ? `${options.baseUrl}/oauth/token`
-        : 'https://comms.todoist.com/oauth/token'
+    const tokenUrl = `${getAuthBaseUrl(options?.baseUrl)}/oauth/access_token`
 
     const payload = {
         clientId: args.clientId,
@@ -249,13 +268,60 @@ export async function getAuthToken(
     return response.data
 }
 
+/**
+ * Exchanges a refresh token for a new access token using the OAuth2
+ * `refresh_token` grant.
+ *
+ * @example
+ * ```typescript
+ * const { accessToken, refreshToken } = await refreshAuthToken({
+ *   clientId: 'client-id',
+ *   clientSecret: 'client-secret',
+ *   refreshToken: storedRefreshToken,
+ * })
+ * ```
+ *
+ * @returns The refreshed token. The response may include a new `refreshToken`
+ * (rotated by the server); persist it in place of the previous one when present.
+ * @throws {@link CommsRequestError} If the refresh fails
+ */
+export async function refreshAuthToken(
+    args: RefreshAuthTokenRequestArgs,
+    options?: AuthOptions,
+): Promise<AuthTokenResponse> {
+    const tokenUrl = `${getAuthBaseUrl(options?.baseUrl)}/oauth/access_token`
+
+    const payload = {
+        clientId: args.clientId,
+        clientSecret: args.clientSecret,
+        refreshToken: args.refreshToken,
+        grantType: 'refresh_token',
+    }
+
+    const response = await request<AuthTokenResponse>({
+        httpMethod: 'POST',
+        baseUri: tokenUrl,
+        relativePath: '',
+        payload,
+        customFetch: options?.customFetch,
+    })
+
+    if (!isSuccess(response) || !response.data?.accessToken) {
+        throw new CommsRequestError(
+            'Authentication token refresh failed.',
+            response.status,
+            response.data,
+        )
+    }
+
+    return response.data
+}
+
 export async function revokeAuthToken(
     args: RevokeAuthTokenRequestArgs,
     options?: AuthOptions,
 ): Promise<boolean> {
-    const revokeUrl = options?.baseUrl
-        ? `${options.baseUrl}/oauth/revoke`
-        : 'https://comms.todoist.com/oauth/revoke'
+    const revokeUrl = `${getAuthBaseUrl(options?.baseUrl)}/api/v1/revoke`
 
     const response = await request({
         httpMethod: 'POST',
@@ -293,9 +359,7 @@ export async function registerClient(
     args: ClientRegistrationRequest,
     options?: AuthOptions,
 ): Promise<ClientRegistrationResponse> {
-    const registerUrl = options?.baseUrl
-        ? `${options.baseUrl}/oauth/register`
-        : 'https://comms.todoist.com/oauth/register'
+    const registerUrl = `${getAuthBaseUrl(options?.baseUrl)}/oauth/register`
 
     const response = await request<RawClientRegistrationResponse>({
         httpMethod: 'POST',

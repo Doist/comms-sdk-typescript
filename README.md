@@ -103,6 +103,24 @@ const api = new CommsApi(tokenResponse.accessToken)
 const user = await api.users.getSessionUser()
 ```
 
+Access tokens expire (see `tokenResponse.expiresIn`). When they do, use the
+`refreshToken` from the original exchange to obtain a new one without sending
+the user back through the authorization flow:
+
+```typescript
+import { refreshAuthToken } from '@doist/comms-sdk'
+
+const refreshed = await refreshAuthToken({
+    clientId: 'your-client-id',
+    clientSecret: 'your-client-secret',
+    refreshToken: tokenResponse.refreshToken,
+})
+
+// The server may rotate the refresh token — persist refreshed.refreshToken
+// when present, otherwise keep using the previous one.
+const api = new CommsApi(refreshed.accessToken)
+```
+
 ### Short-lived processes (CLIs, scripts)
 
 On Node, the SDK keeps a connection pool alive across requests so HTTP/2
@@ -122,7 +140,7 @@ try {
 
 `api.close()` drains the process-global pool, so it also covers code
 paths that only use the standalone OAuth helpers (`getAuthToken`,
-`revokeAuthToken`, `registerClient`). Those flows can also import
+`refreshAuthToken`, `revokeAuthToken`, `registerClient`). Those flows can also import
 `closeDefaultDispatcher` directly.
 
 ## Development
