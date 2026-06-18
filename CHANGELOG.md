@@ -1,3 +1,9 @@
+## [0.5.1](https://github.com/Doist/comms-sdk-typescript/compare/v0.5.0...v0.5.1) (2026-06-18)
+
+### Bug Fixes
+
+* **auth:** Support public client token refresh ([#36](https://github.com/Doist/comms-sdk-typescript/issues/36)) ([ba408a8](https://github.com/Doist/comms-sdk-typescript/commit/ba408a89f55475ef30e7bd5a3d0abddc73fb8f6d))
+
 ## [0.5.0](https://github.com/Doist/comms-sdk-typescript/compare/v0.4.6...v0.5.0) (2026-06-18)
 
 ### Features
