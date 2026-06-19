@@ -127,7 +127,11 @@ export class GroupsClient extends BaseClient {
      * @param args.userId - The user ID to add.
      */
     addUser(args: AddGroupUserArgs): Promise<StatusOk> {
-        return this.simple('POST', 'add_user', { ...args }, StatusOkSchema)
+        // The backend only exposes the plural `add_users` endpoint (routed via
+        // Todoist); there is no `add_user`. Reroute the single-user convenience
+        // method to it with a one-element list.
+        const { userId, ...rest } = args
+        return this.simple('POST', 'add_users', { ...rest, userIds: [userId] }, StatusOkSchema)
     }
 
     /**
@@ -160,7 +164,11 @@ export class GroupsClient extends BaseClient {
      * @param args.userId - The user ID to remove.
      */
     removeUser(args: RemoveGroupUserArgs): Promise<StatusOk> {
-        return this.simple('POST', 'remove_user', { ...args }, StatusOkSchema)
+        // The backend only exposes the plural `remove_users` endpoint (routed
+        // via Todoist); there is no `remove_user`. Reroute the single-user
+        // convenience method to it with a one-element list.
+        const { userId, ...rest } = args
+        return this.simple('POST', 'remove_users', { ...rest, userIds: [userId] }, StatusOkSchema)
     }
 
     /**
