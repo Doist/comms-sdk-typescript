@@ -214,7 +214,8 @@ export class ThreadsClient extends BaseClient {
      * @param args.objIndex - The index of the last known read message.
      */
     markRead(args: MarkThreadReadArgs): Promise<StatusOk> {
-        return this.simple('POST', 'mark_read', { ...args }, StatusOkSchema)
+        const { id, ...rest } = args
+        return this.simple('POST', 'mark_read', { threadId: id, ...rest }, StatusOkSchema)
     }
 
     /**
@@ -225,7 +226,8 @@ export class ThreadsClient extends BaseClient {
      * @param args.objIndex - The index of the last unread message. Use -1 to mark the whole thread as unread.
      */
     markUnread(args: MarkThreadUnreadArgs): Promise<StatusOk> {
-        return this.simple('POST', 'mark_unread', { ...args }, StatusOkSchema)
+        const { id, ...rest } = args
+        return this.simple('POST', 'mark_unread', { threadId: id, ...rest }, StatusOkSchema)
     }
 
     /**
