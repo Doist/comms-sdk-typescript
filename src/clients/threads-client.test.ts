@@ -119,4 +119,40 @@ describe('ThreadsClient — wire serialization', () => {
             },
         ])
     })
+
+    it('markRead sends the thread id as thread_id (not id) plus obj_index', async () => {
+        let body: Record<string, unknown> | undefined
+        server.use(
+            http.post(`${BASE}/threads/mark_read`, async ({ request }) => {
+                body = (await request.json()) as Record<string, unknown>
+                return HttpResponse.json({ status: 'ok' })
+            }),
+        )
+
+        const api = new CommsApi(TEST_API_TOKEN)
+        await api.threads.markRead({ id: '7YpL3oZ4kZ9vP7Q1tR2sX3z', objIndex: 0 })
+
+        // The threads endpoint requires `thread_id`; sending `id` is rejected
+        // with a 400 ("Argument `thread_id` is required").
+        expect(body?.thread_id).toBe('7YpL3oZ4kZ9vP7Q1tR2sX3z')
+        expect(body).not.toHaveProperty('id')
+        expect(body?.obj_index).toBe(0)
+    })
+
+    it('markUnread sends the thread id as thread_id (not id) plus obj_index', async () => {
+        let body: Record<string, unknown> | undefined
+        server.use(
+            http.post(`${BASE}/threads/mark_unread`, async ({ request }) => {
+                body = (await request.json()) as Record<string, unknown>
+                return HttpResponse.json({ status: 'ok' })
+            }),
+        )
+
+        const api = new CommsApi(TEST_API_TOKEN)
+        await api.threads.markUnread({ id: '7YpL3oZ4kZ9vP7Q1tR2sX3z', objIndex: -1 })
+
+        expect(body?.thread_id).toBe('7YpL3oZ4kZ9vP7Q1tR2sX3z')
+        expect(body).not.toHaveProperty('id')
+        expect(body?.obj_index).toBe(-1)
+    })
 })
