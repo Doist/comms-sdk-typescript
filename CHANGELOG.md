@@ -1,3 +1,9 @@
+## [0.5.2](https://github.com/Doist/comms-sdk-typescript/compare/v0.5.1...v0.5.2) (2026-06-19)
+
+### Bug Fixes
+
+* align thread mark_read/unread and group user endpoints with the backend ([#38](https://github.com/Doist/comms-sdk-typescript/issues/38)) ([2e6cffa](https://github.com/Doist/comms-sdk-typescript/commit/2e6cffa8926f45af00f998782c9a2e7475684b1f))
+
 ## [0.5.1](https://github.com/Doist/comms-sdk-typescript/compare/v0.5.0...v0.5.1) (2026-06-18)
 
 ### Bug Fixes
