@@ -1,0 +1,18 @@
+diff --git a/node_modules/gray-matter/lib/engines.js b/node_modules/gray-matter/lib/engines.js
+index 38f993d..889b858 100644
+--- a/node_modules/gray-matter/lib/engines.js
++++ b/node_modules/gray-matter/lib/engines.js
+@@ -13,8 +13,11 @@ const engines = exports = module.exports;
+  */
+ 
+ engines.yaml = {
+-  parse: yaml.safeLoad.bind(yaml),
+-  stringify: yaml.safeDump.bind(yaml)
++  // js-yaml v4 removed safeLoad/safeDump. Docusaurus still pulls gray-matter
++  // 4.0.3, whose package range targets js-yaml v3, but we override js-yaml
++  // to v4 to clear Dependabot alerts.
++  parse: yaml.load.bind(yaml),
++  stringify: yaml.dump.bind(yaml)
+ };
+ 
+ /**

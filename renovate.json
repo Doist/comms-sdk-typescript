@@ -8,8 +8,8 @@
     "packageRules": [
         {
             "matchPackageNames": ["undici"],
-            "enabled": false,
-            "description": "Pin undici to 7.24.8 - block renovate updates to avoid the Node 26 regression in newer 7.x releases"
+            "allowedVersions": "<8.0.0",
+            "description": "Hold undici on 7.x until the SDK is ready to raise its runtime Node floor to undici 8's >=22.19.0"
         },
         {
             "matchPackageNames": ["oxlint", "oxfmt"],
