@@ -4,6 +4,7 @@ import { CommentsClient } from './clients/comments-client'
 import { ConversationMessagesClient } from './clients/conversation-messages-client'
 import { ConversationsClient } from './clients/conversations-client'
 import { GroupsClient } from './clients/groups-client'
+import { HooksClient } from './clients/hooks-client'
 import { InboxClient } from './clients/inbox-client'
 import { ReactionsClient } from './clients/reactions-client'
 import { SearchClient } from './clients/search-client'
@@ -49,6 +50,7 @@ export class CommsApi {
     public reactions: ReactionsClient
     public search: SearchClient
     public attachments: AttachmentsClient
+    public hooks: HooksClient
 
     /**
      * Creates a new Comms API client.
@@ -77,6 +79,7 @@ export class CommsApi {
         this.reactions = new ReactionsClient(clientConfig)
         this.search = new SearchClient(clientConfig)
         this.attachments = new AttachmentsClient(clientConfig)
+        this.hooks = new HooksClient(clientConfig)
     }
 
     /**

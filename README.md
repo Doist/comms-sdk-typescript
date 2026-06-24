@@ -121,6 +121,31 @@ const refreshed = await refreshAuthToken({
 const api = new CommsApi(refreshed.accessToken)
 ```
 
+### REST hooks
+
+REST hooks require a Todoist OAuth access token with app identity. Subscribe
+with an HTTPS target URL up to 150 characters and one of the exported
+`HOOK_EVENTS`; the backend will POST webhook payloads to that URL when
+matching events happen:
+
+```typescript
+import { CommsApi, HOOK_EVENTS } from '@doist/comms-sdk'
+
+const api = new CommsApi('TODOIST_OAUTH_ACCESS_TOKEN')
+
+const subscription = await api.hooks.subscribe({
+    targetUrl: 'https://example.com/comms-hook',
+    event: 'thread_added',
+    workspaceId: 1,
+})
+
+console.log(subscription.id, HOOK_EVENTS)
+
+await api.hooks.unsubscribe({
+    targetUrl: 'https://example.com/comms-hook',
+})
+```
+
 ### Short-lived processes (CLIs, scripts)
 
 On Node, the SDK keeps a connection pool alive across requests so HTTP/2
