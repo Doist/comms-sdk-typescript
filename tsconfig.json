@@ -8,11 +8,12 @@
         "skipLibCheck": true,
         "declaration": true,
         "outDir": "dist",
+        "rootDir": "src",
         "esModuleInterop": true,
         "allowSyntheticDefaultImports": true,
         "strict": true,
         "forceConsistentCasingInFileNames": true,
-        "moduleResolution": "node",
+        "moduleResolution": "node10",
         "isolatedModules": true,
         "noImplicitReturns": true,
         "noImplicitAny": true,
@@ -21,8 +22,7 @@
         "strictFunctionTypes": true,
         "strictNullChecks": true,
         "strictPropertyInitialization": true,
-        "alwaysStrict": true,
-        "baseUrl": "./src"
+        "alwaysStrict": true
     },
     "include": ["src/**/*"],
     "exclude": ["node_modules", "dist", "**/testData"]
