@@ -267,6 +267,87 @@ export type GetReactionsArgs = {
     messageId?: string
 }
 
+// Hooks
+export const NON_MESSAGE_HOOK_EVENTS = [
+    'workspace_added',
+    'workspace_updated',
+    'workspace_deleted',
+    'workspace_user_added',
+    'workspace_user_updated',
+    'workspace_user_removed',
+    'channel_added',
+    'channel_updated',
+    'channel_deleted',
+    'channel_user_added',
+    'channel_user_removed',
+    'thread_added',
+    'thread_updated',
+    'thread_deleted',
+    'comment_added',
+    'comment_updated',
+    'comment_deleted',
+    'group_added',
+    'group_updated',
+    'group_deleted',
+    'group_user_added',
+    'group_user_removed',
+] as const
+export type NonMessageHookEvent = (typeof NON_MESSAGE_HOOK_EVENTS)[number]
+
+export const MESSAGE_HOOK_EVENTS = ['message_added', 'message_updated'] as const
+export type MessageHookEvent = (typeof MESSAGE_HOOK_EVENTS)[number]
+
+export const HOOK_EVENTS = [...NON_MESSAGE_HOOK_EVENTS, ...MESSAGE_HOOK_EVENTS] as const
+export type HookEvent = (typeof HOOK_EVENTS)[number]
+
+export const NonMessageHookEventSchema = z.enum(NON_MESSAGE_HOOK_EVENTS)
+export const MessageHookEventSchema = z.enum(MESSAGE_HOOK_EVENTS)
+export const HookEventSchema = z.enum(HOOK_EVENTS)
+
+export const HookTargetUrlSchema = z
+    .url()
+    .max(150)
+    .refine(
+        (value) => {
+            try {
+                return new URL(value).protocol === 'https:'
+            } catch {
+                return false
+            }
+        },
+        { message: 'URL must use HTTPS' },
+    )
+
+export const SubscribeHookArgsBaseSchema = z.object({
+    targetUrl: HookTargetUrlSchema,
+    workspaceId: z.number().nullable().optional(),
+    channelId: z.string().nullable().optional(),
+    threadId: z.string().nullable().optional(),
+})
+
+export const SubscribeNonMessageHookArgsSchema = SubscribeHookArgsBaseSchema.extend({
+    event: NonMessageHookEventSchema,
+    conversationId: z.never().optional(),
+})
+
+export const SubscribeMessageHookArgsSchema = SubscribeHookArgsBaseSchema.extend({
+    event: MessageHookEventSchema,
+    conversationId: z.string().nullable().optional(),
+})
+
+export const SubscribeHookArgsSchema = z.union([
+    SubscribeNonMessageHookArgsSchema,
+    SubscribeMessageHookArgsSchema,
+])
+
+export type SubscribeHookArgs = z.infer<typeof SubscribeHookArgsSchema>
+
+export const UnsubscribeHookArgsSchema = z.object({
+    targetUrl: HookTargetUrlSchema,
+})
+
+export type UnsubscribeHookArgs = z.infer<typeof UnsubscribeHookArgsSchema>
+
 // Channels
 export type AddChannelUserArgs = {
     id: string

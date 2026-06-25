@@ -22,6 +22,12 @@ export const SystemMessageSchema = z.union([z.string(), z.unknown()]).nullable()
 export const StatusOkSchema = z.object({ status: z.literal('ok') })
 export type StatusOk = z.infer<typeof StatusOkSchema>
 
+export const HookSubscribeResponseSchema = StatusOkSchema.extend({
+    id: z.number().int(),
+})
+
+export type HookSubscribeResponse = z.infer<typeof HookSubscribeResponseSchema>
+
 // Attachment entity from API. Mirrors the canonical backend shape produced
 // by `unify_attachments` / `validate_file_attachment_json`. Only
 // `attachmentId` and `urlType` are guaranteed; everything else depends on
