@@ -1,3 +1,9 @@
+## [0.6.0](https://github.com/Doist/comms-sdk-typescript/compare/v0.5.2...v0.6.0) (2026-06-25)
+
+### Features
+
+* add REST hooks client ([#41](https://github.com/Doist/comms-sdk-typescript/issues/41)) ([70be73a](https://github.com/Doist/comms-sdk-typescript/commit/70be73a6f0f644115e517447928da82c32ccc666))
+
 ## [0.5.2](https://github.com/Doist/comms-sdk-typescript/compare/v0.5.1...v0.5.2) (2026-06-19)
 
 ### Bug Fixes
