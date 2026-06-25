@@ -1,3 +1,9 @@
+## [0.6.1](https://github.com/Doist/comms-sdk-typescript/compare/v0.6.0...v0.6.1) (2026-06-25)
+
+### Bug Fixes
+
+* **deps:** resolve Dependabot vulnerabilities ([#39](https://github.com/Doist/comms-sdk-typescript/issues/39)) ([953f6d8](https://github.com/Doist/comms-sdk-typescript/commit/953f6d83ef27150ee2a17369a2cf76585099f454))
+
 ## [0.6.0](https://github.com/Doist/comms-sdk-typescript/compare/v0.5.2...v0.6.0) (2026-06-25)
 
 ### Features
