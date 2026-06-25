@@ -11,7 +11,7 @@ import { BaseClient } from './base-client'
 
 /**
  * Client for `/api/v1/hooks/`. REST hooks require Todoist OAuth bearer tokens
- * that include app identity; session tokens are rejected by the backend.
+ * that include Comms audience; session tokens are rejected by the backend.
  */
 export class HooksClient extends BaseClient {
     /**
@@ -38,7 +38,7 @@ export class HooksClient extends BaseClient {
     }
 
     /**
-     * Unsubscribes all hooks for the current OAuth app and target URL.
+     * Unsubscribes all hooks with the target URL for the current OAuth app.
      *
      * @param args - The hook unsubscribe parameters.
      * @param args.targetUrl - Target URL to remove.

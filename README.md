@@ -123,7 +123,7 @@ const api = new CommsApi(refreshed.accessToken)
 
 ### REST hooks
 
-REST hooks require a Todoist OAuth access token with app identity. Subscribe
+REST hooks require a Todoist OAuth access token with Todoist Comms audience. Subscribe
 with an HTTPS target URL up to 150 characters and one of the exported
 `HOOK_EVENTS`; the backend will POST webhook payloads to that URL when
 matching events happen:
