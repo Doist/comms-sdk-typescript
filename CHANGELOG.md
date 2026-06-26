@@ -1,3 +1,9 @@
+## [0.7.0](https://github.com/Doist/comms-sdk-typescript/compare/v0.6.1...v0.7.0) (2026-06-26)
+
+### Features
+
+* add Twist→Comms URL migration helper ([#42](https://github.com/Doist/comms-sdk-typescript/issues/42)) ([0fda8af](https://github.com/Doist/comms-sdk-typescript/commit/0fda8afe0997e213aceb3c9f9665be21116bba43))
+
 ## [0.6.1](https://github.com/Doist/comms-sdk-typescript/compare/v0.6.0...v0.6.1) (2026-06-25)
 
 ### Bug Fixes
