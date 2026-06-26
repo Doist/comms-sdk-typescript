@@ -1,4 +1,5 @@
 export * from './authentication'
+export * from './migration'
 export { AttachmentsClient } from './clients/attachments-client'
 export { ChannelsClient } from './clients/channels-client'
 export { CommentsClient } from './clients/comments-client'
