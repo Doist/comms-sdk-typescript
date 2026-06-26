@@ -33,33 +33,21 @@ describe('migration', () => {
             ).rejects.toThrow('Migration response did not contain a new URL.')
         })
 
-        it('should throw CommsRequestError for an invalid URL (400)', async () => {
+        it.each([
+            { label: 'an invalid URL', status: 400, code: 'invalid_url' },
+            { label: 'a not-imported URL', status: 404, code: 'not_imported' },
+        ])('should throw CommsRequestError for $label ($status)', async ({ status, code }) => {
             server.use(
                 http.post(MIGRATION_URL, async () =>
-                    HttpResponse.json({ error: { code: 'invalid_url' } }, { status: 400 }),
-                ),
-            )
-
-            await expect(
-                fetchNewCommsUrl({ oldUrl: 'https://twist.com/bad', twistToken: TWIST_TOKEN }),
-            ).rejects.toMatchObject({
-                httpStatusCode: 400,
-                responseData: { error: { code: 'invalid_url' } },
-            })
-        })
-
-        it('should throw CommsRequestError for a not-imported URL (404)', async () => {
-            server.use(
-                http.post(MIGRATION_URL, async () =>
-                    HttpResponse.json({ error: { code: 'not_imported' } }, { status: 404 }),
+                    HttpResponse.json({ error: { code } }, { status }),
                 ),
             )
 
             await expect(
                 fetchNewCommsUrl({ oldUrl: OLD_URL, twistToken: TWIST_TOKEN }),
             ).rejects.toMatchObject({
-                httpStatusCode: 404,
-                responseData: { error: { code: 'not_imported' } },
+                httpStatusCode: status,
+                responseData: { error: { code } },
             })
         })
 
