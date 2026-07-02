@@ -21,11 +21,15 @@ function createCustomFetchResponse(body: unknown, status: number = 200): CustomF
     }
 }
 
-async function importFetchWithRetryWithMockedDispatcher(dispatcher?: Dispatcher) {
-    const getDefaultDispatcher = vi.fn(async () => dispatcher)
+async function importFetchWithRetryWithMockedTransport(
+    dispatcher?: Dispatcher,
+    nodeFetch?: typeof fetch,
+) {
+    const transport = dispatcher ? { dispatcher, fetch: nodeFetch } : undefined
+    const getDefaultTransport = vi.fn(async () => transport)
 
     vi.doMock('./http-dispatcher', () => ({
-        getDefaultDispatcher,
+        getDefaultTransport,
         resetDefaultDispatcherForTests: vi.fn(),
     }))
 
@@ -33,7 +37,7 @@ async function importFetchWithRetryWithMockedDispatcher(dispatcher?: Dispatcher)
 
     return {
         ...fetchWithRetryModule,
-        getDefaultDispatcher,
+        getDefaultTransport,
     }
 }
 
@@ -55,14 +59,14 @@ describe('fetchWithRetry transport selection', () => {
 
     it('passes the default env-aware dispatcher to built-in fetch', async () => {
         const dispatcher = { id: 'default-dispatcher' } as unknown as Dispatcher
-        const { fetchWithRetry, getDefaultDispatcher } =
-            await importFetchWithRetryWithMockedDispatcher(dispatcher)
+        const { fetchWithRetry, getDefaultTransport } =
+            await importFetchWithRetryWithMockedTransport(dispatcher)
 
         mockFetch.mockResolvedValueOnce(createJsonResponse({ id: 1 }))
 
         await fetchWithRetry('https://api.test.com/users', { method: 'GET' })
 
-        expect(getDefaultDispatcher).toHaveBeenCalledTimes(1)
+        expect(getDefaultTransport).toHaveBeenCalledTimes(1)
         expect(mockFetch).toHaveBeenCalledWith(
             'https://api.test.com/users',
             expect.objectContaining({
@@ -71,10 +75,41 @@ describe('fetchWithRetry transport selection', () => {
         )
     })
 
+    it('prefers the undici fetch paired with the dispatcher over the global fetch', async () => {
+        const dispatcher = { id: 'default-dispatcher' } as unknown as Dispatcher
+        const nodeFetch = vi.fn().mockResolvedValue(createJsonResponse({ id: 1 }))
+        const { fetchWithRetry } = await importFetchWithRetryWithMockedTransport(
+            dispatcher,
+            nodeFetch as unknown as typeof fetch,
+        )
+
+        await fetchWithRetry('https://api.test.com/users', { method: 'GET' })
+
+        expect(nodeFetch).toHaveBeenCalledWith(
+            'https://api.test.com/users',
+            expect.objectContaining({ dispatcher }),
+        )
+        expect(mockFetch).not.toHaveBeenCalled()
+    })
+
+    it('falls back to the global fetch when no undici fetch is paired', async () => {
+        const dispatcher = { id: 'default-dispatcher' } as unknown as Dispatcher
+        const { fetchWithRetry } = await importFetchWithRetryWithMockedTransport(dispatcher)
+
+        mockFetch.mockResolvedValueOnce(createJsonResponse({ id: 1 }))
+
+        await fetchWithRetry('https://api.test.com/users', { method: 'GET' })
+
+        expect(mockFetch).toHaveBeenCalledWith(
+            'https://api.test.com/users',
+            expect.objectContaining({ dispatcher }),
+        )
+    })
+
     it('does not consult the default dispatcher when customFetch is provided', async () => {
         const dispatcher = { id: 'default-dispatcher' } as unknown as Dispatcher
-        const { fetchWithRetry, getDefaultDispatcher } =
-            await importFetchWithRetryWithMockedDispatcher(dispatcher)
+        const { fetchWithRetry, getDefaultTransport } =
+            await importFetchWithRetryWithMockedTransport(dispatcher)
 
         const customFetch = vi.fn().mockResolvedValue(createCustomFetchResponse({ id: 1 }))
 
@@ -85,7 +120,7 @@ describe('fetchWithRetry transport selection', () => {
             customFetch,
         )
 
-        expect(getDefaultDispatcher).not.toHaveBeenCalled()
+        expect(getDefaultTransport).not.toHaveBeenCalled()
         expect(mockFetch).not.toHaveBeenCalled()
         expect(customFetch).toHaveBeenCalledWith(
             'https://api.test.com/users',
@@ -101,7 +136,7 @@ describe('fetchWithRetry transport selection', () => {
         vi.useFakeTimers()
 
         const dispatcher = { id: 'default-dispatcher' } as unknown as Dispatcher
-        const { fetchWithRetry } = await importFetchWithRetryWithMockedDispatcher(dispatcher)
+        const { fetchWithRetry } = await importFetchWithRetryWithMockedTransport(dispatcher)
 
         mockFetch
             .mockImplementationOnce(
@@ -137,8 +172,8 @@ describe('fetchWithRetry transport selection', () => {
         vi.useFakeTimers()
 
         const dispatcher = { id: 'default-dispatcher' } as unknown as Dispatcher
-        const { fetchWithRetry, getDefaultDispatcher } =
-            await importFetchWithRetryWithMockedDispatcher(dispatcher)
+        const { fetchWithRetry, getDefaultTransport } =
+            await importFetchWithRetryWithMockedTransport(dispatcher)
 
         mockFetch.mockImplementationOnce(
             (_url, options) =>
@@ -166,7 +201,7 @@ describe('fetchWithRetry transport selection', () => {
         await vi.advanceTimersByTimeAsync(10)
 
         await requestExpectation
-        expect(getDefaultDispatcher).toHaveBeenCalledTimes(1)
+        expect(getDefaultTransport).toHaveBeenCalledTimes(1)
         expect(mockFetch).toHaveBeenCalledWith(
             'https://api.test.com/users',
             expect.objectContaining({

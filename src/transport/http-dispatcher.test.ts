@@ -1,9 +1,16 @@
 import { createServer, type Server } from 'node:http'
 import type { AddressInfo } from 'node:net'
 import { gzipSync } from 'node:zlib'
+import { fetch as undiciFetch } from 'undici'
+
+// This file exercises the real dispatcher, so opt out of the suite-wide
+// transport seam installed in `testUtils/msw-setup.ts`.
+vi.unmock('./http-dispatcher')
+
 import {
     closeDefaultDispatcher,
     getDefaultDispatcher,
+    getDefaultFetch,
     resetDefaultDispatcherForTests,
     suppressExperimentalWarningsSync,
 } from './http-dispatcher'
@@ -60,6 +67,14 @@ describe('httpDispatcher', () => {
         expect(typeof dispatcher?.dispatch).toBe('function')
     })
 
+    it('pairs the dispatcher with undici’s own fetch in Node', async () => {
+        await getDefaultDispatcher()
+
+        // The bridge that fixes the version mismatch: the resolved transport
+        // must carry undici's own `fetch`, not the global one.
+        expect(getDefaultFetch()).toBe(undiciFetch)
+    })
+
     it('reuses the same dispatcher instance across calls', async () => {
         const firstDispatcher = await getDefaultDispatcher()
         const secondDispatcher = await getDefaultDispatcher()
@@ -98,6 +113,7 @@ describe('httpDispatcher', () => {
             interceptors: {
                 decompress: () => (dispatch: unknown) => dispatch,
             },
+            fetch: vi.fn(),
         }))
 
         await expect(getDefaultDispatcher()).rejects.toThrow('init failed')
@@ -118,6 +134,7 @@ describe('httpDispatcher', () => {
                 async close() {}
             },
             interceptors: {},
+            fetch: vi.fn(),
         }))
 
         try {
@@ -180,6 +197,7 @@ describe('httpDispatcher', () => {
             interceptors: {
                 decompress: () => (dispatch: unknown) => dispatch,
             },
+            fetch: vi.fn(),
         }))
 
         const first = await getDefaultDispatcher()
