@@ -2,7 +2,7 @@ import { CommsRequestError } from '../types/errors'
 import type { CustomFetch, CustomFetchResponse, HttpResponse } from '../types/http'
 import { camelCaseKeys } from '../utils/case-conversion'
 import { transformTimestamps } from '../utils/timestamp-conversion'
-import { getDefaultDispatcher } from './http-dispatcher'
+import { getDefaultDispatcher, getDefaultFetch } from './http-dispatcher'
 
 export async function fetchWithRetry<T>(
     url: string,
@@ -89,14 +89,24 @@ async function fetchWithDefaultTransport(
     signal?: AbortSignal,
 ): Promise<CustomFetchResponse> {
     const dispatcher = await getDefaultDispatcher()
+    // Use the `fetch` paired with the dispatcher (undici's own, on Node) so the
+    // request client and dispatcher stay on one undici version; otherwise the
+    // `decompress` interceptor terminates gzip responses when the global
+    // `fetch`'s bundled undici differs. Falls back to the global `fetch` in the
+    // browser/edge path where there is no dispatcher.
+    // `getDefaultFetch()` returns undici's own `fetch`; it and the global
+    // `fetch` are the same function at runtime but carry different (undici vs
+    // DOM) `RequestInit`/`Response` types. Call it through the global signature,
+    // which matches the global-typed `options` below.
+    const fetchImpl = (getDefaultFetch?.() ?? fetch) as typeof fetch
     const response = dispatcher
-        ? await fetch(url, {
+        ? await fetchImpl(url, {
               ...options,
               signal,
               // @ts-expect-error - dispatcher is valid for Node.js fetch but not in TS types
               dispatcher,
           })
-        : await fetch(url, {
+        : await fetchImpl(url, {
               ...options,
               signal,
           })

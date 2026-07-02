@@ -21,11 +21,16 @@ function createCustomFetchResponse(body: unknown, status: number = 200): CustomF
     }
 }
 
-async function importFetchWithRetryWithMockedDispatcher(dispatcher?: Dispatcher) {
+async function importFetchWithRetryWithMockedDispatcher(
+    dispatcher?: Dispatcher,
+    nodeFetch?: typeof fetch,
+) {
     const getDefaultDispatcher = vi.fn(async () => dispatcher)
+    const getDefaultFetch = vi.fn(() => nodeFetch)
 
     vi.doMock('./http-dispatcher', () => ({
         getDefaultDispatcher,
+        getDefaultFetch,
         resetDefaultDispatcherForTests: vi.fn(),
     }))
 
@@ -34,6 +39,7 @@ async function importFetchWithRetryWithMockedDispatcher(dispatcher?: Dispatcher)
     return {
         ...fetchWithRetryModule,
         getDefaultDispatcher,
+        getDefaultFetch,
     }
 }
 
@@ -68,6 +74,37 @@ describe('fetchWithRetry transport selection', () => {
             expect.objectContaining({
                 dispatcher,
             }),
+        )
+    })
+
+    it('prefers the undici fetch paired with the dispatcher over the global fetch', async () => {
+        const dispatcher = { id: 'default-dispatcher' } as unknown as Dispatcher
+        const nodeFetch = vi.fn().mockResolvedValue(createJsonResponse({ id: 1 }))
+        const { fetchWithRetry } = await importFetchWithRetryWithMockedDispatcher(
+            dispatcher,
+            nodeFetch as unknown as typeof fetch,
+        )
+
+        await fetchWithRetry('https://api.test.com/users', { method: 'GET' })
+
+        expect(nodeFetch).toHaveBeenCalledWith(
+            'https://api.test.com/users',
+            expect.objectContaining({ dispatcher }),
+        )
+        expect(mockFetch).not.toHaveBeenCalled()
+    })
+
+    it('falls back to the global fetch when no undici fetch is paired', async () => {
+        const dispatcher = { id: 'default-dispatcher' } as unknown as Dispatcher
+        const { fetchWithRetry } = await importFetchWithRetryWithMockedDispatcher(dispatcher)
+
+        mockFetch.mockResolvedValueOnce(createJsonResponse({ id: 1 }))
+
+        await fetchWithRetry('https://api.test.com/users', { method: 'GET' })
+
+        expect(mockFetch).toHaveBeenCalledWith(
+            'https://api.test.com/users',
+            expect.objectContaining({ dispatcher }),
         )
     })
 

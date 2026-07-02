@@ -1,6 +1,11 @@
 import { createServer, type Server } from 'node:http'
 import type { AddressInfo } from 'node:net'
 import { gzipSync } from 'node:zlib'
+
+// This file exercises the real dispatcher, so opt out of the suite-wide
+// transport seam installed in `testUtils/msw-setup.ts`.
+vi.unmock('./http-dispatcher')
+
 import {
     closeDefaultDispatcher,
     getDefaultDispatcher,
@@ -98,6 +103,7 @@ describe('httpDispatcher', () => {
             interceptors: {
                 decompress: () => (dispatch: unknown) => dispatch,
             },
+            fetch: vi.fn(),
         }))
 
         await expect(getDefaultDispatcher()).rejects.toThrow('init failed')
@@ -118,6 +124,7 @@ describe('httpDispatcher', () => {
                 async close() {}
             },
             interceptors: {},
+            fetch: vi.fn(),
         }))
 
         try {
@@ -180,6 +187,7 @@ describe('httpDispatcher', () => {
             interceptors: {
                 decompress: () => (dispatch: unknown) => dispatch,
             },
+            fetch: vi.fn(),
         }))
 
         const first = await getDefaultDispatcher()

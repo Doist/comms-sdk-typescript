@@ -1,7 +1,15 @@
 import type { Dispatcher } from 'undici'
 
+// undici's own `fetch`, typed from the same package the dispatcher comes from.
+type UndiciFetch = typeof import('undici').fetch
+
 let defaultDispatcher: Dispatcher | undefined
 let defaultDispatcherPromise: Promise<Dispatcher | undefined> | undefined
+
+// undici's own `fetch`, paired with the composed dispatcher above. Set only on
+// the full-undici Node path; left undefined elsewhere so callers fall back to
+// the global `fetch`. See `getDefaultFetch` for why this pairing matters.
+let defaultFetch: UndiciFetch | undefined
 
 export async function getDefaultDispatcher(): Promise<Dispatcher | undefined> {
     if (defaultDispatcher) {
@@ -36,6 +44,7 @@ export async function closeDefaultDispatcher(): Promise<void> {
     const initPromise = defaultDispatcherPromise
     defaultDispatcher = undefined
     defaultDispatcherPromise = undefined
+    defaultFetch = undefined
 
     if (!initPromise) return
 
@@ -52,6 +61,27 @@ export async function closeDefaultDispatcher(): Promise<void> {
 export function resetDefaultDispatcherForTests(): void {
     defaultDispatcher = undefined
     defaultDispatcherPromise = undefined
+    defaultFetch = undefined
+}
+
+/**
+ * The `fetch` implementation that must be used with {@link getDefaultDispatcher}'s
+ * dispatcher. Returns undici's own `fetch` on the full-undici Node path, or
+ * `undefined` (meaning: use the global `fetch`) in the browser/edge/Bun paths.
+ *
+ * Node's global `fetch` is backed by whatever undici version ships inside that
+ * Node release (6.x on Node 22 … 8.x on Node 26). Our dispatcher — and its
+ * `decompress` interceptor — comes from the npm `undici` package, which is a
+ * different version. Handing an npm-undici dispatcher to a mismatched built-in
+ * client makes gzip responses fail mid-stream with `terminated`. Sourcing
+ * `fetch` from the same npm `undici` keeps the whole request path on one
+ * version and removes the split.
+ *
+ * Only meaningful after {@link getDefaultDispatcher} has resolved, which is the
+ * one place that populates it.
+ */
+export function getDefaultFetch(): UndiciFetch | undefined {
+    return defaultFetch
 }
 
 function isNodeEnvironment(): boolean {
@@ -66,7 +96,7 @@ async function createDefaultDispatcher(): Promise<Dispatcher | undefined> {
     // Dynamic import so non-Node consumers (browser, edge runtimes) don't pull
     // undici into their bundle. `isNodeEnvironment()` above already gated this
     // branch, so undici is safe to load when we get here.
-    const { EnvHttpProxyAgent, interceptors } = await import('undici')
+    const { EnvHttpProxyAgent, interceptors, fetch: undiciFetch } = await import('undici')
 
     // `EnvHttpProxyAgent` (with `allowH2`) and `interceptors.decompress()` both
     // emit an ExperimentalWarning on first use, so build the whole dispatcher
@@ -93,6 +123,14 @@ async function createDefaultDispatcher(): Promise<Dispatcher | undefined> {
         // `content-encoding` without actually decompressing the body.
         // See https://github.com/Doist/todoist-cli/issues/318.
         const decompress = interceptors.decompress()
+
+        // Pair undici's own `fetch` with this dispatcher so the request client
+        // and the dispatcher stay on one undici version (see `getDefaultFetch`).
+        // The global `fetch` is backed by a different, Node-bundled undici;
+        // mixing the two makes the decompress interceptor terminate gzip
+        // responses on some Node versions.
+        defaultFetch = undiciFetch
+
         return agent.compose(decompress)
     })
 }
