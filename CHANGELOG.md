@@ -1,3 +1,9 @@
+## [0.7.1](https://github.com/Doist/comms-sdk-typescript/compare/v0.7.0...v0.7.1) (2026-07-02)
+
+### Bug Fixes
+
+* use undici's own fetch to avoid version mismatch on Node 26 ([#44](https://github.com/Doist/comms-sdk-typescript/issues/44)) ([59f3677](https://github.com/Doist/comms-sdk-typescript/commit/59f3677811d756c36f6f30bf81375ab25bdd57d3))
+
 ## [0.7.0](https://github.com/Doist/comms-sdk-typescript/compare/v0.6.1...v0.7.0) (2026-06-26)
 
 ### Features
