@@ -12,8 +12,7 @@ vi.mock('../transport/http-dispatcher', async (importOriginal) => {
     const actual = await importOriginal<typeof import('../transport/http-dispatcher')>()
     return {
         ...actual,
-        getDefaultDispatcher: vi.fn(async () => undefined),
-        getDefaultFetch: vi.fn(() => undefined),
+        getDefaultTransport: vi.fn(async () => undefined),
     }
 })
 

@@ -3,33 +3,46 @@ import type { Dispatcher } from 'undici'
 // undici's own `fetch`, typed from the same package the dispatcher comes from.
 type UndiciFetch = typeof import('undici').fetch
 
-let defaultDispatcher: Dispatcher | undefined
-let defaultDispatcherPromise: Promise<Dispatcher | undefined> | undefined
+/**
+ * A dispatcher and the `fetch` that must be used with it. `fetch` is undici's
+ * own `fetch` on the full-undici Node path, or `undefined` (meaning: use the
+ * global `fetch`) on the Bun path. The two are cached together so callers can
+ * never observe a dispatcher paired with a mismatched `fetch` — see
+ * {@link getDefaultFetch} for why the pairing matters.
+ */
+type DefaultTransport = { dispatcher: Dispatcher; fetch: UndiciFetch | undefined }
 
-// undici's own `fetch`, paired with the composed dispatcher above. Set only on
-// the full-undici Node path; left undefined elsewhere so callers fall back to
-// the global `fetch`. See `getDefaultFetch` for why this pairing matters.
-let defaultFetch: UndiciFetch | undefined
+let defaultTransport: DefaultTransport | undefined
+let defaultTransportPromise: Promise<DefaultTransport | undefined> | undefined
 
-export async function getDefaultDispatcher(): Promise<Dispatcher | undefined> {
-    if (defaultDispatcher) {
-        return defaultDispatcher
+/**
+ * The default dispatcher and its paired `fetch`, as a single value so the two
+ * are always read consistently. Resolves to `undefined` outside Node (browser/
+ * edge), where callers use the global `fetch` with no dispatcher.
+ */
+export async function getDefaultTransport(): Promise<DefaultTransport | undefined> {
+    if (defaultTransport) {
+        return defaultTransport
     }
 
-    if (!defaultDispatcherPromise) {
-        defaultDispatcherPromise = createDefaultDispatcher()
-            .then((dispatcher) => {
-                defaultDispatcher = dispatcher
-                return dispatcher
+    if (!defaultTransportPromise) {
+        defaultTransportPromise = createDefaultTransport()
+            .then((transport) => {
+                defaultTransport = transport
+                return transport
             })
             .catch((error) => {
-                defaultDispatcher = undefined
-                defaultDispatcherPromise = undefined
+                defaultTransport = undefined
+                defaultTransportPromise = undefined
                 throw error
             })
     }
 
-    return defaultDispatcherPromise
+    return defaultTransportPromise
+}
+
+export async function getDefaultDispatcher(): Promise<Dispatcher | undefined> {
+    return (await getDefaultTransport())?.dispatcher
 }
 
 /**
@@ -39,19 +52,18 @@ export async function getDefaultDispatcher(): Promise<Dispatcher | undefined> {
  */
 export async function closeDefaultDispatcher(): Promise<void> {
     // Clear the singleton *before* awaiting init, so any concurrent
-    // `getDefaultDispatcher()` after this point creates a fresh dispatcher
+    // `getDefaultTransport()` after this point creates a fresh dispatcher
     // instead of receiving a reference to the one we're about to close.
-    const initPromise = defaultDispatcherPromise
-    defaultDispatcher = undefined
-    defaultDispatcherPromise = undefined
-    defaultFetch = undefined
+    const initPromise = defaultTransportPromise
+    defaultTransport = undefined
+    defaultTransportPromise = undefined
 
     if (!initPromise) return
 
     try {
-        const dispatcher = await initPromise
-        if (dispatcher) {
-            await dispatcher.close()
+        const transport = await initPromise
+        if (transport) {
+            await transport.dispatcher.close()
         }
     } catch {
         // init failed; nothing to close
@@ -59,15 +71,14 @@ export async function closeDefaultDispatcher(): Promise<void> {
 }
 
 export function resetDefaultDispatcherForTests(): void {
-    defaultDispatcher = undefined
-    defaultDispatcherPromise = undefined
-    defaultFetch = undefined
+    defaultTransport = undefined
+    defaultTransportPromise = undefined
 }
 
 /**
- * The `fetch` implementation that must be used with {@link getDefaultDispatcher}'s
- * dispatcher. Returns undici's own `fetch` on the full-undici Node path, or
- * `undefined` (meaning: use the global `fetch`) in the browser/edge/Bun paths.
+ * The `fetch` implementation that must be used with the default dispatcher.
+ * Returns undici's own `fetch` on the full-undici Node path, or `undefined`
+ * (meaning: use the global `fetch`) in the browser/edge/Bun paths.
  *
  * Node's global `fetch` is backed by whatever undici version ships inside that
  * Node release (6.x on Node 22 … 8.x on Node 26). Our dispatcher — and its
@@ -77,18 +88,18 @@ export function resetDefaultDispatcherForTests(): void {
  * `fetch` from the same npm `undici` keeps the whole request path on one
  * version and removes the split.
  *
- * Only meaningful after {@link getDefaultDispatcher} has resolved, which is the
+ * Only meaningful after {@link getDefaultTransport} has resolved, which is the
  * one place that populates it.
  */
 export function getDefaultFetch(): UndiciFetch | undefined {
-    return defaultFetch
+    return defaultTransport?.fetch
 }
 
 function isNodeEnvironment(): boolean {
     return typeof process !== 'undefined' && typeof process.versions?.node === 'string'
 }
 
-async function createDefaultDispatcher(): Promise<Dispatcher | undefined> {
+async function createDefaultTransport(): Promise<DefaultTransport | undefined> {
     if (!isNodeEnvironment()) {
         return undefined
     }
@@ -115,7 +126,9 @@ async function createDefaultDispatcher(): Promise<Dispatcher | undefined> {
         // crashing on the missing API. Optional chaining also guards a runtime
         // that omits the `interceptors` export entirely.
         if (typeof interceptors?.decompress !== 'function') {
-            return agent
+            // Bun: pair the agent with the global `fetch` (undefined), which
+            // decompresses natively.
+            return { dispatcher: agent, fetch: undefined }
         }
 
         // `interceptors.decompress()` decodes gzip/deflate/br/zstd bodies. On
@@ -129,9 +142,7 @@ async function createDefaultDispatcher(): Promise<Dispatcher | undefined> {
         // The global `fetch` is backed by a different, Node-bundled undici;
         // mixing the two makes the decompress interceptor terminate gzip
         // responses on some Node versions.
-        defaultFetch = undiciFetch
-
-        return agent.compose(decompress)
+        return { dispatcher: agent.compose(decompress), fetch: undiciFetch }
     })
 }
 

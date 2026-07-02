@@ -1,6 +1,7 @@
 import { createServer, type Server } from 'node:http'
 import type { AddressInfo } from 'node:net'
 import { gzipSync } from 'node:zlib'
+import { fetch as undiciFetch } from 'undici'
 
 // This file exercises the real dispatcher, so opt out of the suite-wide
 // transport seam installed in `testUtils/msw-setup.ts`.
@@ -9,6 +10,7 @@ vi.unmock('./http-dispatcher')
 import {
     closeDefaultDispatcher,
     getDefaultDispatcher,
+    getDefaultFetch,
     resetDefaultDispatcherForTests,
     suppressExperimentalWarningsSync,
 } from './http-dispatcher'
@@ -63,6 +65,14 @@ describe('httpDispatcher', () => {
 
         expect(dispatcher).toBeDefined()
         expect(typeof dispatcher?.dispatch).toBe('function')
+    })
+
+    it('pairs the dispatcher with undici’s own fetch in Node', async () => {
+        await getDefaultDispatcher()
+
+        // The bridge that fixes the version mismatch: the resolved transport
+        // must carry undici's own `fetch`, not the global one.
+        expect(getDefaultFetch()).toBe(undiciFetch)
     })
 
     it('reuses the same dispatcher instance across calls', async () => {

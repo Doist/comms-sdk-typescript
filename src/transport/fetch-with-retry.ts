@@ -2,7 +2,7 @@ import { CommsRequestError } from '../types/errors'
 import type { CustomFetch, CustomFetchResponse, HttpResponse } from '../types/http'
 import { camelCaseKeys } from '../utils/case-conversion'
 import { transformTimestamps } from '../utils/timestamp-conversion'
-import { getDefaultDispatcher, getDefaultFetch } from './http-dispatcher'
+import { getDefaultTransport } from './http-dispatcher'
 
 export async function fetchWithRetry<T>(
     url: string,
@@ -88,23 +88,23 @@ async function fetchWithDefaultTransport(
     options: RequestInit & { timeout?: number },
     signal?: AbortSignal,
 ): Promise<CustomFetchResponse> {
-    const dispatcher = await getDefaultDispatcher()
-    // Use the `fetch` paired with the dispatcher (undici's own, on Node) so the
-    // request client and dispatcher stay on one undici version; otherwise the
-    // `decompress` interceptor terminates gzip responses when the global
-    // `fetch`'s bundled undici differs. Falls back to the global `fetch` in the
-    // browser/edge path where there is no dispatcher.
-    // `getDefaultFetch()` returns undici's own `fetch`; it and the global
-    // `fetch` are the same function at runtime but carry different (undici vs
-    // DOM) `RequestInit`/`Response` types. Call it through the global signature,
-    // which matches the global-typed `options` below.
-    const fetchImpl = (getDefaultFetch?.() ?? fetch) as typeof fetch
-    const response = dispatcher
+    // Read the dispatcher and its paired `fetch` as one value so they can never
+    // be mismatched. On Node, `fetch` is undici's own — paired with the
+    // dispatcher — so the request client and dispatcher stay on one undici
+    // version; otherwise the `decompress` interceptor terminates gzip responses
+    // when the global `fetch`'s bundled undici differs. Browser/edge (and Bun)
+    // have no paired `fetch` and fall back to the global one.
+    const transport = await getDefaultTransport()
+    // undici's `fetch` and the global `fetch` are the same function at runtime
+    // but carry different (undici vs DOM) `RequestInit`/`Response` types. Call
+    // through the global signature, which matches the global-typed `options`.
+    const fetchImpl = (transport?.fetch ?? fetch) as typeof fetch
+    const response = transport?.dispatcher
         ? await fetchImpl(url, {
               ...options,
               signal,
               // @ts-expect-error - dispatcher is valid for Node.js fetch but not in TS types
-              dispatcher,
+              dispatcher: transport.dispatcher,
           })
         : await fetchImpl(url, {
               ...options,
