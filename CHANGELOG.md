@@ -1,3 +1,9 @@
+## [0.8.0](https://github.com/Doist/comms-sdk-typescript/compare/v0.7.1...v0.8.0) (2026-07-06)
+
+### Features
+
+* support notifyAudience on createThread ([#45](https://github.com/Doist/comms-sdk-typescript/issues/45)) ([9c38073](https://github.com/Doist/comms-sdk-typescript/commit/9c38073783c679abecab68c21b236b4f9062f25c))
+
 ## [0.7.1](https://github.com/Doist/comms-sdk-typescript/compare/v0.7.0...v0.7.1) (2026-07-02)
 
 ### Bug Fixes
