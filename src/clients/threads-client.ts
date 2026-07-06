@@ -29,6 +29,7 @@ import type {
 import { resolveCreateId } from '../utils/uuidv7'
 import { addCommentRequest } from './add-comment-helper'
 import { BaseClient } from './base-client'
+import { applyNotifyAudience } from './notify-audience'
 
 export const ThreadListSchema = z.array(ThreadSchema)
 
@@ -115,6 +116,11 @@ export class ThreadsClient extends BaseClient {
      * @param args.content - The thread content.
      * @param args.recipients - Optional array of user IDs to notify.
      * @param args.groups - Optional array of custom group IDs to notify.
+     * @param args.notifyAudience - Optional broader audience to notify in addition to
+     *   `recipients` and `groups`. `'channel'` notifies everyone in the channel;
+     *   `'thread'` notifies everyone who has interacted with the thread — but a
+     *   brand-new thread has no interactions yet, so the backend discards
+     *   `'thread'` at create time. It is only meaningful on replies (`createComment`).
      * @param args.attachments - Optional array of {@link Attachment}s (from `attachments.upload`).
      * @returns The created thread object.
      *
@@ -124,14 +130,16 @@ export class ThreadsClient extends BaseClient {
      *   channelId: '7YpL3oZ4kZ9vP7Q1tR2sX44',
      *   title: 'New Feature Discussion',
      *   content: 'Let\'s discuss the new feature...',
+     *   notifyAudience: 'channel', // tag "Everyone in channel"
      * })
      * ```
      */
     createThread(args: CreateThreadArgs): Promise<Thread> {
+        const normalized = applyNotifyAudience(args)
         return this.simple(
             'POST',
             'add',
-            { ...args, id: resolveCreateId(args.id) },
+            { ...normalized, id: resolveCreateId(args.id) },
             this.threadSchema,
         )
     }
