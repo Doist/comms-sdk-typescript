@@ -30,10 +30,10 @@ function collectMarkerOffenses(
  * (`EVERYONE` / `EVERYONE_IN_THREAD`) and rejects callers who put those
  * reserved markers directly into `groups` / `directGroupMentions`.
  *
- * Returns the params with `notifyAudience` stripped and, when it was set, its
- * sentinel appended to `groups`. `notifyAudience` is a client-only convenience
- * — it is never sent on the wire; the backend only understands the marker in
- * `groups`.
+ * When `notifyAudience` is set it is stripped and its sentinel is appended to
+ * `groups`; the backend only understands the marker in `groups`. When it is
+ * unset the params are returned unchanged, preserving any explicit
+ * `groups` / `directGroupMentions` (including a `null`) on the wire.
  */
 export function applyNotifyAudience<T extends NotifyAudienceParams>(
     params: T,
@@ -52,18 +52,17 @@ export function applyNotifyAudience<T extends NotifyAudienceParams>(
         )
     }
 
-    const { notifyAudience, groups, ...rest } = params
-
-    if (notifyAudience == null) {
-        return { ...rest, ...(groups == null ? {} : { groups }) } as Omit<T, 'notifyAudience'>
+    if (params.notifyAudience == null) {
+        return params as Omit<T, 'notifyAudience'>
     }
 
-    if (!isNotifyAudience(notifyAudience)) {
+    if (!isNotifyAudience(params.notifyAudience)) {
         throw new Error(
-            `Invalid \`notifyAudience\` value "${String(notifyAudience)}". Expected one of: ${NOTIFY_AUDIENCES.join(', ')}.`,
+            `Invalid \`notifyAudience\` value "${String(params.notifyAudience)}". Expected one of: ${NOTIFY_AUDIENCES.join(', ')}.`,
         )
     }
 
-    const sentinel = NOTIFY_AUDIENCE_GROUP_IDS[notifyAudience]
+    const sentinel = NOTIFY_AUDIENCE_GROUP_IDS[params.notifyAudience]
+    const { notifyAudience: _stripped, groups, ...rest } = params
     return { ...rest, groups: [...(groups ?? []), sentinel] } as Omit<T, 'notifyAudience'>
 }

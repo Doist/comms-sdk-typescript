@@ -86,21 +86,7 @@ describe('ThreadsClient — wire serialization', () => {
         server.use(
             http.post(`${BASE}/threads/add`, async ({ request }) => {
                 body = (await request.json()) as Record<string, unknown>
-                return HttpResponse.json({
-                    id: '7YpL3oZ4kZ9vP7Q1tR2sX3z',
-                    title: 'Release notes',
-                    content: 'See attached',
-                    creator: 1,
-                    channel_id: '7YpL3oZ4kZ9vP7Q1tR2sX44',
-                    workspace_id: 1,
-                    comment_count: 0,
-                    last_updated_ts: 1609459200,
-                    pinned: false,
-                    posted_ts: 1609459200,
-                    snippet: 'See attached',
-                    snippet_creator: 1,
-                    is_archived: false,
-                })
+                return HttpResponse.json(THREAD_RESPONSE)
             }),
         )
 
@@ -199,6 +185,7 @@ describe('ThreadsClient — wire serialization', () => {
 
         expect(body?.groups).toEqual([EVERYONE_IN_THREAD])
         expect(body).not.toHaveProperty('notify_audience')
+        expect(body).not.toHaveProperty('notifyAudience')
     })
 
     it('createThread rejects a raw broadcast marker passed in groups', () => {
