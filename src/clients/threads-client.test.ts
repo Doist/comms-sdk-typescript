@@ -3,6 +3,23 @@ import { describe, expect, it } from 'vitest'
 import { CommsApi } from '../comms-api'
 import { server } from '../testUtils/msw-setup'
 import { TEST_API_BASE_URL as BASE, TEST_API_TOKEN } from '../testUtils/test-defaults'
+import { EVERYONE, EVERYONE_IN_THREAD } from '../types/enums'
+
+const THREAD_RESPONSE = {
+    id: '7YpL3oZ4kZ9vP7Q1tR2sX3z',
+    title: 'Release notes',
+    content: 'See attached',
+    creator: 1,
+    channel_id: '7YpL3oZ4kZ9vP7Q1tR2sX44',
+    workspace_id: 1,
+    comment_count: 0,
+    last_updated_ts: 1609459200,
+    pinned: false,
+    posted_ts: 1609459200,
+    snippet: 'See attached',
+    snippet_creator: 1,
+    is_archived: false,
+}
 
 // Pins the wire shape of `threads-client`. The PR that dropped the
 // `newer_than_ts` / `older_than_ts` aliases also tightened how `params`
@@ -118,6 +135,82 @@ describe('ThreadsClient — wire serialization', () => {
                 url: 'https://files.comms.todoist.com/abc/spec.pdf',
             },
         ])
+    })
+
+    it('createThread translates notifyAudience: channel into the EVERYONE marker', async () => {
+        let body: Record<string, unknown> | undefined
+        server.use(
+            http.post(`${BASE}/threads/add`, async ({ request }) => {
+                body = (await request.json()) as Record<string, unknown>
+                return HttpResponse.json(THREAD_RESPONSE)
+            }),
+        )
+
+        const api = new CommsApi(TEST_API_TOKEN)
+        await api.threads.createThread({
+            channelId: '7YpL3oZ4kZ9vP7Q1tR2sX44',
+            title: 'Release notes',
+            content: 'Everyone should see this',
+            notifyAudience: 'channel',
+        })
+
+        expect(body?.groups).toEqual([EVERYONE])
+        expect(body).not.toHaveProperty('notify_audience')
+        expect(body).not.toHaveProperty('notifyAudience')
+    })
+
+    it('createThread appends the EVERYONE marker alongside existing groups', async () => {
+        let body: Record<string, unknown> | undefined
+        server.use(
+            http.post(`${BASE}/threads/add`, async ({ request }) => {
+                body = (await request.json()) as Record<string, unknown>
+                return HttpResponse.json(THREAD_RESPONSE)
+            }),
+        )
+
+        const api = new CommsApi(TEST_API_TOKEN)
+        await api.threads.createThread({
+            channelId: '7YpL3oZ4kZ9vP7Q1tR2sX44',
+            title: 'Release notes',
+            content: 'Everyone plus a group',
+            groups: ['7YpL3oZ4kZ9vP7Q1tR2sX99'],
+            notifyAudience: 'channel',
+        })
+
+        expect(body?.groups).toEqual(['7YpL3oZ4kZ9vP7Q1tR2sX99', EVERYONE])
+    })
+
+    it('createThread translates notifyAudience: thread into the EVERYONE_IN_THREAD marker', async () => {
+        let body: Record<string, unknown> | undefined
+        server.use(
+            http.post(`${BASE}/threads/add`, async ({ request }) => {
+                body = (await request.json()) as Record<string, unknown>
+                return HttpResponse.json(THREAD_RESPONSE)
+            }),
+        )
+
+        const api = new CommsApi(TEST_API_TOKEN)
+        await api.threads.createThread({
+            channelId: '7YpL3oZ4kZ9vP7Q1tR2sX44',
+            title: 'Release notes',
+            content: 'Interacted only',
+            notifyAudience: 'thread',
+        })
+
+        expect(body?.groups).toEqual([EVERYONE_IN_THREAD])
+        expect(body).not.toHaveProperty('notify_audience')
+    })
+
+    it('createThread rejects a raw broadcast marker passed in groups', () => {
+        const api = new CommsApi(TEST_API_TOKEN)
+        expect(() =>
+            api.threads.createThread({
+                channelId: '7YpL3oZ4kZ9vP7Q1tR2sX44',
+                title: 'Release notes',
+                content: 'Bad marker',
+                groups: [EVERYONE],
+            }),
+        ).toThrow(/`groups` contains EVERYONE/)
     })
 
     it('markRead sends the thread id as thread_id (not id) plus obj_index', async () => {
