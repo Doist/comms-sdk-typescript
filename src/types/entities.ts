@@ -513,7 +513,7 @@ export const SearchResultSchema = z.object({
     /** The matched comment id, set on 'thread' results when the match is a comment. */
     commentId: z.string().nullable().optional(),
     /** The matched message id, set by the API on 'conversation' results. */
-    messageId: z.string().nullable().optional(),
+    messageId: z.union([z.string(), z.number()]).transform(String).nullable().optional(),
     channelId: z.string().nullable().optional(),
     channelName: z.string().nullable().optional(),
     channelColor: z.number().nullable().optional(),

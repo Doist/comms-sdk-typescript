@@ -44,6 +44,16 @@ describe('SearchClient — result parsing', () => {
                             conversation_id: TEST_CONVERSATION_ID,
                             message_id: TEST_MESSAGE_ID,
                         },
+                        // Legacy documents can carry numeric message ids
+                        {
+                            id: `conversation_${TEST_CONVERSATION_ID}`,
+                            type: 'conversation',
+                            snippet: 'a legacy message match',
+                            snippet_creator_id: 2,
+                            snippet_last_updated_ts: 1700000002,
+                            conversation_id: TEST_CONVERSATION_ID,
+                            message_id: 123456,
+                        },
                     ],
                     next_cursor_mark: null,
                     has_more: false,
@@ -55,8 +65,8 @@ describe('SearchClient — result parsing', () => {
         const api = new CommsApi(TEST_API_TOKEN)
         const response = await api.search.search({ query: 'match', workspaceId: 1 })
 
-        expect(response.items).toHaveLength(2)
-        const [threadResult, conversationResult] = response.items
+        expect(response.items).toHaveLength(3)
+        const [threadResult, conversationResult, legacyConversationResult] = response.items
         expect(threadResult).toMatchObject({
             id: `thread_${TEST_THREAD_ID}`,
             type: 'thread',
@@ -70,5 +80,6 @@ describe('SearchClient — result parsing', () => {
             conversationId: TEST_CONVERSATION_ID,
             messageId: TEST_MESSAGE_ID,
         })
+        expect(legacyConversationResult).toMatchObject({ messageId: '123456' })
     })
 })
