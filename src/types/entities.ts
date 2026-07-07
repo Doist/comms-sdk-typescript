@@ -489,18 +489,31 @@ export const UnreadConversationSchema = z.object({
 export type UnreadConversation = z.infer<typeof UnreadConversationSchema>
 
 // SearchResult entity from API.
+// The API currently only emits 'thread' and 'conversation' results: a match inside a
+// comment is returned as a 'thread' result with `commentId` set, and a match inside a
+// message as a 'conversation' result with `messageId` set.
 export const SEARCH_RESULT_TYPES = ['thread', 'comment', 'message', 'conversation'] as const
 export type SearchResultType = (typeof SEARCH_RESULT_TYPES)[number]
 
 export const SearchResultSchema = z.object({
+    /**
+     * Opaque search-result key in the form `thread_<threadId>` or
+     * `conversation_<conversationId>`. Unique per result; not a Comms object id — use
+     * `threadId`, `conversationId`, `commentId`, or `messageId` to reference objects.
+     */
     id: z.string(),
     type: z.enum(SEARCH_RESULT_TYPES),
     snippet: z.string(),
     snippetCreatorId: z.number(),
     snippetLastUpdated: z.date(),
+    /** The owning thread id. Set by the API on 'thread' results. */
     threadId: z.string().nullable().optional(),
+    /** The owning conversation id. Set by the API on 'conversation' results. */
     conversationId: z.string().nullable().optional(),
+    /** The matched comment id, set on 'thread' results when the match is a comment. */
     commentId: z.string().nullable().optional(),
+    /** The matched message id, set by the API on 'conversation' results. */
+    messageId: z.union([z.string(), z.number()]).transform(String).nullable().optional(),
     channelId: z.string().nullable().optional(),
     channelName: z.string().nullable().optional(),
     channelColor: z.number().nullable().optional(),
