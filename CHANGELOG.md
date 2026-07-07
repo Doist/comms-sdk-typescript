@@ -1,3 +1,9 @@
+## [0.9.0](https://github.com/Doist/comms-sdk-typescript/compare/v0.8.0...v0.9.0) (2026-07-07)
+
+### Features
+
+* add messageId to search results, document id semantics ([#46](https://github.com/Doist/comms-sdk-typescript/issues/46)) ([b1249eb](https://github.com/Doist/comms-sdk-typescript/commit/b1249ebb8acd39c7a62f08ba4174804044ce69d8))
+
 ## [0.8.0](https://github.com/Doist/comms-sdk-typescript/compare/v0.7.1...v0.8.0) (2026-07-06)
 
 ### Features
