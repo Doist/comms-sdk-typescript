@@ -5,6 +5,7 @@ import { server } from '../testUtils/msw-setup'
 import { TEST_API_BASE_URL, TEST_API_TOKEN, TEST_THREAD_ID } from '../testUtils/test-defaults'
 import { CommentSchema, createCommentSchema } from '../types/entities'
 import { EVERYONE, EVERYONE_IN_THREAD } from '../types/enums'
+import { UuidV7Error } from '../utils/uuidv7'
 import { addCommentRequest } from './add-comment-helper'
 
 const ctx = { baseUri: getCommsBaseUri(), apiToken: TEST_API_TOKEN, schema: CommentSchema }
@@ -34,6 +35,26 @@ describe('addCommentRequest — base-bound schema', () => {
         expect(comment.url).toBe(
             `${customBase}/1/ch/BBBBBBBBBBBBBBBBBBBBBB/t/${TEST_THREAD_ID}/c/AAAAAAAAAAAAAAAAAAAAAA`,
         )
+    })
+})
+
+describe('addCommentRequest — thread id validation', () => {
+    it('throws before posting when threadId is not base58 UUIDv7', () => {
+        let requestWasSent = false
+        server.use(
+            http.post(COMMENT_ADD, () => {
+                requestWasSent = true
+                return HttpResponse.json(COMMENT_RESPONSE)
+            }),
+        )
+
+        expect(() =>
+            addCommentRequest(ctx, {
+                threadId: '019f47ab-523b-7370-b509-fec2446dc999',
+                content: 'hello',
+            }),
+        ).toThrow(UuidV7Error)
+        expect(requestWasSent).toBe(false)
     })
 })
 
