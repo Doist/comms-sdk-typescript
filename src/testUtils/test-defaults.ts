@@ -13,9 +13,10 @@ import type {
 export const TEST_API_TOKEN = 'test-api-token'
 export const TEST_API_BASE_URL = getCommsBaseUri().replace(/\/$/, '')
 
-// Stable test IDs. TEST_THREAD_ID is base58 UUIDv7-shaped because
-// add-comment paths validate it SDK-side.
-export const TEST_CHANNEL_ID = '7YpL3oZ4kZ9vP7Q1tR2sX3y'
+// Stable test IDs. TEST_CHANNEL_ID and TEST_THREAD_ID are base58
+// UUIDv7-shaped because create-thread and add-comment paths validate them
+// SDK-side.
+export const TEST_CHANNEL_ID = 'CQ7yksHFbYFrSPVTaHVCs'
 export const TEST_THREAD_ID = 'CQ7yksHFbYFrSPVTaHVCt'
 export const TEST_COMMENT_ID = '7YpL3oZ4kZ9vP7Q1tR2sX41'
 export const TEST_CONVERSATION_ID = '7YpL3oZ4kZ9vP7Q1tR2sX42'

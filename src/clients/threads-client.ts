@@ -26,7 +26,7 @@ import type {
     ThreadAction,
     UpdateThreadArgs,
 } from '../types/requests'
-import { resolveCreateId } from '../utils/uuidv7'
+import { resolveCreateId, resolveReferenceId } from '../utils/uuidv7'
 import { addCommentRequest } from './add-comment-helper'
 import { BaseClient } from './base-client'
 import { applyNotifyAudience } from './notify-audience'
@@ -139,7 +139,11 @@ export class ThreadsClient extends BaseClient {
         return this.simple(
             'POST',
             'add',
-            { ...normalized, id: resolveCreateId(args.id) },
+            {
+                ...normalized,
+                id: resolveCreateId(normalized.id),
+                channelId: resolveReferenceId(normalized.channelId, 'channelId'),
+            },
             this.threadSchema,
         )
     }
