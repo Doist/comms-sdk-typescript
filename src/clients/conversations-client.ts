@@ -47,26 +47,46 @@ export class ConversationsClient extends BaseClient {
         : ConversationListSchema
 
     /**
-     * Gets all conversations for a workspace.
+     * Gets a page of conversations for a workspace, newest activity first.
+     * The server returns at most 500 rows per request (20 by default); pass
+     * the last row's `lastActive`/`id` as `olderThan`/`beforeId` to fetch
+     * the next page. Paired, they form a strict compound boundary, so pages
+     * never repeat rows. Omitting `archived` returns active and archived
+     * conversations mixed.
      *
      * @param args - The arguments for getting conversations.
      * @param args.workspaceId - The workspace ID.
-     * @param args.archived - Optional flag to include archived conversations.
+     * @param args.archived - Optional flag to filter archived (true) or active (false) conversations.
+     * @param args.olderThan - Optional date to get conversations last active before.
+     * @param args.beforeId - Optional conversation id paired with olderThan for compound pagination.
+     * @param args.limit - Optional page size (server default 20, max 500).
      * @returns An array of conversation objects.
      *
      * @example
      * ```typescript
-     * const conversations = await api.conversations.getConversations({ workspaceId: 123 })
-     * conversations.forEach(c => console.log(c.title))
+     * const page = await api.conversations.getConversations({ workspaceId: 123, limit: 500 })
+     * const last = page[page.length - 1]
+     * const nextPage = await api.conversations.getConversations({
+     *     workspaceId: 123,
+     *     limit: 500,
+     *     olderThan: last.lastActive,
+     *     beforeId: last.id,
+     * })
      * ```
      */
     getConversations(args: GetConversationsArgs): Promise<Conversation[]> {
+        const { olderThan, ...rest } = args
+        const params: Record<string, unknown> = { ...rest }
+        // The generic snake-casing walks objects, so a Date must be
+        // converted before it reaches the transport.
+        if (olderThan) params.olderThanTs = Math.floor(olderThan.getTime() / 1000)
+
         return request<Conversation[]>({
             httpMethod: 'GET',
             baseUri: this.getBaseUri(),
             relativePath: `${ENDPOINT_CONVERSATIONS}/get`,
             apiToken: this.apiToken,
-            payload: args,
+            payload: params,
             customFetch: this.customFetch,
         }).then((response) => this.conversationListSchema.parse(response.data))
     }
