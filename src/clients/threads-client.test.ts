@@ -225,6 +225,28 @@ describe('ThreadsClient — wire serialization', () => {
         ).toThrow(/`groups` contains EVERYONE/)
     })
 
+    it.each(['closeThread', 'reopenThread'] as const)(
+        '%s rejects id that is not base58 UUIDv7 before posting',
+        (method) => {
+            let handlerCalled = false
+            server.use(
+                http.post(`${BASE}/comments/add`, () => {
+                    handlerCalled = true
+                    return HttpResponse.json({})
+                }),
+            )
+
+            const api = new CommsApi(TEST_API_TOKEN)
+            expect(() =>
+                api.threads[method]({
+                    id: '019f47ab-523b-7370-b509-fec2446dc999',
+                    content: 'hello',
+                }),
+            ).toThrow(/invalid id/)
+            expect(handlerCalled).toBe(false)
+        },
+    )
+
     it('markRead sends the thread id as thread_id (not id) plus obj_index', async () => {
         let body: Record<string, unknown> | undefined
         server.use(

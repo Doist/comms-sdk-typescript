@@ -400,7 +400,7 @@ export class ThreadsClient extends BaseClient {
                 customFetch: this.customFetch,
                 schema: this.commentSchema,
             },
-            { threadId: id, ...rest },
+            { threadId: resolveReferenceId(id, 'id'), ...rest },
             { threadAction },
         )
     }
