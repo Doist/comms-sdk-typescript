@@ -143,6 +143,9 @@ export type GetCommentsArgs = z.infer<typeof GetCommentsArgsSchema>
 export const GetConversationsArgsSchema = z.object({
     workspaceId: z.number(),
     archived: z.boolean().nullable().optional(),
+    olderThan: z.date().nullable().optional(),
+    beforeId: z.string().nullable().optional(),
+    limit: z.number().nullable().optional(),
 })
 
 export type GetConversationsArgs = z.infer<typeof GetConversationsArgsSchema>

@@ -47,26 +47,52 @@ export class ConversationsClient extends BaseClient {
         : ConversationListSchema
 
     /**
-     * Gets all conversations for a workspace.
+     * Gets a page of conversations for a workspace, newest activity first.
+     * The server returns at most 500 rows per request (20 by default); pass
+     * the last row's `lastActive`/`id` as `olderThan`/`beforeId` to fetch
+     * the next page. Paired, they form a strict compound boundary, so pages
+     * never repeat rows. Omitting `archived` returns active and archived
+     * conversations mixed.
      *
      * @param args - The arguments for getting conversations.
      * @param args.workspaceId - The workspace ID.
-     * @param args.archived - Optional flag to include archived conversations.
+     * @param args.archived - Optional flag to filter archived (true) or active (false) conversations.
+     * @param args.olderThan - Optional date to get conversations last active before.
+     * @param args.beforeId - Optional conversation id. Paired with olderThan it forms the
+     *   strict compound cursor; alone it pages by conversation id order instead.
+     * @param args.limit - Optional page size (server default 20, max 500).
      * @returns An array of conversation objects.
      *
      * @example
      * ```typescript
-     * const conversations = await api.conversations.getConversations({ workspaceId: 123 })
-     * conversations.forEach(c => console.log(c.title))
+     * const page = await api.conversations.getConversations({ workspaceId: 123, limit: 500 })
+     * const last = page.at(-1)
+     * const nextPage = last
+     *     ? await api.conversations.getConversations({
+     *           workspaceId: 123,
+     *           limit: 500,
+     *           olderThan: last.lastActive,
+     *           beforeId: last.id,
+     *       })
+     *     : []
      * ```
      */
     getConversations(args: GetConversationsArgs): Promise<Conversation[]> {
+        // Fields are picked explicitly (matching getThreads/getComments) so a
+        // future Date field can't silently reach the generic snake-casing,
+        // which would turn it into an empty object on the wire.
+        const params: Record<string, unknown> = { workspaceId: args.workspaceId }
+        if (args.archived != null) params.archived = args.archived
+        if (args.olderThan) params.olderThanTs = Math.floor(args.olderThan.getTime() / 1000)
+        if (args.beforeId != null) params.beforeId = args.beforeId
+        if (args.limit != null) params.limit = args.limit
+
         return request<Conversation[]>({
             httpMethod: 'GET',
             baseUri: this.getBaseUri(),
             relativePath: `${ENDPOINT_CONVERSATIONS}/get`,
             apiToken: this.apiToken,
-            payload: args,
+            payload: params,
             customFetch: this.customFetch,
         }).then((response) => this.conversationListSchema.parse(response.data))
     }
