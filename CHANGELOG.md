@@ -1,3 +1,9 @@
+## [0.10.0](https://github.com/Doist/comms-sdk-typescript/compare/v0.9.0...v0.10.0) (2026-07-10)
+
+### Features
+
+* narrow search results by type ([#48](https://github.com/Doist/comms-sdk-typescript/issues/48)) ([5103a44](https://github.com/Doist/comms-sdk-typescript/commit/5103a44aac441b95ed6867676b5fb6aab7f27732))
+
 ## [0.9.0](https://github.com/Doist/comms-sdk-typescript/compare/v0.8.0...v0.9.0) (2026-07-07)
 
 ### Features
