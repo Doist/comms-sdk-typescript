@@ -1,3 +1,9 @@
+## [0.11.0](https://github.com/Doist/comms-sdk-typescript/compare/v0.10.0...v0.11.0) (2026-07-10)
+
+### Features
+
+* Add pagination args to getConversations ([#49](https://github.com/Doist/comms-sdk-typescript/issues/49)) ([65f1217](https://github.com/Doist/comms-sdk-typescript/commit/65f1217087222c04b23200c18d4fc1fa1b1d2feb))
+
 ## [0.10.0](https://github.com/Doist/comms-sdk-typescript/compare/v0.9.0...v0.10.0) (2026-07-10)
 
 ### Features
