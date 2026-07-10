@@ -58,28 +58,34 @@ export class ConversationsClient extends BaseClient {
      * @param args.workspaceId - The workspace ID.
      * @param args.archived - Optional flag to filter archived (true) or active (false) conversations.
      * @param args.olderThan - Optional date to get conversations last active before.
-     * @param args.beforeId - Optional conversation id paired with olderThan for compound pagination.
+     * @param args.beforeId - Optional conversation id. Paired with olderThan it forms the
+     *   strict compound cursor; alone it pages by conversation id order instead.
      * @param args.limit - Optional page size (server default 20, max 500).
      * @returns An array of conversation objects.
      *
      * @example
      * ```typescript
      * const page = await api.conversations.getConversations({ workspaceId: 123, limit: 500 })
-     * const last = page[page.length - 1]
-     * const nextPage = await api.conversations.getConversations({
-     *     workspaceId: 123,
-     *     limit: 500,
-     *     olderThan: last.lastActive,
-     *     beforeId: last.id,
-     * })
+     * const last = page.at(-1)
+     * const nextPage = last
+     *     ? await api.conversations.getConversations({
+     *           workspaceId: 123,
+     *           limit: 500,
+     *           olderThan: last.lastActive,
+     *           beforeId: last.id,
+     *       })
+     *     : []
      * ```
      */
     getConversations(args: GetConversationsArgs): Promise<Conversation[]> {
-        const { olderThan, ...rest } = args
-        const params: Record<string, unknown> = { ...rest }
-        // The generic snake-casing walks objects, so a Date must be
-        // converted before it reaches the transport.
-        if (olderThan) params.olderThanTs = Math.floor(olderThan.getTime() / 1000)
+        // Fields are picked explicitly (matching getThreads/getComments) so a
+        // future Date field can't silently reach the generic snake-casing,
+        // which would turn it into an empty object on the wire.
+        const params: Record<string, unknown> = { workspaceId: args.workspaceId }
+        if (args.archived != null) params.archived = args.archived
+        if (args.olderThan) params.olderThanTs = Math.floor(args.olderThan.getTime() / 1000)
+        if (args.beforeId != null) params.beforeId = args.beforeId
+        if (args.limit != null) params.limit = args.limit
 
         return request<Conversation[]>({
             httpMethod: 'GET',
