@@ -3,7 +3,7 @@ import { request } from '../transport/http-client'
 import { type Comment, type createCommentSchema } from '../types/entities'
 import type { CustomFetch } from '../types/http'
 import type { CreateCommentArgs, ThreadAction } from '../types/requests'
-import { resolveCreateId } from '../utils/uuidv7'
+import { resolveCreateId, resolveReferenceId } from '../utils/uuidv7'
 import { applyNotifyAudience } from './notify-audience'
 
 type ClientContext = {
@@ -37,7 +37,11 @@ export function addCommentRequest(
     options?: { threadAction?: ThreadAction },
 ): Promise<Comment> {
     const normalized = applyNotifyAudience(params)
-    const withId = { ...normalized, id: resolveCreateId(normalized.id) }
+    const withId = {
+        ...normalized,
+        id: resolveCreateId(normalized.id),
+        threadId: resolveReferenceId(normalized.threadId, 'threadId'),
+    }
     const payload = options?.threadAction
         ? { ...withId, threadAction: options.threadAction }
         : withId

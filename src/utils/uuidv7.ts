@@ -119,6 +119,16 @@ export function generateId(): string {
     return encodeUuidToBase58(hexToBytes(hex))
 }
 
+/** Validate an existing entity ID without minting a replacement. */
+export function resolveReferenceId(id: string, fieldName: string): string {
+    if (!isValidUuidV7Base58(id)) {
+        throw new UuidV7Error(
+            `invalid ${fieldName} ${JSON.stringify(id)} — use a base58 UUIDv7 value for \`${fieldName}\`.`,
+        )
+    }
+    return id
+}
+
 /**
  * Resolve the `id` for a create-style API call: validate the caller-supplied
  * value (throwing {@link UuidV7Error} before the request leaves the SDK) or
