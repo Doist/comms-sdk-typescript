@@ -168,8 +168,11 @@ describe('httpDispatcher', () => {
         try {
             const { port } = httpServer.address() as AddressInfo
             const dispatcher = await getDefaultDispatcher()
-            const response = await fetch(`http://127.0.0.1:${port}/`, {
-                // @ts-expect-error - dispatcher is a valid Node fetch option not in TS lib types
+            // Pair the dispatcher with undici's own `fetch`, exactly as production
+            // does (see getDefaultFetch). The global `fetch` is backed by a
+            // different, Node-bundled undici; mixing it with this dispatcher's
+            // decompress interceptor corrupts gzip bodies (Z_DATA_ERROR on Node 26).
+            const response = await undiciFetch(`http://127.0.0.1:${port}/`, {
                 dispatcher,
             })
             const body = await response.text()
