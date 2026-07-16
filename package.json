@@ -12,7 +12,8 @@
     "license": "MIT",
     "type": "module",
     "engines": {
-        "node": ">=20.18.1"
+        "node": ">=24",
+        "npm": ">=11"
     },
     "main": "dist/cjs/index.js",
     "module": "dist/esm/index.js",
