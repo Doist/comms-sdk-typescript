@@ -1,3 +1,13 @@
+## [1.0.0](https://github.com/Doist/comms-sdk-typescript/compare/v0.11.1...v1.0.0) (2026-07-16)
+
+### ⚠ BREAKING CHANGES
+
+* require node >=24, test on 24 & 26, support npm >=11 (#50)
+
+### Features
+
+* require node >=24, test on 24 & 26, support npm >=11 ([#50](https://github.com/Doist/comms-sdk-typescript/issues/50)) ([da9e47e](https://github.com/Doist/comms-sdk-typescript/commit/da9e47edb6ab119921b5d8617f243e867fb6a405))
+
 ## [0.11.1](https://github.com/Doist/comms-sdk-typescript/compare/v0.11.0...v0.11.1) (2026-07-12)
 
 ### Bug Fixes
