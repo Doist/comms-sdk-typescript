@@ -1,3 +1,9 @@
+## [1.0.1](https://github.com/Doist/comms-sdk-typescript/compare/v1.0.0...v1.0.1) (2026-07-29)
+
+### Bug Fixes
+
+* set Comms audience to thread ([#62](https://github.com/Doist/comms-sdk-typescript/issues/62)) ([1a0cdd5](https://github.com/Doist/comms-sdk-typescript/commit/1a0cdd5876c190cf596320c73e5d54fbb5cfaa43))
+
 ## [1.0.0](https://github.com/Doist/comms-sdk-typescript/compare/v0.11.1...v1.0.0) (2026-07-16)
 
 ### ⚠ BREAKING CHANGES
