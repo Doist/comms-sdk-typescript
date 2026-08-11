@@ -1,3 +1,13 @@
+## [2.0.0](https://github.com/Doist/comms-sdk-typescript/compare/v1.0.1...v2.0.0) (2026-08-11)
+
+### ⚠ BREAKING CHANGES
+
+* parse the restricted user shape from workspace_users lookups (#66)
+
+### Bug Fixes
+
+* parse the restricted user shape from workspace_users lookups ([#66](https://github.com/Doist/comms-sdk-typescript/issues/66)) ([6731bff](https://github.com/Doist/comms-sdk-typescript/commit/6731bff4fda17fb3417bcb1ef6483d15076fcd63))
+
 ## [1.0.1](https://github.com/Doist/comms-sdk-typescript/compare/v1.0.0...v1.0.1) (2026-07-29)
 
 ### Bug Fixes
