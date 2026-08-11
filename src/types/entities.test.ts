@@ -1,8 +1,11 @@
+import { mockWorkspaceUser } from '../testUtils/test-defaults'
 import {
     AttachmentSchema,
     createChannelSchema,
     createInboxThreadSchema,
+    isRestrictedWorkspaceUser,
     RequestAttachmentSchema,
+    VisibleWorkspaceUserSchema,
 } from './entities'
 
 describe('AttachmentSchema', () => {
@@ -198,5 +201,52 @@ describe('entity url factories', () => {
         expect(parsed.lastComment?.url).toBe(
             `${base}/1/ch/${channelId}/t/${commentThreadId}/c/${commentId}`,
         )
+    })
+})
+
+describe('VisibleWorkspaceUserSchema', () => {
+    // Shape the backend sends for a user the viewer may not see in full: no
+    // `timezone`, no `userType`, and `fullName` holding the first name only.
+    const restrictedPayload = {
+        id: 4210001,
+        fullName: 'Alex',
+        firstName: 'Alex',
+        shortName: 'Alex',
+        setupPending: false,
+        imageId: 'a1b2c3d4e5f60718293a4b5c6d7e8f90',
+        version: 0,
+        removed: true,
+        restricted: true,
+        avatarUrls: {
+            s35: 'https://example.com/a_small.jpg',
+            s60: 'https://example.com/a_medium.jpg',
+            s195: 'https://example.com/a_big.jpg',
+            s640: 'https://example.com/a_s640.jpg',
+        },
+    }
+
+    it('parses a restricted user that carries no timezone or userType', () => {
+        const user = VisibleWorkspaceUserSchema.parse(restrictedPayload)
+        expect(isRestrictedWorkspaceUser(user)).toBe(true)
+        expect(user.fullName).toBe('Alex')
+        expect(user.removed).toBe(true)
+    })
+
+    it('parses a full user and does not narrow it to restricted', () => {
+        const user = VisibleWorkspaceUserSchema.parse({
+            ...mockWorkspaceUser,
+            restricted: false,
+        })
+        expect(isRestrictedWorkspaceUser(user)).toBe(false)
+        if (!isRestrictedWorkspaceUser(user)) {
+            expect(user.timezone).toBe('America/New_York')
+            expect(user.userType).toBe('USER')
+        }
+    })
+
+    it('rejects a payload that is neither shape', () => {
+        expect(() =>
+            VisibleWorkspaceUserSchema.parse({ ...restrictedPayload, restricted: false }),
+        ).toThrow()
     })
 })
