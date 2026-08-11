@@ -366,6 +366,48 @@ export const WorkspaceUserSchema = BaseUserSchema.extend({
 
 export type WorkspaceUser = z.infer<typeof WorkspaceUserSchema>
 
+// Reduced user shape the backend substitutes when the viewer may not see a
+// user's full profile — the user has been removed from the workspace, or the
+// viewer is a guest with no visibility of them. `full_name` / `short_name`
+// carry the first name only, and neither `timezone` nor `user_type` is sent,
+// so those cannot be modelled on this branch.
+export const RestrictedWorkspaceUserSchema = BaseUserSchema.omit({ timezone: true }).extend({
+    restricted: z.literal(true),
+    version: z.number(),
+})
+
+export type RestrictedWorkspaceUser = z.infer<typeof RestrictedWorkspaceUserSchema>
+
+// A workspace user as the current viewer sees them. Endpoints that resolve a
+// single user by id or email return either shape, discriminated by
+// `restricted`; narrow with {@link isRestrictedWorkspaceUser}. Endpoints that
+// list a workspace's own members always return the full shape.
+export const VisibleWorkspaceUserSchema = z.union([
+    WorkspaceUserSchema,
+    RestrictedWorkspaceUserSchema,
+])
+
+export type VisibleWorkspaceUser = z.infer<typeof VisibleWorkspaceUserSchema>
+
+/**
+ * Narrows a {@link VisibleWorkspaceUser} to the reduced shape, which has no
+ * `timezone` and no `userType`.
+ *
+ * @param user - The user to check.
+ * @returns `true` when the viewer only gets the restricted profile.
+ *
+ * @example
+ * ```typescript
+ * const user = await api.workspaceUsers.getUserById({ workspaceId: 123, userId: 456 })
+ * const zone = isRestrictedWorkspaceUser(user) ? 'UTC' : user.timezone
+ * ```
+ */
+export function isRestrictedWorkspaceUser(
+    user: VisibleWorkspaceUser,
+): user is RestrictedWorkspaceUser {
+    return user.restricted === true
+}
+
 // ConversationMessage entity from API. `id` is widened to `string | number`
 // (coerced to a string post-parse) because the backend currently emits
 // either shape depending on the endpoint; the URL/reaction helpers accept

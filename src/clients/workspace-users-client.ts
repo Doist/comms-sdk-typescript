@@ -1,5 +1,10 @@
 import { request } from '../transport/http-client'
-import { type WorkspaceUser, WorkspaceUserSchema } from '../types/entities'
+import {
+    type VisibleWorkspaceUser,
+    VisibleWorkspaceUserSchema,
+    type WorkspaceUser,
+    WorkspaceUserSchema,
+} from '../types/entities'
 import { UserType } from '../types/enums'
 import type {
     GetUserByEmailArgs,
@@ -73,23 +78,24 @@ export class WorkspaceUsersClient extends BaseClient {
      * @param args - The arguments for getting a user by ID.
      * @param args.workspaceId - The workspace ID.
      * @param args.userId - The user's ID.
-     * @returns The workspace user object.
+     * @returns The workspace user object, reduced to the restricted shape when
+     * the viewer may not see the user's full profile.
      *
      * @example
      * ```typescript
      * const user = await api.workspaceUsers.getUserById({ workspaceId: 123, userId: 456 })
-     * console.log(user.fullName, user.email)
+     * console.log(user.fullName, isRestrictedWorkspaceUser(user) ? null : user.email)
      * ```
      */
-    getUserById(args: GetUserByIdArgs): Promise<WorkspaceUser> {
-        return request<WorkspaceUser>({
+    getUserById(args: GetUserByIdArgs): Promise<VisibleWorkspaceUser> {
+        return request<VisibleWorkspaceUser>({
             httpMethod: 'GET',
             baseUri: this.getBaseUri(),
             relativePath: 'workspace_users/getone',
             apiToken: this.apiToken,
             payload: { id: args.workspaceId, user_id: args.userId },
             customFetch: this.customFetch,
-        }).then((response) => WorkspaceUserSchema.parse(response.data))
+        }).then((response) => VisibleWorkspaceUserSchema.parse(response.data))
     }
 
     /**
@@ -98,7 +104,8 @@ export class WorkspaceUsersClient extends BaseClient {
      * @param args - The arguments for getting a user by email.
      * @param args.workspaceId - The workspace ID.
      * @param args.email - The user's email.
-     * @returns The workspace user object.
+     * @returns The workspace user object, reduced to the restricted shape when
+     * the viewer may not see the user's full profile.
      *
      * @example
      * ```typescript
@@ -108,15 +115,15 @@ export class WorkspaceUsersClient extends BaseClient {
      * })
      * ```
      */
-    getUserByEmail(args: GetUserByEmailArgs): Promise<WorkspaceUser> {
-        return request<WorkspaceUser>({
+    getUserByEmail(args: GetUserByEmailArgs): Promise<VisibleWorkspaceUser> {
+        return request<VisibleWorkspaceUser>({
             httpMethod: 'GET',
             baseUri: this.getBaseUri(),
             relativePath: 'workspace_users/get_by_email',
             apiToken: this.apiToken,
             payload: { id: args.workspaceId, email: args.email },
             customFetch: this.customFetch,
-        }).then((response) => WorkspaceUserSchema.parse(response.data))
+        }).then((response) => VisibleWorkspaceUserSchema.parse(response.data))
     }
 
     /**
