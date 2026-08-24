@@ -75,35 +75,22 @@ describe('ConversationsClient — wire serialization', () => {
         expect(params.has('limit')).toBe(false)
     })
 
-    it('archiveConversation posts the conversation id', async () => {
+    it.each([
+        ['archiveConversation', 'archive', true],
+        ['unarchiveConversation', 'unarchive', false],
+    ] as const)('%s posts the conversation id', async (method, suffix, archived) => {
         let body: Record<string, unknown> | undefined
         server.use(
-            http.post(`${BASE}/conversations/archive`, async ({ request }) => {
+            http.post(`${BASE}/conversations/${suffix}`, async ({ request }) => {
                 body = (await request.json()) as Record<string, unknown>
-                return HttpResponse.json({ ...CONVERSATION_RESPONSE, archived: true })
+                return HttpResponse.json({ ...CONVERSATION_RESPONSE, archived })
             }),
         )
 
         const api = new CommsApi(TEST_API_TOKEN)
-        const conversation = await api.conversations.archiveConversation(TEST_CONVERSATION_ID)
+        const conversation = await api.conversations[method](TEST_CONVERSATION_ID)
 
         expect(body).toEqual({ id: TEST_CONVERSATION_ID })
-        expect(conversation.archived).toBe(true)
-    })
-
-    it('unarchiveConversation posts the conversation id', async () => {
-        let body: Record<string, unknown> | undefined
-        server.use(
-            http.post(`${BASE}/conversations/unarchive`, async ({ request }) => {
-                body = (await request.json()) as Record<string, unknown>
-                return HttpResponse.json(CONVERSATION_RESPONSE)
-            }),
-        )
-
-        const api = new CommsApi(TEST_API_TOKEN)
-        const conversation = await api.conversations.unarchiveConversation(TEST_CONVERSATION_ID)
-
-        expect(body).toEqual({ id: TEST_CONVERSATION_ID })
-        expect(conversation.archived).toBe(false)
+        expect(conversation.archived).toBe(archived)
     })
 })
