@@ -164,7 +164,7 @@ export class ConversationsClient extends BaseClient {
      * @returns The updated conversation object.
      */
     archiveConversation(id: string): Promise<Conversation> {
-        return this.simple('GET', 'archive', { id }, this.conversationSchema)
+        return this.simple('POST', 'archive', { id }, this.conversationSchema)
     }
 
     /**
@@ -174,7 +174,7 @@ export class ConversationsClient extends BaseClient {
      * @returns The updated conversation object.
      */
     unarchiveConversation(id: string): Promise<Conversation> {
-        return this.simple('GET', 'unarchive', { id }, this.conversationSchema)
+        return this.simple('POST', 'unarchive', { id }, this.conversationSchema)
     }
 
     /**

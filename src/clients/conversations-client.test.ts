@@ -9,6 +9,20 @@ import {
     TEST_CONVERSATION_ID,
 } from '../testUtils/test-defaults'
 
+const CONVERSATION_RESPONSE = {
+    id: TEST_CONVERSATION_ID,
+    workspace_id: 1,
+    user_ids: [1, 2],
+    message_count: 1,
+    last_obj_index: 0,
+    snippet: 'Hello there',
+    snippet_creators: [1],
+    last_active_ts: 1_609_459_200,
+    archived: false,
+    created_ts: 1_609_459_200,
+    creator: 1,
+}
+
 // Pins the wire shape of the `conversations/get` pagination args. `olderThan`
 // is a `Date` that the client must convert itself — the transport's generic
 // snake-casing would turn a `Date` into an empty object.
@@ -59,5 +73,24 @@ describe('ConversationsClient — wire serialization', () => {
         expect(params.has('older_than_ts')).toBe(false)
         expect(params.has('before_id')).toBe(false)
         expect(params.has('limit')).toBe(false)
+    })
+
+    it.each([
+        ['archiveConversation', 'archive', true],
+        ['unarchiveConversation', 'unarchive', false],
+    ] as const)('%s posts the conversation id', async (method, suffix, archived) => {
+        let body: Record<string, unknown> | undefined
+        server.use(
+            http.post(`${BASE}/conversations/${suffix}`, async ({ request }) => {
+                body = (await request.json()) as Record<string, unknown>
+                return HttpResponse.json({ ...CONVERSATION_RESPONSE, archived })
+            }),
+        )
+
+        const api = new CommsApi(TEST_API_TOKEN)
+        const conversation = await api.conversations[method](TEST_CONVERSATION_ID)
+
+        expect(body).toEqual({ id: TEST_CONVERSATION_ID })
+        expect(conversation.archived).toBe(archived)
     })
 })
