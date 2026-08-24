@@ -1,3 +1,9 @@
+## [2.0.1](https://github.com/Doist/comms-sdk-typescript/compare/v2.0.0...v2.0.1) (2026-08-24)
+
+### Bug Fixes
+
+* use POST for conversation archive endpoints ([#68](https://github.com/Doist/comms-sdk-typescript/issues/68)) ([c798d9e](https://github.com/Doist/comms-sdk-typescript/commit/c798d9ebf7d4f8068ee608806598163f3cd30d68))
+
 ## [2.0.0](https://github.com/Doist/comms-sdk-typescript/compare/v1.0.1...v2.0.0) (2026-08-11)
 
 ### ⚠ BREAKING CHANGES
