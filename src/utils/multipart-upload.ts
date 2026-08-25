@@ -1,3 +1,4 @@
+import { v4 as uuid } from 'uuid'
 import { fetchWithRetry } from '../transport/fetch-with-retry'
 import type { CustomFetch } from '../types/http'
 
@@ -111,8 +112,7 @@ const MIME_BY_EXTENSION: Readonly<Record<string, string>> = {
 
 /**
  * Normalise a supported {@link UploadFile} into a `Blob` plus a resolved file name and
- * content type, so uploads use the cross-platform global `FormData`/`Blob` body that
- * `undici` and browsers both accept natively.
+ * content type, ready to be encoded into the multipart body.
  */
 function toBlob(
     file: UploadFile,
@@ -145,14 +145,86 @@ function toBlob(
 }
 
 /**
+ * Escapes a value for use inside a quoted `Content-Disposition` parameter, where a raw
+ * quote would end the value early and a raw CR or LF would end the header. A lone CR
+ * needs escaping too, not just CRLF pairs.
+ *
+ * This is the same escaping the platform's own `FormData` encoder applies, so servers
+ * see exactly what they would from any browser.
+ */
+function escapeDispositionValue(value: string): string {
+    return value.replace(/"/g, '%22').replace(/\r/g, '%0D').replace(/\n/g, '%0A')
+}
+
+/**
+ * Rejects a media type that could not be safely written into a part header.
+ *
+ * `contentType` is public caller input and reaches the header verbatim. A value
+ * carrying a CR or LF would end the header early and let the caller forge one
+ * of its own — `Blob` normalises the `type` it stores, but the supplied value
+ * is what gets interpolated. Reject rather than silently rewrite, so a caller
+ * passing something unusable finds out instead of having it altered.
+ */
+function assertHeaderSafeContentType(contentType: string): void {
+    if (!/^[\x20-\x7e]*$/.test(contentType)) {
+        throw new Error(
+            'contentType must contain only printable ASCII characters, without CR or LF',
+        )
+    }
+}
+
+/**
+ * Encodes a `multipart/form-data` body as a `Blob`, together with the `Content-Type`
+ * that describes it.
+ *
+ * Deliberately avoids `FormData`. A `FormData` body is only encoded by the `fetch` that
+ * owns that `FormData` class — undici brands its own and checks it with a plain
+ * `instanceof` — and the SDK dispatches through undici's own `fetch` to keep the request
+ * client on the same undici as the dispatcher. A global `FormData` handed to it is
+ * stringified to the literal `"[object FormData]"`, so the upload silently carries no
+ * file. `Blob` has no such brand and works with whichever `fetch` sends the request,
+ * including a caller-supplied `customFetch`.
+ */
+function buildMultipartBody(args: {
+    blob: Blob
+    fileName: string
+    contentType: string
+    fields: Record<string, string | number | boolean | undefined | null>
+}): { body: Blob; contentType: string } {
+    const { blob, fileName, contentType, fields } = args
+    assertHeaderSafeContentType(contentType)
+    const boundary = `----comms-sdk-${uuid()}`
+    const parts: BlobPart[] = [
+        `--${boundary}\r\n` +
+            `Content-Disposition: form-data; name="file"; filename="${escapeDispositionValue(fileName)}"\r\n` +
+            `Content-Type: ${contentType}\r\n\r\n`,
+        blob,
+        '\r\n',
+    ]
+
+    for (const [key, value] of Object.entries(fields)) {
+        if (value !== undefined && value !== null) {
+            parts.push(
+                `--${boundary}\r\n` +
+                    `Content-Disposition: form-data; name="${escapeDispositionValue(key)}"\r\n\r\n` +
+                    `${String(value)}\r\n`,
+            )
+        }
+    }
+
+    parts.push(`--${boundary}--\r\n`)
+
+    return { body: new Blob(parts), contentType: `multipart/form-data; boundary=${boundary}` }
+}
+
+/**
  * Upload a file using `multipart/form-data`.
  *
- * Builds the request body with the global `FormData`/`Blob` so it works unchanged in the
- * browser and in Node.js (via `undici`). The `file` part is sent alongside `file_name`,
+ * Encodes the request body as a `Blob` so it works unchanged in the browser and in
+ * Node.js, whichever `fetch` ends up sending it. The `file` part is sent alongside `file_name`,
  * `file_size`, and `underlying_type` fields (the canonical Comms upload shape); any
  * `additionalFields` are merged in and override the derived values. Authentication uses
- * `Authorization: Bearer`, matching every other Comms SDK client, and `Content-Type` is
- * intentionally left unset so the runtime adds the correct multipart boundary.
+ * `Authorization: Bearer`, matching every other Comms SDK client.
  *
  * The response is JSON-parsed and camel-cased by {@link fetchWithRetry}; callers validate
  * the returned shape with the appropriate schema.
@@ -184,16 +256,18 @@ export async function uploadMultipartFile<T>(args: UploadMultipartFileArgs): Pro
         ...additionalFields,
     }
 
-    const form = new FormData()
-    form.append('file', blob, resolvedFileName)
-    for (const [key, value] of Object.entries(fields)) {
-        if (value !== undefined && value !== null) {
-            form.append(key, String(value))
-        }
-    }
+    const multipart = buildMultipartBody({
+        blob,
+        fileName: resolvedFileName,
+        contentType: resolvedType,
+        fields,
+    })
 
     const headers: Record<string, string> = {
         Authorization: `Bearer ${authToken}`,
+        // The boundary is ours, so this has to be declared explicitly — `fetch`
+        // only fills it in for a `FormData` body.
+        'Content-Type': multipart.contentType,
     }
     if (requestId) {
         headers['X-Request-Id'] = requestId
@@ -206,8 +280,7 @@ export async function uploadMultipartFile<T>(args: UploadMultipartFileArgs): Pro
         {
             method: 'POST',
             headers,
-            body: form,
-            // Don't set Content-Type — the runtime adds the multipart boundary.
+            body: multipart.body,
             timeout: 30000,
         },
         maxRetries,
