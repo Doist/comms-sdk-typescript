@@ -1,3 +1,9 @@
+## [2.0.2](https://github.com/Doist/comms-sdk-typescript/compare/v2.0.1...v2.0.2) (2026-08-25)
+
+### Bug Fixes
+
+* build multipart uploads without FormData ([#69](https://github.com/Doist/comms-sdk-typescript/issues/69)) ([0943697](https://github.com/Doist/comms-sdk-typescript/commit/094369741801484159e0ab19a8163c82b9a9381c))
+
 ## [2.0.1](https://github.com/Doist/comms-sdk-typescript/compare/v2.0.0...v2.0.1) (2026-08-24)
 
 ### Bug Fixes
