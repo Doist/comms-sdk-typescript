@@ -157,6 +157,23 @@ function escapeDispositionValue(value: string): string {
 }
 
 /**
+ * Rejects a media type that could not be safely written into a part header.
+ *
+ * `contentType` is public caller input and reaches the header verbatim. A value
+ * carrying a CR or LF would end the header early and let the caller forge one
+ * of its own — `Blob` normalises the `type` it stores, but the supplied value
+ * is what gets interpolated. Reject rather than silently rewrite, so a caller
+ * passing something unusable finds out instead of having it altered.
+ */
+function assertHeaderSafeContentType(contentType: string): void {
+    if (!/^[\x20-\x7e]*$/.test(contentType)) {
+        throw new Error(
+            'contentType must contain only printable ASCII characters, without CR or LF',
+        )
+    }
+}
+
+/**
  * Encodes a `multipart/form-data` body as a `Blob`, together with the `Content-Type`
  * that describes it.
  *
@@ -175,6 +192,7 @@ function buildMultipartBody(args: {
     fields: Record<string, string | number | boolean | undefined | null>
 }): { body: Blob; contentType: string } {
     const { blob, fileName, contentType, fields } = args
+    assertHeaderSafeContentType(contentType)
     const boundary = `----comms-sdk-${uuid()}`
     const parts: BlobPart[] = [
         `--${boundary}\r\n` +

@@ -122,6 +122,22 @@ describe('uploadMultipartFile over the real transport', () => {
         expect(body.match(/Content-Disposition: form-data; name="file"/g)).toHaveLength(1)
     })
 
+    test('rejects a content type that would forge a part header', async () => {
+        // `contentType` is caller input and lands in the part header verbatim,
+        // so a CR or LF in it could end the header and start another.
+        await expect(upload({ contentType: 'image/png\r\nX-Injected: forged' })).rejects.toThrow(
+            'contentType must contain only printable ASCII',
+        )
+
+        expect(received).toBeUndefined()
+    })
+
+    test('accepts a content type carrying ordinary parameters', async () => {
+        await upload({ contentType: 'text/plain; charset=utf-8' })
+
+        expect(received?.body).toContain('Content-Type: text/plain; charset=utf-8')
+    })
+
     test('requires a file name for raw bytes', async () => {
         await expect(
             upload({ file: new Uint8Array([1, 2, 3]), fileName: undefined }),
