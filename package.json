@@ -15,14 +15,11 @@
         "node": ">=24",
         "npm": ">=11"
     },
-    "main": "dist/cjs/index.js",
-    "module": "dist/esm/index.js",
     "types": "dist/types/index.d.ts",
     "exports": {
         ".": {
             "types": "./dist/types/index.d.ts",
-            "import": "./dist/esm/index.js",
-            "require": "./dist/cjs/index.js"
+            "default": "./dist/esm/index.js"
         }
     },
     "sideEffects": false,
@@ -31,22 +28,21 @@
         "test": "vitest run",
         "test:watch": "vitest",
         "test:coverage": "vitest run --coverage",
-        "build:cjs": "npx tsc -p tsconfig.cjs.json",
         "build:esm": "npx tsc -p tsconfig.esm.json",
         "build:fix-esm": "node scripts/fix-esm-imports.cjs",
         "build:fix-dts": "node scripts/fix-dts-imports.cjs",
-        "build:post": "echo '{\"type\":\"commonjs\"}' > dist/cjs/package.json",
-        "build": "npm-run-all clean build:cjs build:esm build:fix-esm build:fix-dts build:post",
+        "build": "npm-run-all clean build:esm build:fix-esm build:fix-dts",
         "type-check": "npx tsc --noEmit",
         "check": "oxlint src && oxfmt --check",
         "check:fix": "oxlint src --fix && oxfmt",
-        "attw": "attw --pack --ignore-rules fallback-condition false-esm",
+        "attw": "attw --pack --ignore-rules cjs-resolves-to-esm",
         "audit": "npm audit --audit-level=moderate",
         "integrity-checks": "npm-run-all clean check test build attw",
         "prepublishOnly": "npm run integrity-checks",
         "prepare": "npm run build"
     },
     "dependencies": {
+        "@doist/sdk-kmp": "0.2.3",
         "camelcase": "9.0.0",
         "ts-custom-error": "3.3.1",
         "undici": "7.29.0",
@@ -81,7 +77,6 @@
         "*.{ts,tsx,json,md,yml,yaml}": "oxfmt --no-error-on-unmatched-pattern"
     },
     "files": [
-        "dist/cjs/**/*",
         "dist/esm/**/*",
         "dist/types/**/*",
         "!dist/**/*.test.js",

@@ -13,7 +13,7 @@
         "allowSyntheticDefaultImports": true,
         "strict": true,
         "forceConsistentCasingInFileNames": true,
-        "moduleResolution": "node10",
+        "moduleResolution": "bundler",
         "isolatedModules": true,
         "noImplicitReturns": true,
         "noImplicitAny": true,
