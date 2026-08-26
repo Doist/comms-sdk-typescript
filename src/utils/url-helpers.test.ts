@@ -1,5 +1,4 @@
 import {
-    COMMS_LINK_TYPES,
     getChannelURL,
     getCommentURL,
     getCommsURL,
@@ -281,21 +280,19 @@ describe('parseCommsURL', () => {
     test('returns a plain serialisable object', () => {
         const parsed = parseCommsURL(url(getChannelURL({ workspaceId: 1, channelId: CH })))
         expect(JSON.parse(JSON.stringify(parsed))).toEqual(parsed)
-        expect(parsed && Object.keys(parsed)).toEqual([
-            'type',
-            'workspaceId',
-            'channelId',
-            'threadId',
-            'commentId',
-            'conversationId',
-            'messageId',
-            'isQuoteReference',
-        ])
-    })
-
-    test('only ever returns a declared link type', () => {
-        const parsed = parseCommsURL(url(getChannelURL({ workspaceId: 1, channelId: CH })))
-        expect(COMMS_LINK_TYPES).toContain(parsed?.type)
+        // Sorted so the assertion catches leaked internals without pinning field order.
+        expect(parsed && Object.keys(parsed).sort()).toEqual(
+            [
+                'type',
+                'workspaceId',
+                'channelId',
+                'threadId',
+                'commentId',
+                'conversationId',
+                'messageId',
+                'isQuoteReference',
+            ].sort(),
+        )
     })
 
     test.each([

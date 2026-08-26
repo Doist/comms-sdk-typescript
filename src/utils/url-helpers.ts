@@ -37,6 +37,10 @@ const COMMS_BASE_URL = 'https://comms.todoist.com'
  * rejects one of the given ids. These helpers run while parsing API responses,
  * so building a path must never fail the parse.
  *
+ * Every error is caught, not just id rejection. The link builders expose no
+ * error type to narrow on, and a path is never important enough to fail a
+ * parse over, so any failure degrades to the locally built path.
+ *
  * @param build Builds the path.
  * @param fallback Builds the path without the shared link builder.
  * @returns The built path, or the locally built path if an id was rejected.
