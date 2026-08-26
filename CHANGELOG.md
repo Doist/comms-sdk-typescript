@@ -1,3 +1,13 @@
+## [3.0.0](https://github.com/Doist/comms-sdk-typescript/compare/v2.0.2...v3.0.0) (2026-08-26)
+
+### ⚠ BREAKING CHANGES
+
+* generate Comms paths via @doist/sdk-kmp and drop the CommonJS build (#70)
+
+### Features
+
+* generate Comms paths via @doist/sdk-kmp and drop the CommonJS build ([#70](https://github.com/Doist/comms-sdk-typescript/issues/70)) ([886e45c](https://github.com/Doist/comms-sdk-typescript/commit/886e45cd765be57a5acc9c82fe0de0206d32d90f))
+
 ## [2.0.2](https://github.com/Doist/comms-sdk-typescript/compare/v2.0.1...v2.0.2) (2026-08-25)
 
 ### Bug Fixes
