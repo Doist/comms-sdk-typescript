@@ -4,8 +4,13 @@ export class CommsRequestError extends CustomError {
     public httpStatusCode?: number
     public responseData?: unknown
 
-    constructor(message: string, httpStatusCode?: number, responseData?: unknown) {
-        super(message)
+    constructor(
+        message: string,
+        httpStatusCode?: number,
+        responseData?: unknown,
+        options?: ErrorOptions,
+    ) {
+        super(message, options)
         this.httpStatusCode = httpStatusCode
         this.responseData = responseData
     }
