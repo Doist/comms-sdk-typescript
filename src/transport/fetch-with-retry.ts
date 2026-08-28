@@ -11,8 +11,11 @@ export async function fetchWithRetry<T>(
     customFetch?: CustomFetch,
 ): Promise<HttpResponse<T>> {
     let lastError: Error | undefined
+    let attempts = 0
 
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        attempts++
+
         let clearTimeoutFn: (() => void) | undefined
 
         try {
@@ -80,7 +83,63 @@ export async function fetchWithRetry<T>(
         throw lastError
     }
 
-    throw new CommsRequestError(lastError?.message ?? 'Request failed')
+    throw new CommsRequestError(
+        describeTransportFailure(lastError, attempts),
+        undefined,
+        undefined,
+        {
+            cause: lastError,
+        },
+    )
+}
+
+/** Causes reported before the rest of the chain is dropped. */
+const CAUSE_CHAIN_LIMIT = 3
+
+/**
+ * Builds the message for a request that never produced a response.
+ *
+ * `fetch` reports every transport problem as the same `fetch failed`, and puts
+ * the reason a caller actually needs — `ENOTFOUND`, `ECONNRESET`, a TLS failure
+ * — in `cause`. Dropping that leaves an unattributable error in the logs, so
+ * unwrap the chain into the message and keep the original as `cause`.
+ */
+function describeTransportFailure(error: Error | undefined, attempts: number): string {
+    const base = error?.message ?? 'Request failed'
+    const cause = describeCauseChain(error)
+    const tries = attempts > 1 ? ` after ${attempts} attempts` : ''
+
+    return cause ? `${base} (${cause})${tries}` : `${base}${tries}`
+}
+
+function describeCauseChain(error: Error | undefined): string | undefined {
+    const descriptions: string[] = []
+    const seen = new Set<unknown>()
+    let current: unknown = error?.cause
+
+    while (
+        current instanceof Error &&
+        !seen.has(current) &&
+        descriptions.length < CAUSE_CHAIN_LIMIT
+    ) {
+        seen.add(current)
+        const description = describeCause(current)
+        if (description) {
+            descriptions.push(description)
+        }
+        // A failed connect can carry one error per address it tried; the first
+        // one is representative and the rest are the same failure repeated.
+        const aggregated = current instanceof AggregateError ? current.errors[0] : undefined
+        current = aggregated ?? current.cause
+    }
+
+    return descriptions.length > 0 ? descriptions.join(' <- ') : undefined
+}
+
+function describeCause(error: Error): string {
+    const code = (error as { code?: unknown }).code
+
+    return typeof code === 'string' && code.length > 0 ? `${code}: ${error.message}` : error.message
 }
 
 async function fetchWithDefaultTransport(

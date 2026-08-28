@@ -211,3 +211,81 @@ describe('fetchWithRetry transport selection', () => {
         )
     })
 })
+
+describe('fetchWithRetry transport failures', () => {
+    beforeEach(() => {
+        vi.resetModules()
+        vi.restoreAllMocks()
+        vi.useRealTimers()
+
+        mockFetch = vi.fn()
+        global.fetch = mockFetch as unknown as typeof fetch
+    })
+
+    afterEach(() => {
+        vi.unmock('./http-dispatcher')
+        vi.resetModules()
+    })
+
+    function createFetchFailure(cause: unknown): TypeError {
+        const error = new TypeError('fetch failed')
+        error.cause = cause
+        return error
+    }
+
+    it('reports the underlying cause and the attempt count', async () => {
+        const { fetchWithRetry } = await importFetchWithRetryWithMockedTransport()
+
+        const cause = Object.assign(new Error('getaddrinfo ENOTFOUND comms.todoist.com'), {
+            code: 'ENOTFOUND',
+        })
+        mockFetch.mockRejectedValue(createFetchFailure(cause))
+
+        await expect(
+            fetchWithRetry('https://api.test.com/users', { method: 'GET' }, 1),
+        ).rejects.toThrow(
+            'fetch failed (ENOTFOUND: getaddrinfo ENOTFOUND comms.todoist.com) after 2 attempts',
+        )
+    })
+
+    it('keeps the original error as the cause', async () => {
+        const { fetchWithRetry } = await importFetchWithRetryWithMockedTransport()
+
+        const transportError = createFetchFailure(new Error('read ECONNRESET'))
+        mockFetch.mockRejectedValue(transportError)
+
+        await expect(
+            fetchWithRetry('https://api.test.com/users', { method: 'GET' }, 0),
+        ).rejects.toMatchObject({ cause: transportError })
+    })
+
+    it('unwraps the first address of an aggregated connect failure', async () => {
+        const { fetchWithRetry } = await importFetchWithRetryWithMockedTransport()
+
+        const aggregate = new AggregateError(
+            [
+                Object.assign(new Error('connect ECONNREFUSED 10.0.0.1:443'), {
+                    code: 'ECONNREFUSED',
+                }),
+            ],
+            'all attempts failed',
+        )
+        mockFetch.mockRejectedValue(createFetchFailure(aggregate))
+
+        await expect(
+            fetchWithRetry('https://api.test.com/users', { method: 'GET' }, 0),
+        ).rejects.toThrow(
+            'fetch failed (all attempts failed <- ECONNREFUSED: connect ECONNREFUSED 10.0.0.1:443)',
+        )
+    })
+
+    it('leaves a causeless failure message unchanged', async () => {
+        const { fetchWithRetry } = await importFetchWithRetryWithMockedTransport()
+
+        mockFetch.mockRejectedValue(new TypeError('fetch failed'))
+
+        await expect(
+            fetchWithRetry('https://api.test.com/users', { method: 'GET' }, 0),
+        ).rejects.toThrow('fetch failed')
+    })
+})
