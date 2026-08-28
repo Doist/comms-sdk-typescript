@@ -8,7 +8,7 @@ export class CommsRequestError extends CustomError {
         message: string,
         httpStatusCode?: number,
         responseData?: unknown,
-        options?: { cause?: unknown },
+        options?: ErrorOptions,
     ) {
         super(message, options)
         this.httpStatusCode = httpStatusCode

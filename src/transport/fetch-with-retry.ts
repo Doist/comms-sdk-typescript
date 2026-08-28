@@ -11,11 +11,9 @@ export async function fetchWithRetry<T>(
     customFetch?: CustomFetch,
 ): Promise<HttpResponse<T>> {
     let lastError: Error | undefined
-    let attempts = 0
+    let attempt = 0
 
-    for (let attempt = 0; attempt <= maxRetries; attempt++) {
-        attempts++
-
+    for (; attempt <= maxRetries; attempt++) {
         let clearTimeoutFn: (() => void) | undefined
 
         try {
@@ -84,7 +82,7 @@ export async function fetchWithRetry<T>(
     }
 
     throw new CommsRequestError(
-        describeTransportFailure(lastError, attempts),
+        describeTransportFailure(lastError, attempt + 1),
         undefined,
         undefined,
         {

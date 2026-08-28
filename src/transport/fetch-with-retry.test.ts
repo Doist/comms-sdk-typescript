@@ -286,6 +286,6 @@ describe('fetchWithRetry transport failures', () => {
 
         await expect(
             fetchWithRetry('https://api.test.com/users', { method: 'GET' }, 0),
-        ).rejects.toThrow('fetch failed')
+        ).rejects.toThrow(/^fetch failed$/)
     })
 })
