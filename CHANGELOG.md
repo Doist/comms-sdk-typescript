@@ -1,3 +1,9 @@
+## [3.0.1](https://github.com/Doist/comms-sdk-typescript/compare/v3.0.0...v3.0.1) (2026-08-28)
+
+### Bug Fixes
+
+* report the cause of a failed request instead of "fetch failed" ([#71](https://github.com/Doist/comms-sdk-typescript/issues/71)) ([347a8be](https://github.com/Doist/comms-sdk-typescript/commit/347a8bee42e921739c54c0c754405ae2b447fb16))
+
 ## [3.0.0](https://github.com/Doist/comms-sdk-typescript/compare/v2.0.2...v3.0.0) (2026-08-26)
 
 ### ⚠ BREAKING CHANGES
