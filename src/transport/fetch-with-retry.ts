@@ -112,26 +112,35 @@ function describeTransportFailure(error: Error | undefined, attempts: number): s
 
 function describeCauseChain(error: Error | undefined): string | undefined {
     const descriptions: string[] = []
-    const seen = new Set<unknown>()
-    let current: unknown = error?.cause
 
-    while (
-        current instanceof Error &&
-        !seen.has(current) &&
-        descriptions.length < CAUSE_CHAIN_LIMIT
-    ) {
-        seen.add(current)
-        const description = describeCause(current)
+    for (const cause of causeChain(error)) {
+        const description = describeCause(cause)
         if (description) {
             descriptions.push(description)
         }
-        // A failed connect can carry one error per address it tried; the first
-        // one is representative and the rest are the same failure repeated.
-        const aggregated = current instanceof AggregateError ? current.errors[0] : undefined
-        current = aggregated ?? current.cause
     }
 
     return descriptions.length > 0 ? descriptions.join(' <- ') : undefined
+}
+
+/**
+ * Walks an error's `cause` chain, stopping at {@link CAUSE_CHAIN_LIMIT} and on
+ * a cycle. A failed connect can carry one error per address it tried; the first
+ * is representative and the rest repeat the same failure.
+ */
+function* causeChain(error: Error | undefined): Generator<Error> {
+    const seen = new Set<unknown>()
+    let current: unknown = error?.cause
+    let depth = 0
+
+    while (current instanceof Error && !seen.has(current) && depth < CAUSE_CHAIN_LIMIT) {
+        seen.add(current)
+        depth++
+        yield current
+
+        const aggregated = current instanceof AggregateError ? current.errors[0] : undefined
+        current = aggregated ?? current.cause
+    }
 }
 
 function describeCause(error: Error): string {
@@ -183,16 +192,63 @@ function createTimeoutError(timeoutMs: number): Error {
     return error
 }
 
+/**
+ * Error codes that mean the connection went away rather than the request being
+ * refused. `UND_ERR_SOCKET` covers the HTTP/2 `GOAWAY` an edge proxy sends when
+ * it retires a pooled connection, which is otherwise indistinguishable from any
+ * other `fetch failed`.
+ */
+const NETWORK_ERROR_CODES = new Set([
+    'ECONNREFUSED',
+    'ECONNRESET',
+    'EAI_AGAIN',
+    'ENOTFOUND',
+    'EPIPE',
+    'ETIMEDOUT',
+    'UND_ERR_SOCKET',
+])
+
 function isNetworkError(error: Error): boolean {
     return (
         error.name === 'TypeError' ||
         error.name === timeoutErrorName ||
-        error.message.toLowerCase().includes('network')
+        error.message.toLowerCase().includes('network') ||
+        hasNetworkErrorCode(error)
     )
 }
 
+function hasNetworkErrorCode(error: Error): boolean {
+    for (const cause of causeChain(error)) {
+        const code = (cause as { code?: unknown }).code
+        if (typeof code === 'string' && NETWORK_ERROR_CODES.has(code)) {
+            return true
+        }
+    }
+
+    return false
+}
+
+/** First retry delay, doubling by {@link RETRY_DELAY_FACTOR} per attempt. */
+const RETRY_BASE_DELAY_MS = 100
+const RETRY_DELAY_FACTOR = 4
+const RETRY_MAX_DELAY_MS = 2000
+
+/**
+ * How long to wait before retry `retryCount` (1-based).
+ *
+ * A retired connection takes a moment to be torn down and replaced, so retrying
+ * immediately just re-dispatches onto the socket that is going away and burns
+ * the whole retry budget inside a second. The delay grows so the later attempts
+ * land on a fresh connection, and carries jitter because one retirement hits
+ * every pooled connection at once: without it, every caller reconnects in step.
+ */
 function getRetryDelay(retryCount: number): number {
-    return retryCount === 1 ? 0 : 500
+    const delay = Math.min(
+        RETRY_BASE_DELAY_MS * RETRY_DELAY_FACTOR ** (retryCount - 1),
+        RETRY_MAX_DELAY_MS,
+    )
+
+    return delay / 2 + Math.random() * (delay / 2)
 }
 
 function createTimeoutSignal(
