@@ -1,3 +1,9 @@
+## [3.0.2](https://github.com/Doist/comms-sdk-typescript/compare/v3.0.1...v3.0.2) (2026-08-31)
+
+### Bug Fixes
+
+* back off between retries so a retired connection can be replaced ([#72](https://github.com/Doist/comms-sdk-typescript/issues/72)) ([2d74c31](https://github.com/Doist/comms-sdk-typescript/commit/2d74c3165e36b5812cb26d0138b8f4564b9d382f))
+
 ## [3.0.1](https://github.com/Doist/comms-sdk-typescript/compare/v3.0.0...v3.0.1) (2026-08-28)
 
 ### Bug Fixes
