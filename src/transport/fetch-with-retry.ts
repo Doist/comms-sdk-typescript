@@ -193,10 +193,10 @@ function createTimeoutError(timeoutMs: number): Error {
 }
 
 /**
- * Error codes that mean the connection went away rather than the request being
- * refused. `UND_ERR_SOCKET` covers the HTTP/2 `GOAWAY` an edge proxy sends when
- * it retires a pooled connection, which is otherwise indistinguishable from any
- * other `fetch failed`.
+ * Transport-level failure codes worth another attempt: the request never got an
+ * answer, so nothing about the response argues against retrying. `UND_ERR_SOCKET`
+ * covers the HTTP/2 `GOAWAY` an edge proxy sends when it retires a pooled
+ * connection, which is otherwise indistinguishable from any other `fetch failed`.
  */
 const NETWORK_ERROR_CODES = new Set([
     'ECONNREFUSED',
@@ -218,14 +218,25 @@ function isNetworkError(error: Error): boolean {
 }
 
 function hasNetworkErrorCode(error: Error): boolean {
+    // The code can be on the error itself — a `customFetch` is free to reject
+    // with one directly — or on anything `fetch` wrapped to produce it.
+    if (hasRetryableCode(error)) {
+        return true
+    }
+
     for (const cause of causeChain(error)) {
-        const code = (cause as { code?: unknown }).code
-        if (typeof code === 'string' && NETWORK_ERROR_CODES.has(code)) {
+        if (hasRetryableCode(cause)) {
             return true
         }
     }
 
     return false
+}
+
+function hasRetryableCode(error: Error): boolean {
+    const code = (error as { code?: unknown }).code
+
+    return typeof code === 'string' && NETWORK_ERROR_CODES.has(code)
 }
 
 /** First retry delay, doubling by {@link RETRY_DELAY_FACTOR} per attempt. */

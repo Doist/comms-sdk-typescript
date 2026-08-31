@@ -324,6 +324,28 @@ describe('fetchWithRetry backoff', () => {
         expect(response.status).toBe(200)
     })
 
+    it('retries a coded error thrown directly by a custom fetch', async () => {
+        const { fetchWithRetry } = await importFetchWithRetryWithMockedTransport()
+
+        // No cause, not a TypeError: the code on the error itself is the only
+        // thing marking it retryable.
+        const socketError = Object.assign(new Error('socket error'), { code: 'UND_ERR_SOCKET' })
+        const customFetch = vi
+            .fn()
+            .mockRejectedValueOnce(socketError)
+            .mockResolvedValueOnce(createCustomFetchResponse({ id: 1 }))
+
+        const response = await fetchWithRetry(
+            'https://api.test.com/users',
+            { method: 'GET' },
+            1,
+            customFetch,
+        )
+
+        expect(customFetch).toHaveBeenCalledTimes(2)
+        expect(response.status).toBe(200)
+    })
+
     it('waits longer before each attempt so a retry can land on a new connection', async () => {
         vi.useFakeTimers()
         // Full jitter, so the delays are the whole computed backoff.
