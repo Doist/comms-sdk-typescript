@@ -161,6 +161,8 @@ describe('fetchWithRetry transport selection', () => {
         )
 
         await vi.advanceTimersByTimeAsync(20)
+        // Past the retry backoff, which no longer fires immediately.
+        await vi.advanceTimersByTimeAsync(100)
 
         const response = await requestPromise
 
@@ -287,5 +289,88 @@ describe('fetchWithRetry transport failures', () => {
         await expect(
             fetchWithRetry('https://api.test.com/users', { method: 'GET' }, 0),
         ).rejects.toThrow(/^fetch failed$/)
+    })
+})
+
+describe('fetchWithRetry backoff', () => {
+    beforeEach(() => {
+        vi.resetModules()
+        vi.restoreAllMocks()
+        vi.useRealTimers()
+
+        mockFetch = vi.fn()
+        global.fetch = mockFetch as unknown as typeof fetch
+    })
+
+    afterEach(() => {
+        vi.unmock('./http-dispatcher')
+        vi.resetModules()
+        vi.useRealTimers()
+    })
+
+    it('retries a connection the server retired, identified by its cause code', async () => {
+        const { fetchWithRetry } = await importFetchWithRetryWithMockedTransport()
+
+        // Not a TypeError, so only the cause code marks this as retryable.
+        const goaway = new Error('socket error')
+        goaway.cause = Object.assign(new Error('HTTP/2: "GOAWAY" frame received with code 0'), {
+            code: 'UND_ERR_SOCKET',
+        })
+        mockFetch.mockRejectedValueOnce(goaway).mockResolvedValueOnce(createJsonResponse({ id: 1 }))
+
+        const response = await fetchWithRetry('https://api.test.com/users', { method: 'GET' }, 1)
+
+        expect(mockFetch).toHaveBeenCalledTimes(2)
+        expect(response.status).toBe(200)
+    })
+
+    it('retries a coded error thrown directly by a custom fetch', async () => {
+        const { fetchWithRetry } = await importFetchWithRetryWithMockedTransport()
+
+        // No cause, not a TypeError: the code on the error itself is the only
+        // thing marking it retryable.
+        const socketError = Object.assign(new Error('socket error'), { code: 'UND_ERR_SOCKET' })
+        const customFetch = vi
+            .fn()
+            .mockRejectedValueOnce(socketError)
+            .mockResolvedValueOnce(createCustomFetchResponse({ id: 1 }))
+
+        const response = await fetchWithRetry(
+            'https://api.test.com/users',
+            { method: 'GET' },
+            1,
+            customFetch,
+        )
+
+        expect(customFetch).toHaveBeenCalledTimes(2)
+        expect(response.status).toBe(200)
+    })
+
+    it('waits longer before each attempt so a retry can land on a new connection', async () => {
+        vi.useFakeTimers()
+        // Full jitter, so the delays are the whole computed backoff.
+        vi.spyOn(Math, 'random').mockReturnValue(1)
+
+        const { fetchWithRetry } = await importFetchWithRetryWithMockedTransport()
+
+        const goaway = new TypeError('fetch failed')
+        mockFetch.mockRejectedValue(goaway)
+
+        const requestPromise = fetchWithRetry('https://api.test.com/users', { method: 'GET' }, 3)
+        const requestExpectation = expect(requestPromise).rejects.toThrow('after 4 attempts')
+
+        await vi.advanceTimersByTimeAsync(0)
+        expect(mockFetch).toHaveBeenCalledTimes(1)
+
+        await vi.advanceTimersByTimeAsync(100)
+        expect(mockFetch).toHaveBeenCalledTimes(2)
+
+        await vi.advanceTimersByTimeAsync(400)
+        expect(mockFetch).toHaveBeenCalledTimes(3)
+
+        await vi.advanceTimersByTimeAsync(1600)
+        expect(mockFetch).toHaveBeenCalledTimes(4)
+
+        await requestExpectation
     })
 })
