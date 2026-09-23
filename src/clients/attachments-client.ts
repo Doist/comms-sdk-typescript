@@ -62,9 +62,8 @@ export class AttachmentsClient extends BaseClient {
         const response = await request<unknown>({
             httpMethod: 'GET',
             baseUri: this.getBaseUri(),
-            relativePath: `${ENDPOINT_FILES}/${id}/image`,
+            relativePath: `${ENDPOINT_FILES}/image/${checkedThreadId}/${id}`,
             apiToken: this.apiToken,
-            payload: { threadId: checkedThreadId },
             customFetch: this.customFetch,
         })
         return ImageReadResultSchema.parse(response.data)

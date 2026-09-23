@@ -29,11 +29,14 @@ describe('AttachmentsClient', () => {
             const uploadId = generateId()
             const threadId = generateId()
             let authorization: string | null = null
-            let threadQuery: string | null = null
+            let requestedPath: string | null = null
+            let requestedSearch: string | null = null
             server.use(
-                http.get(apiUrl(`api/v1/files/${uploadId}/image`), ({ request }) => {
+                http.get(apiUrl(`api/v1/files/image/${threadId}/${uploadId}`), ({ request }) => {
                     authorization = request.headers.get('Authorization')
-                    threadQuery = new URL(request.url).searchParams.get('thread_id')
+                    const url = new URL(request.url)
+                    requestedPath = url.pathname
+                    requestedSearch = url.search
                     return HttpResponse.json({
                         mime_type: 'image/png',
                         data_base64: 'AQID',
@@ -48,7 +51,8 @@ describe('AttachmentsClient', () => {
                 byteLength: 3,
             })
             expect(authorization).toBe(`Bearer ${TEST_API_TOKEN}`)
-            expect(threadQuery).toBe(threadId)
+            expect(requestedPath).toBe(`/api/v1/files/image/${threadId}/${uploadId}`)
+            expect(requestedSearch).toBe('')
         })
 
         it('rejects invalid upload IDs before making a request', async () => {
@@ -65,8 +69,9 @@ describe('AttachmentsClient', () => {
 
         it('rejects an unsupported image type from the backend', async () => {
             const uploadId = generateId()
+            const threadId = generateId()
             server.use(
-                http.get(apiUrl(`api/v1/files/${uploadId}/image`), () =>
+                http.get(apiUrl(`api/v1/files/image/${threadId}/${uploadId}`), () =>
                     HttpResponse.json({
                         mime_type: 'text/html',
                         data_base64: 'AQID',
@@ -75,7 +80,7 @@ describe('AttachmentsClient', () => {
                 ),
             )
 
-            await expect(client.readImage(uploadId, generateId())).rejects.toThrow()
+            await expect(client.readImage(uploadId, threadId)).rejects.toThrow()
         })
     })
 
