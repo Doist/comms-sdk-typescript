@@ -41,6 +41,7 @@ describe('AttachmentsClient', () => {
                         mime_type: 'image/png',
                         data_base64: 'AQID',
                         byte_length: 3,
+                        extra_field: 'ignored',
                     })
                 }),
             )
@@ -56,15 +57,31 @@ describe('AttachmentsClient', () => {
         })
 
         it('rejects invalid upload IDs before making a request', async () => {
+            let handlerCalled = false
+            server.use(
+                http.get(apiUrl('api/v1/files/image/*'), () => {
+                    handlerCalled = true
+                    return HttpResponse.json({})
+                }),
+            )
             await expect(
                 client.readImage('https://example.com/image', generateId()),
             ).rejects.toThrow('invalid uploadId')
+            expect(handlerCalled).toBe(false)
         })
 
         it('rejects invalid thread IDs before making a request', async () => {
+            let handlerCalled = false
+            server.use(
+                http.get(apiUrl('api/v1/files/image/*'), () => {
+                    handlerCalled = true
+                    return HttpResponse.json({})
+                }),
+            )
             await expect(client.readImage(generateId(), 'not-a-thread')).rejects.toThrow(
                 'invalid threadId',
             )
+            expect(handlerCalled).toBe(false)
         })
 
         it('rejects an unsupported image type from the backend', async () => {
@@ -80,7 +97,23 @@ describe('AttachmentsClient', () => {
                 ),
             )
 
-            await expect(client.readImage(uploadId, threadId)).rejects.toThrow()
+            await expect(client.readImage(uploadId, threadId)).rejects.toThrow(/mimeType/)
+        })
+
+        it('rejects malformed base64 from the backend', async () => {
+            const uploadId = generateId()
+            const threadId = generateId()
+            server.use(
+                http.get(apiUrl(`api/v1/files/image/${threadId}/${uploadId}`), () =>
+                    HttpResponse.json({
+                        mime_type: 'image/png',
+                        data_base64: 'A',
+                        byte_length: 1,
+                    }),
+                ),
+            )
+
+            await expect(client.readImage(uploadId, threadId)).rejects.toThrow(/dataBase64/)
         })
     })
 

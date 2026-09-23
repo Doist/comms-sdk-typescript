@@ -30,21 +30,15 @@ function resolveAttachmentId(attachmentId: string | undefined): string {
 
 export const IMAGE_READ_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const
 export type ImageReadMimeType = (typeof IMAGE_READ_MIME_TYPES)[number]
-export const ImageReadResultSchema = z
-    .object({
-        mimeType: z.enum(IMAGE_READ_MIME_TYPES),
-        dataBase64: z
-            .string()
-            .min(1)
-            .max(5_592_408)
-            .regex(/^[A-Za-z0-9+/]*={0,2}$/),
-        byteLength: z
-            .number()
-            .int()
-            .positive()
-            .max(4 * 1024 * 1024),
-    })
-    .strict()
+export const ImageReadResultSchema = z.object({
+    mimeType: z.enum(IMAGE_READ_MIME_TYPES),
+    dataBase64: z.string().min(1).max(5_592_408).base64(),
+    byteLength: z
+        .number()
+        .int()
+        .positive()
+        .max(4 * 1024 * 1024),
+})
 export type ImageReadResult = z.infer<typeof ImageReadResultSchema>
 
 /**
