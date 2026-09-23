@@ -24,6 +24,99 @@ describe('AttachmentsClient', () => {
         client = new AttachmentsClient({ apiToken: TEST_API_TOKEN })
     })
 
+    describe('readImage', () => {
+        it('reads a thread image by upload ID with the caller token', async () => {
+            const uploadId = generateId()
+            const threadId = generateId()
+            let authorization: string | null = null
+            let requestedPath: string | null = null
+            let requestedSearch: string | null = null
+            server.use(
+                http.get(apiUrl(`api/v1/files/image/${threadId}/${uploadId}`), ({ request }) => {
+                    authorization = request.headers.get('Authorization')
+                    const url = new URL(request.url)
+                    requestedPath = url.pathname
+                    requestedSearch = url.search
+                    return HttpResponse.json({
+                        mime_type: 'image/png',
+                        data_base64: 'AQID',
+                        byte_length: 3,
+                        extra_field: 'ignored',
+                    })
+                }),
+            )
+
+            await expect(client.readImage(uploadId, threadId)).resolves.toEqual({
+                mimeType: 'image/png',
+                dataBase64: 'AQID',
+                byteLength: 3,
+            })
+            expect(authorization).toBe(`Bearer ${TEST_API_TOKEN}`)
+            expect(requestedPath).toBe(`/api/v1/files/image/${threadId}/${uploadId}`)
+            expect(requestedSearch).toBe('')
+        })
+
+        it('rejects invalid upload IDs before making a request', async () => {
+            let handlerCalled = false
+            server.use(
+                http.get(apiUrl('api/v1/files/image/*'), () => {
+                    handlerCalled = true
+                    return HttpResponse.json({})
+                }),
+            )
+            await expect(
+                client.readImage('https://example.com/image', generateId()),
+            ).rejects.toThrow('invalid uploadId')
+            expect(handlerCalled).toBe(false)
+        })
+
+        it('rejects invalid thread IDs before making a request', async () => {
+            let handlerCalled = false
+            server.use(
+                http.get(apiUrl('api/v1/files/image/*'), () => {
+                    handlerCalled = true
+                    return HttpResponse.json({})
+                }),
+            )
+            await expect(client.readImage(generateId(), 'not-a-thread')).rejects.toThrow(
+                'invalid threadId',
+            )
+            expect(handlerCalled).toBe(false)
+        })
+
+        it('rejects an unsupported image type from the backend', async () => {
+            const uploadId = generateId()
+            const threadId = generateId()
+            server.use(
+                http.get(apiUrl(`api/v1/files/image/${threadId}/${uploadId}`), () =>
+                    HttpResponse.json({
+                        mime_type: 'text/html',
+                        data_base64: 'AQID',
+                        byte_length: 3,
+                    }),
+                ),
+            )
+
+            await expect(client.readImage(uploadId, threadId)).rejects.toThrow(/mimeType/)
+        })
+
+        it('rejects malformed base64 from the backend', async () => {
+            const uploadId = generateId()
+            const threadId = generateId()
+            server.use(
+                http.get(apiUrl(`api/v1/files/image/${threadId}/${uploadId}`), () =>
+                    HttpResponse.json({
+                        mime_type: 'image/png',
+                        data_base64: 'A',
+                        byte_length: 1,
+                    }),
+                ),
+            )
+
+            await expect(client.readImage(uploadId, threadId)).rejects.toThrow(/dataBase64/)
+        })
+    })
+
     describe('upload', () => {
         it('uploads a Buffer with the canonical multipart fields', async () => {
             let capturedForm: FormData | undefined
