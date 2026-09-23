@@ -1,3 +1,9 @@
+## [3.1.0](https://github.com/Doist/comms-sdk-typescript/compare/v3.0.2...v3.1.0) (2026-09-23)
+
+### Features
+
+* **attachments:** add thread image read ([#80](https://github.com/Doist/comms-sdk-typescript/issues/80)) ([65ac040](https://github.com/Doist/comms-sdk-typescript/commit/65ac040f9bf4ddfff8364a8a5356c0639d561902))
+
 ## [3.0.2](https://github.com/Doist/comms-sdk-typescript/compare/v3.0.1...v3.0.2) (2026-08-31)
 
 ### Bug Fixes
