@@ -33,6 +33,7 @@ export type ImageReadMimeType = (typeof IMAGE_READ_MIME_TYPES)[number]
 const IMAGE_READ_MAX_BYTES = 5 * 1024 * 1024
 export const ImageReadResultSchema = z.object({
     mimeType: z.enum(IMAGE_READ_MIME_TYPES),
+    // Base64 uses four characters for each group of three bytes.
     dataBase64: z
         .string()
         .min(1)
