@@ -24,6 +24,61 @@ describe('AttachmentsClient', () => {
         client = new AttachmentsClient({ apiToken: TEST_API_TOKEN })
     })
 
+    describe('readImage', () => {
+        it('reads a thread image by upload ID with the caller token', async () => {
+            const uploadId = generateId()
+            const threadId = generateId()
+            let authorization: string | null = null
+            let threadQuery: string | null = null
+            server.use(
+                http.get(apiUrl(`api/v1/files/${uploadId}/image`), ({ request }) => {
+                    authorization = request.headers.get('Authorization')
+                    threadQuery = new URL(request.url).searchParams.get('thread_id')
+                    return HttpResponse.json({
+                        mime_type: 'image/png',
+                        data_base64: 'AQID',
+                        byte_length: 3,
+                    })
+                }),
+            )
+
+            await expect(client.readImage(uploadId, threadId)).resolves.toEqual({
+                mimeType: 'image/png',
+                dataBase64: 'AQID',
+                byteLength: 3,
+            })
+            expect(authorization).toBe(`Bearer ${TEST_API_TOKEN}`)
+            expect(threadQuery).toBe(threadId)
+        })
+
+        it('rejects invalid upload IDs before making a request', async () => {
+            await expect(
+                client.readImage('https://example.com/image', generateId()),
+            ).rejects.toThrow('invalid uploadId')
+        })
+
+        it('rejects invalid thread IDs before making a request', async () => {
+            await expect(client.readImage(generateId(), 'not-a-thread')).rejects.toThrow(
+                'invalid threadId',
+            )
+        })
+
+        it('rejects an unsupported image type from the backend', async () => {
+            const uploadId = generateId()
+            server.use(
+                http.get(apiUrl(`api/v1/files/${uploadId}/image`), () =>
+                    HttpResponse.json({
+                        mime_type: 'text/html',
+                        data_base64: 'AQID',
+                        byte_length: 3,
+                    }),
+                ),
+            )
+
+            await expect(client.readImage(uploadId, generateId())).rejects.toThrow()
+        })
+    })
+
     describe('upload', () => {
         it('uploads a Buffer with the canonical multipart fields', async () => {
             let capturedForm: FormData | undefined

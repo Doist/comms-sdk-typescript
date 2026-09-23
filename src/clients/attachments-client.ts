@@ -1,8 +1,16 @@
-import { ENDPOINT_ATTACHMENTS } from '../consts/endpoints'
+import { z } from 'zod'
+
+import { ENDPOINT_ATTACHMENTS, ENDPOINT_FILES } from '../consts/endpoints'
+import { request } from '../transport/http-client'
 import { type Attachment, AttachmentSchema } from '../types/entities'
 import type { UploadAttachmentArgs } from '../types/requests'
 import { uploadMultipartFile } from '../utils/multipart-upload'
-import { isValidUuidV7Base58, resolveCreateId, UuidV7Error } from '../utils/uuidv7'
+import {
+    isValidUuidV7Base58,
+    resolveCreateId,
+    resolveReferenceId,
+    UuidV7Error,
+} from '../utils/uuidv7'
 import { BaseClient } from './base-client'
 
 /**
@@ -20,14 +28,48 @@ function resolveAttachmentId(attachmentId: string | undefined): string {
     return resolveCreateId(attachmentId)
 }
 
+export const IMAGE_READ_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const
+export type ImageReadMimeType = (typeof IMAGE_READ_MIME_TYPES)[number]
+export const ImageReadResultSchema = z
+    .object({
+        mimeType: z.enum(IMAGE_READ_MIME_TYPES),
+        dataBase64: z
+            .string()
+            .min(1)
+            .max(5_592_408)
+            .regex(/^[A-Za-z0-9+/]*={0,2}$/),
+        byteLength: z
+            .number()
+            .int()
+            .positive()
+            .max(4 * 1024 * 1024),
+    })
+    .strict()
+export type ImageReadResult = z.infer<typeof ImageReadResultSchema>
+
 /**
- * Client for uploading file attachments to Comms.
+ * Client for uploading attachments and reading thread images.
  *
  * Attachments are uploaded independently, then referenced by passing the returned
  * {@link Attachment} into the `attachments` array of `comments.createComment`,
  * `conversationMessages.createMessage`, and similar calls.
  */
 export class AttachmentsClient extends BaseClient {
+    /** Read one thread image under the caller's content scope. */
+    async readImage(uploadId: string, threadId: string): Promise<ImageReadResult> {
+        const id = resolveReferenceId(uploadId, 'uploadId')
+        const checkedThreadId = resolveReferenceId(threadId, 'threadId')
+        const response = await request<unknown>({
+            httpMethod: 'GET',
+            baseUri: this.getBaseUri(),
+            relativePath: `${ENDPOINT_FILES}/${id}/image`,
+            apiToken: this.apiToken,
+            payload: { threadId: checkedThreadId },
+            customFetch: this.customFetch,
+        })
+        return ImageReadResultSchema.parse(response.data)
+    }
+
     /**
      * Uploads a file and returns the created {@link Attachment}.
      *

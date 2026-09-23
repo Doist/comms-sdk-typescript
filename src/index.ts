@@ -1,6 +1,12 @@
 export * from './authentication'
 export * from './migration'
-export { AttachmentsClient } from './clients/attachments-client'
+export {
+    AttachmentsClient,
+    IMAGE_READ_MIME_TYPES,
+    ImageReadResultSchema,
+    type ImageReadMimeType,
+    type ImageReadResult,
+} from './clients/attachments-client'
 export { ChannelsClient } from './clients/channels-client'
 export { CommentsClient } from './clients/comments-client'
 export { ConversationMessagesClient } from './clients/conversation-messages-client'
