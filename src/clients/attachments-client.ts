@@ -30,14 +30,17 @@ function resolveAttachmentId(attachmentId: string | undefined): string {
 
 export const IMAGE_READ_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const
 export type ImageReadMimeType = (typeof IMAGE_READ_MIME_TYPES)[number]
+const IMAGE_READ_MAX_BYTES = 5 * 1024 * 1024
 export const ImageReadResultSchema = z.object({
     mimeType: z.enum(IMAGE_READ_MIME_TYPES),
-    dataBase64: z.string().min(1).max(5_592_408).base64(),
-    byteLength: z
-        .number()
-        .int()
-        .positive()
-        .max(4 * 1024 * 1024),
+    // The API allows 5 MiB of image bytes. Base64 encodes each three-byte group
+    // as four characters, including padding for the last group.
+    dataBase64: z
+        .string()
+        .min(1)
+        .max(4 * Math.ceil(IMAGE_READ_MAX_BYTES / 3))
+        .base64(),
+    byteLength: z.number().int().positive().max(IMAGE_READ_MAX_BYTES),
 })
 export type ImageReadResult = z.infer<typeof ImageReadResultSchema>
 

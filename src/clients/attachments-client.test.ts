@@ -3,7 +3,7 @@ import { apiUrl } from '../testUtils/msw-handlers'
 import { server } from '../testUtils/msw-setup'
 import { TEST_API_TOKEN } from '../testUtils/test-defaults'
 import { generateId, isValidUuidV7Base58 } from '../utils/uuidv7'
-import { AttachmentsClient } from './attachments-client'
+import { AttachmentsClient, ImageReadResultSchema } from './attachments-client'
 
 const UPLOAD_URL = apiUrl('api/v1/attachments/upload')
 
@@ -25,6 +25,31 @@ describe('AttachmentsClient', () => {
     })
 
     describe('readImage', () => {
+        it('accepts a 5 MiB image and rejects a larger response', () => {
+            const image = Buffer.alloc(5 * 1024 * 1024)
+            expect(
+                ImageReadResultSchema.safeParse({
+                    mimeType: 'image/png',
+                    dataBase64: image.toString('base64'),
+                    byteLength: image.length,
+                }).success,
+            ).toBe(true)
+            expect(
+                ImageReadResultSchema.safeParse({
+                    mimeType: 'image/png',
+                    dataBase64: image.toString('base64'),
+                    byteLength: image.length + 1,
+                }).success,
+            ).toBe(false)
+            expect(
+                ImageReadResultSchema.safeParse({
+                    mimeType: 'image/png',
+                    dataBase64: Buffer.alloc(image.length + 2).toString('base64'),
+                    byteLength: image.length,
+                }).success,
+            ).toBe(false)
+        })
+
         it('reads a thread image by upload ID with the caller token', async () => {
             const uploadId = generateId()
             const threadId = generateId()
