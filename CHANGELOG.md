@@ -1,3 +1,9 @@
+## [3.2.0](https://github.com/Doist/comms-sdk-typescript/compare/v3.1.0...v3.2.0) (2026-09-24)
+
+### Features
+
+* accept 5 MiB image reads ([c7938f2](https://github.com/Doist/comms-sdk-typescript/commit/c7938f21db907026be41bf2f1742428b10824c34))
+
 ## [3.1.0](https://github.com/Doist/comms-sdk-typescript/compare/v3.0.2...v3.1.0) (2026-09-23)
 
 ### Features
