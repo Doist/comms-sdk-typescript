@@ -59,7 +59,7 @@ export function getCommsErrorString(error: unknown): string | null {
  * @example
  * ```typescript
  * try {
- *     await api.threads.getThread({ id })
+ *     await api.threads.getThread(id)
  * } catch (error) {
  *     if (isNotFound(error)) return null
  *     throw error

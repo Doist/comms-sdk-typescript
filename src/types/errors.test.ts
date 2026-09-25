@@ -81,7 +81,7 @@ describe('getCommsErrorString', () => {
 
     it('does not fall back to the error message', () => {
         // `message` is the SDK's own text; this reads the server's body only.
-        expect(getCommsErrorString(requestError(409))).toBeNull()
+        expect(getCommsErrorString(new CommsRequestError('server text', 409))).toBeNull()
     })
 })
 
