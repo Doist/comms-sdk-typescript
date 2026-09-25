@@ -20,6 +20,13 @@ function hasStatus(error: unknown, status: number): error is CommsRequestError {
     return error instanceof CommsRequestError && error.httpStatusCode === status
 }
 
+function getResponseField(error: unknown, field: string): unknown {
+    if (!(error instanceof CommsRequestError)) return undefined
+    const data = error.responseData
+    if (typeof data !== 'object' || data === null || !(field in data)) return undefined
+    return (data as Record<string, unknown>)[field]
+}
+
 /**
  * The numeric `error_code` the API sends in an error body, when there was one.
  *
@@ -28,11 +35,22 @@ function hasStatus(error: unknown, status: number): error is CommsRequestError {
  * {@link CommsRequestError} or carried no numeric `error_code`.
  */
 export function getCommsErrorCode(error: unknown): number | null {
-    if (!(error instanceof CommsRequestError)) return null
-    const data = error.responseData
-    if (typeof data !== 'object' || data === null || !('error_code' in data)) return null
-    const code = (data as Record<string, unknown>).error_code
+    const code = getResponseField(error, 'error_code')
     return typeof code === 'number' ? code : null
+}
+
+/**
+ * The `error_string` the API sends alongside `error_code`, when there was one.
+ * It is a server-authored message rather than a stable contract, so branch on
+ * {@link getCommsErrorCode} and use this for display.
+ *
+ * @param error - The thrown value to inspect.
+ * @returns The message, or `null` when the error is not a
+ * {@link CommsRequestError} or carried no string `error_string`.
+ */
+export function getCommsErrorString(error: unknown): string | null {
+    const message = getResponseField(error, 'error_string')
+    return typeof message === 'string' ? message : null
 }
 
 /**

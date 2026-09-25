@@ -1,6 +1,7 @@
 import {
     CommsRequestError,
     getCommsErrorCode,
+    getCommsErrorString,
     isConflict,
     isMalformedId,
     isNotFound,
@@ -56,6 +57,31 @@ describe('getCommsErrorCode', () => {
 
     it('is null for anything that is not a CommsRequestError', () => {
         expect(getCommsErrorCode({ responseData: { error_code: 217 } })).toBeNull()
+    })
+})
+
+describe('getCommsErrorString', () => {
+    it('reads the error_string out of the response body', () => {
+        const error = requestError(409, { error_string: 'id must decode to 16 bytes' })
+        expect(getCommsErrorString(error)).toBe('id must decode to 16 bytes')
+    })
+
+    it('is null when the body carried no error_string', () => {
+        expect(getCommsErrorString(requestError(409, { error_code: 217 }))).toBeNull()
+        expect(getCommsErrorString(requestError(409))).toBeNull()
+    })
+
+    it('is null when error_string is not a string', () => {
+        expect(getCommsErrorString(requestError(409, { error_string: 217 }))).toBeNull()
+    })
+
+    it('is null for anything that is not a CommsRequestError', () => {
+        expect(getCommsErrorString({ responseData: { error_string: 'nope' } })).toBeNull()
+    })
+
+    it('does not fall back to the error message', () => {
+        // `message` is the SDK's own text; this reads the server's body only.
+        expect(getCommsErrorString(requestError(409))).toBeNull()
     })
 })
 
