@@ -1,3 +1,9 @@
+## [3.3.0](https://github.com/Doist/comms-sdk-typescript/compare/v3.2.0...v3.3.0) (2026-10-01)
+
+### Features
+
+* add isNotFound, isConflict and isMalformedId error predicates ([#83](https://github.com/Doist/comms-sdk-typescript/issues/83)) ([f4d2213](https://github.com/Doist/comms-sdk-typescript/commit/f4d22132289638e2b55ce29b1ce212f3cb456c5e))
+
 ## [3.2.0](https://github.com/Doist/comms-sdk-typescript/compare/v3.1.0...v3.2.0) (2026-09-24)
 
 ### Features
