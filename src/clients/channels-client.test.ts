@@ -21,13 +21,14 @@ const CHANNEL_RESPONSE = {
 
 describe('ChannelsClient — wire serialization', () => {
     it.each([
-        ['createChannel', 'add', true],
-        ['createChannel', 'add', false],
-        ['updateChannel', 'update', true],
-        ['updateChannel', 'update', false],
+        ['createChannel', true],
+        ['createChannel', false],
+        ['updateChannel', true],
+        ['updateChannel', false],
     ] as const)(
         '%s sends use_default_recipients: %s and empty default audience arrays',
-        async (method, suffix, useDefaultRecipients) => {
+        async (method, useDefaultRecipients) => {
+            const suffix = method === 'createChannel' ? 'add' : 'update'
             let body: Record<string, unknown> | undefined
             server.use(
                 http.post(`${BASE}/channels/${suffix}`, async ({ request }) => {
