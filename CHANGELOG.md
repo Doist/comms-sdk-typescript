@@ -1,3 +1,9 @@
+## [3.3.1](https://github.com/Doist/comms-sdk-typescript/compare/v3.3.0...v3.3.1) (2026-10-06)
+
+### Bug Fixes
+
+* move undici to 8.11.2 so a graceful HTTP/2 GOAWAY no longer fails requests ([#92](https://github.com/Doist/comms-sdk-typescript/issues/92)) ([7dac6b1](https://github.com/Doist/comms-sdk-typescript/commit/7dac6b159dd5e5a2bd69e064f9f3184cb7dd2789))
+
 ## [3.3.0](https://github.com/Doist/comms-sdk-typescript/compare/v3.2.0...v3.3.0) (2026-10-01)
 
 ### Features
