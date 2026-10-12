@@ -64,6 +64,22 @@ export const RequestAttachmentSchema = z.object(attachmentShape)
 
 export type RequestAttachment = z.infer<typeof RequestAttachmentSchema>
 
+// Shared user status. It lives on the Todoist account, so Comms, Todoist and
+// automations all see the same one. `activeUntil` is an RFC 3339 string, and an
+// expired status is returned as `null` rather than as an expired object.
+export const UserStatusSchema = z.object({
+    message: z.string(),
+    emoji: z.string().nullable().optional(),
+    activeUntil: z.string().nullable().optional(),
+    effects: z
+        .object({
+            pauseNotifications: z.object({ scope: z.object({ mode: z.string() }) }).optional(),
+        })
+        .optional(),
+})
+
+export type UserStatus = z.infer<typeof UserStatusSchema>
+
 // Fields shared by `User` and `WorkspaceUser`. Profile fields
 // (`fullName`, `imageId`, avatar URLs) are sourced from Todoist-ID.
 export const BaseUserSchema = z.object({
@@ -85,6 +101,7 @@ export const BaseUserSchema = z.object({
         .optional(),
     restricted: z.boolean().nullable().optional(),
     setupPending: z.boolean().nullable().optional(),
+    status: UserStatusSchema.nullable().optional(),
 })
 
 // User entity from API.

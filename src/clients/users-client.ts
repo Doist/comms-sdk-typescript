@@ -2,7 +2,7 @@ import type { z } from 'zod'
 import { ENDPOINT_USERS } from '../consts/endpoints'
 import { request } from '../transport/http-client'
 import { type User, UserSchema } from '../types/entities'
-import type { UpdateUserArgs } from '../types/requests'
+import type { SetStatusArgs, UpdateUserArgs } from '../types/requests'
 import { BaseClient } from './base-client'
 
 type EmailExistsResponse = { exists: boolean; verified: boolean }
@@ -205,6 +205,45 @@ export class UsersClient extends BaseClient {
      */
     update(args: UpdateUserArgs): Promise<User> {
         return this.post(`${ENDPOINT_USERS}/update`, args, UserSchema)
+    }
+
+    /**
+     * Sets the shared status of the session user, replacing any current one.
+     * The status belongs to the Todoist account, so it is shared with Todoist.
+     * Requires the `user:write` scope.
+     *
+     * @param args - The status to set.
+     * @param args.message - 1 to 80 characters once trimmed.
+     * @param args.emoji - Optional emoji.
+     * @param args.activeUntil - Optional expiry in the future (`Date` or ISO 8601 string).
+     * @param args.effects - Optional effects, e.g. `{ pauseNotifications: {} }` to hold back
+     *   Comms notifications while the status is active.
+     * @returns The updated user object.
+     *
+     * @example
+     * ```typescript
+     * await api.users.setStatus({
+     *   message: 'Deep work',
+     *   emoji: '🎯',
+     *   activeUntil: new Date(Date.now() + 2 * 60 * 60 * 1000),
+     *   effects: { pauseNotifications: {} },
+     * })
+     * ```
+     */
+    setStatus(args: SetStatusArgs): Promise<User> {
+        const { activeUntil, ...rest } = args
+        const payload =
+            activeUntil instanceof Date ? { ...rest, activeUntil: activeUntil.toISOString() } : args
+        return this.post(`${ENDPOINT_USERS}/set_status`, payload, UserSchema)
+    }
+
+    /**
+     * Clears the session user's shared status. Requires the `user:write` scope.
+     *
+     * @returns The updated user object.
+     */
+    clearStatus(): Promise<User> {
+        return this.post(`${ENDPOINT_USERS}/clear_status`, undefined, UserSchema)
     }
 
     /**
