@@ -1,3 +1,9 @@
+## [3.4.0](https://github.com/Doist/comms-sdk-typescript/compare/v3.3.1...v3.4.0) (2026-10-13)
+
+### Features
+
+* **users:** add the shared user status ([#100](https://github.com/Doist/comms-sdk-typescript/issues/100)) ([b6195bf](https://github.com/Doist/comms-sdk-typescript/commit/b6195bf24af7119e40cd64aaef18feac8e681e88))
+
 ## [3.3.1](https://github.com/Doist/comms-sdk-typescript/compare/v3.3.0...v3.3.1) (2026-10-06)
 
 ### Bug Fixes
