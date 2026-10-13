@@ -172,6 +172,18 @@ export type UpdateUserArgs = {
     theme?: number | string
 }
 
+export type SetStatusArgs = {
+    /** 1 to 80 characters once trimmed. */
+    message: string
+    emoji?: string | null
+    /** When the status ends. Must be in the future. A `Date` is sent as an ISO 8601 string. */
+    activeUntil?: Date | string | null
+    effects?: {
+        /** Holds back Comms notifications while the status is active. They are not sent later. */
+        pauseNotifications?: { scope?: { mode: 'all' } }
+    }
+}
+
 // Search
 type SearchArgsCommon = {
     workspaceId: number
