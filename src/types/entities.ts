@@ -77,6 +77,9 @@ export const UserStatusSchema = z.object({
             pauseNotifications: z
                 .object({ scope: z.object({ mode: z.string().optional() }).optional() })
                 .optional(),
+            pauseActivity: z
+                .object({ scope: z.object({ mode: z.string().optional() }).optional() })
+                .optional(),
         })
         .optional(),
 })

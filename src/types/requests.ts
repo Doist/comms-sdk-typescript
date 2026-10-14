@@ -181,6 +181,8 @@ export type SetStatusArgs = {
     effects?: {
         /** Holds back Comms notifications while the status is active. They are not sent later. */
         pauseNotifications?: { scope?: { mode: 'all' } }
+        /** Meant to pause Karma and streaks while the status is active. Todoist stores it but does not act on it yet. */
+        pauseActivity?: { scope?: { mode: 'all' } }
     }
 }
 
