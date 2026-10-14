@@ -73,7 +73,10 @@ export const UserStatusSchema = z.object({
     activeUntil: z.string().nullable().optional(),
     effects: z
         .object({
-            pauseNotifications: z.object({ scope: z.object({ mode: z.string() }) }).optional(),
+            // Clients that don't model `scope` can store `{}`, and the backend omits unset fields.
+            pauseNotifications: z
+                .object({ scope: z.object({ mode: z.string().optional() }).optional() })
+                .optional(),
         })
         .optional(),
 })
