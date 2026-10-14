@@ -1,3 +1,9 @@
+## [3.4.1](https://github.com/Doist/comms-sdk-typescript/compare/v3.4.0...v3.4.1) (2026-10-14)
+
+### Bug Fixes
+
+* accept a pause_notifications effect without a scope ([#102](https://github.com/Doist/comms-sdk-typescript/issues/102)) ([d2ef405](https://github.com/Doist/comms-sdk-typescript/commit/d2ef405244c5f7d0bc0546b8931f66525314b304))
+
 ## [3.4.0](https://github.com/Doist/comms-sdk-typescript/compare/v3.3.1...v3.4.0) (2026-10-13)
 
 ### Features
