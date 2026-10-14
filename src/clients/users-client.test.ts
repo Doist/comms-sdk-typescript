@@ -115,5 +115,20 @@ describe('UsersClient status', () => {
 
             expect(user.status).toEqual({ message: 'Away', emoji: null })
         })
+
+        it('parses a pause_notifications effect stored without a scope', async () => {
+            server.use(
+                http.get(apiUrl('api/v1/users/get_session_user'), () =>
+                    HttpResponse.json({
+                        ...mockUser,
+                        status: { message: 'Away', effects: { pause_notifications: {} } },
+                    }),
+                ),
+            )
+
+            const user = await client.getSessionUser()
+
+            expect(user.status).toEqual({ message: 'Away', effects: { pauseNotifications: {} } })
+        })
     })
 })
