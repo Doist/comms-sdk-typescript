@@ -157,7 +157,7 @@ describe('UsersClient status', () => {
             expect(user.status).toEqual({ message: 'Away', effects: { pauseNotifications: {} } })
         })
 
-        it('parses a pause_activity effect, alone or next to pause_notifications', async () => {
+        it('parses a pause_activity effect next to pause_notifications', async () => {
             server.use(
                 http.get(apiUrl('api/v1/users/get_session_user'), () =>
                     HttpResponse.json({
@@ -184,19 +184,28 @@ describe('UsersClient status', () => {
             })
         })
 
-        it('parses a pause_activity effect stored without a scope', async () => {
-            server.use(
-                http.get(apiUrl('api/v1/users/get_session_user'), () =>
-                    HttpResponse.json({
-                        ...mockUser,
-                        status: { message: 'Away', effects: { pause_activity: {} } },
-                    }),
-                ),
-            )
+        describe.each([
+            ['pause_notifications', 'pauseNotifications'],
+            ['pause_activity', 'pauseActivity'],
+        ])('the %s effect', (wireKey, key) => {
+            it.each([
+                ['without a scope', {}],
+                ['with an empty scope', { scope: {} }],
+                ['with scope.mode', { scope: { mode: 'all' } }],
+            ])('parses %s', async (_name, effect) => {
+                server.use(
+                    http.get(apiUrl('api/v1/users/get_session_user'), () =>
+                        HttpResponse.json({
+                            ...mockUser,
+                            status: { message: 'Away', effects: { [wireKey]: effect } },
+                        }),
+                    ),
+                )
 
-            const user = await client.getSessionUser()
+                const user = await client.getSessionUser()
 
-            expect(user.status).toEqual({ message: 'Away', effects: { pauseActivity: {} } })
+                expect(user.status).toEqual({ message: 'Away', effects: { [key]: effect } })
+            })
         })
 
         it('parses a status whose effects object is empty', async () => {
