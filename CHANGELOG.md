@@ -1,3 +1,9 @@
+## [3.5.0](https://github.com/Doist/comms-sdk-typescript/compare/v3.4.1...v3.5.0) (2026-10-17)
+
+### Features
+
+* **users:** add the pause_activity status effect ([#103](https://github.com/Doist/comms-sdk-typescript/issues/103)) ([5364865](https://github.com/Doist/comms-sdk-typescript/commit/53648659ac27a6eec2ebe113429a96d8d91cef54))
+
 ## [3.4.1](https://github.com/Doist/comms-sdk-typescript/compare/v3.4.0...v3.4.1) (2026-10-14)
 
 ### Bug Fixes
