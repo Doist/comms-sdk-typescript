@@ -64,6 +64,11 @@ export const RequestAttachmentSchema = z.object(attachmentShape)
 
 export type RequestAttachment = z.infer<typeof RequestAttachmentSchema>
 
+// Clients that don't model `scope` can store `{}`, and the backend omits unset fields.
+export const StatusEffectSchema = z.object({
+    scope: z.object({ mode: z.string().optional() }).optional(),
+})
+
 // Shared user status. It lives on the Todoist account, so Comms, Todoist and
 // automations all see the same one. `activeUntil` is an RFC 3339 string, and an
 // expired status is returned as `null` rather than as an expired object.
@@ -73,10 +78,8 @@ export const UserStatusSchema = z.object({
     activeUntil: z.string().nullable().optional(),
     effects: z
         .object({
-            // Clients that don't model `scope` can store `{}`, and the backend omits unset fields.
-            pauseNotifications: z
-                .object({ scope: z.object({ mode: z.string().optional() }).optional() })
-                .optional(),
+            pauseNotifications: StatusEffectSchema.optional(),
+            pauseActivity: StatusEffectSchema.optional(),
         })
         .optional(),
 })

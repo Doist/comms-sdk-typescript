@@ -172,6 +172,8 @@ export type UpdateUserArgs = {
     theme?: number | string
 }
 
+type StatusEffectArgs = { scope?: { mode: 'all' } }
+
 export type SetStatusArgs = {
     /** 1 to 80 characters once trimmed. */
     message: string
@@ -180,7 +182,9 @@ export type SetStatusArgs = {
     activeUntil?: Date | string | null
     effects?: {
         /** Holds back Comms notifications while the status is active. They are not sent later. */
-        pauseNotifications?: { scope?: { mode: 'all' } }
+        pauseNotifications?: StatusEffectArgs
+        /** Meant to pause Karma and streaks while the status is active. Comms drops it until Doist/comms-backend#1081 ships. */
+        pauseActivity?: StatusEffectArgs
     }
 }
 

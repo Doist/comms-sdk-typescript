@@ -71,6 +71,32 @@ describe('UsersClient status', () => {
             })
         })
 
+        it('sends a pause_activity effect as pause_activity', async () => {
+            let body: unknown
+            server.use(
+                http.post(apiUrl('api/v1/users/set_status'), async ({ request }) => {
+                    body = await request.json()
+                    return HttpResponse.json(mockUser)
+                }),
+            )
+
+            await client.setStatus({
+                message: 'On holiday',
+                effects: {
+                    pauseNotifications: { scope: { mode: 'all' } },
+                    pauseActivity: { scope: { mode: 'all' } },
+                },
+            })
+
+            expect(body).toEqual({
+                message: 'On holiday',
+                effects: {
+                    pause_notifications: { scope: { mode: 'all' } },
+                    pause_activity: { scope: { mode: 'all' } },
+                },
+            })
+        })
+
         it('sends only the message when nothing else is given', async () => {
             let body: unknown
             server.use(
@@ -116,19 +142,67 @@ describe('UsersClient status', () => {
             expect(user.status).toEqual({ message: 'Away', emoji: null })
         })
 
-        it('parses a pause_notifications effect stored without a scope', async () => {
+        it('parses a pause_activity effect next to pause_notifications', async () => {
             server.use(
                 http.get(apiUrl('api/v1/users/get_session_user'), () =>
                     HttpResponse.json({
                         ...mockUser,
-                        status: { message: 'Away', effects: { pause_notifications: {} } },
+                        status: {
+                            message: 'On holiday',
+                            effects: {
+                                pause_activity: { scope: { mode: 'all' } },
+                                pause_notifications: {},
+                            },
+                        },
                     }),
                 ),
             )
 
             const user = await client.getSessionUser()
 
-            expect(user.status).toEqual({ message: 'Away', effects: { pauseNotifications: {} } })
+            expect(user.status).toEqual({
+                message: 'On holiday',
+                effects: {
+                    pauseActivity: { scope: { mode: 'all' } },
+                    pauseNotifications: {},
+                },
+            })
+        })
+
+        describe.each([
+            ['pause_notifications', 'pauseNotifications'],
+            ['pause_activity', 'pauseActivity'],
+        ])('the %s effect', (wireKey, key) => {
+            it.each([
+                ['without a scope', {}],
+                ['with an empty scope', { scope: {} }],
+                ['with scope.mode', { scope: { mode: 'all' } }],
+            ])('parses %s', async (_name, effect) => {
+                server.use(
+                    http.get(apiUrl('api/v1/users/get_session_user'), () =>
+                        HttpResponse.json({
+                            ...mockUser,
+                            status: { message: 'Away', effects: { [wireKey]: effect } },
+                        }),
+                    ),
+                )
+
+                const user = await client.getSessionUser()
+
+                expect(user.status).toEqual({ message: 'Away', effects: { [key]: effect } })
+            })
+        })
+
+        it('parses a status whose effects object is empty', async () => {
+            server.use(
+                http.get(apiUrl('api/v1/users/get_session_user'), () =>
+                    HttpResponse.json({ ...mockUser, status: { message: 'Away', effects: {} } }),
+                ),
+            )
+
+            const user = await client.getSessionUser()
+
+            expect(user.status).toEqual({ message: 'Away', effects: {} })
         })
     })
 })
