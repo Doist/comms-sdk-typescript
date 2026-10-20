@@ -1,5 +1,12 @@
-import type { CustomFetch, HttpMethod, HttpResponse, RequestConfig } from '../types/http'
+import type {
+    CustomFetch,
+    CustomHeaders,
+    HttpMethod,
+    HttpResponse,
+    RequestConfig,
+} from '../types/http'
 import { snakeCaseKeys } from '../utils/case-conversion'
+import { mergeHeaders, resolveCustomHeaders } from '../utils/headers'
 import { fetchWithRetry } from './fetch-with-retry'
 
 export function paramsSerializer(params: Record<string, unknown>): string {
@@ -31,12 +38,17 @@ function getRequestConfiguration(
     baseURL: string,
     apiToken?: string,
     requestId?: string,
-    customHeaders?: Record<string, string>,
+    customHeaders?: CustomHeaders,
 ): RequestConfig {
     const authHeader = apiToken ? { Authorization: getAuthHeader(apiToken) } : undefined
     const requestIdHeader = requestId ? { 'X-Request-Id': requestId } : undefined
     // Custom headers sit below auth and request id so they can never clobber them.
-    const headers = { ...defaultHeaders, ...customHeaders, ...authHeader, ...requestIdHeader }
+    const headers = mergeHeaders(
+        defaultHeaders,
+        resolveCustomHeaders(customHeaders),
+        authHeader,
+        requestIdHeader,
+    )
 
     return { baseURL, headers, timeout: 30000 }
 }
@@ -48,7 +60,7 @@ export type RequestArgs = {
     apiToken?: string
     payload?: Record<string, unknown>
     requestId?: string
-    headers?: Record<string, string>
+    headers?: CustomHeaders
     customFetch?: CustomFetch
 }
 

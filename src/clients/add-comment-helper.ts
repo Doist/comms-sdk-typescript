@@ -1,7 +1,7 @@
 import { ENDPOINT_COMMENTS } from '../consts/endpoints'
 import { request } from '../transport/http-client'
 import { type Comment, type createCommentSchema } from '../types/entities'
-import type { CustomFetch } from '../types/http'
+import type { CustomFetch, CustomHeaders } from '../types/http'
 import type { CreateCommentArgs, ThreadAction } from '../types/requests'
 import { resolveCreateId, resolveReferenceId } from '../utils/uuidv7'
 import { applyNotifyAudience } from './notify-audience'
@@ -10,7 +10,7 @@ type ClientContext = {
     baseUri: string
     apiToken: string
     customFetch?: CustomFetch
-    headers?: Record<string, string>
+    headers?: CustomHeaders
     /** Per-client Comment schema, base-bound for the returned comment's web `url`. */
     schema: ReturnType<typeof createCommentSchema>
 }

@@ -1,6 +1,7 @@
 import { v4 as uuid } from 'uuid'
 import { fetchWithRetry } from '../transport/fetch-with-retry'
-import type { CustomFetch } from '../types/http'
+import type { CustomFetch, CustomHeaders } from '../types/http'
+import { mergeHeaders, resolveCustomHeaders } from './headers'
 
 /**
  * File content accepted by the upload helpers.
@@ -37,8 +38,8 @@ type UploadMultipartFileArgs = {
     maxRetries?: number
     /** Optional request ID for tracing. */
     requestId?: string
-    /** Optional headers sent with the request. Cannot override `Authorization` or `Content-Type`. */
-    headers?: Record<string, string>
+    /** Optional headers sent with the request. Cannot override `Authorization`, `X-Request-Id` or `Content-Type`. */
+    headers?: CustomHeaders
     /** Optional custom fetch implementation. */
     customFetch?: CustomFetch
 }
@@ -266,16 +267,14 @@ export async function uploadMultipartFile<T>(args: UploadMultipartFileArgs): Pro
         fields,
     })
 
-    const headers: Record<string, string> = {
-        ...customHeaders,
+    // Custom headers come first so they can never replace the SDK's own.
+    const headers = mergeHeaders(resolveCustomHeaders(customHeaders), {
         Authorization: `Bearer ${authToken}`,
         // The boundary is ours, so this has to be declared explicitly — `fetch`
         // only fills it in for a `FormData` body.
         'Content-Type': multipart.contentType,
-    }
-    if (requestId) {
-        headers['X-Request-Id'] = requestId
-    }
+        ...(requestId ? { 'X-Request-Id': requestId } : {}),
+    })
 
     const url = new URL(endpoint, baseUrl).toString()
 

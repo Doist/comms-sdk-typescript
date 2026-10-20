@@ -1,7 +1,7 @@
 import { getCommsBaseUri } from '../consts/endpoints'
 import type { ApiVersion } from '../types/api-version'
 import { DEFAULT_API_VERSION } from '../types/api-version'
-import type { CustomFetch } from '../types/http'
+import type { CustomFetch, CustomHeaders } from '../types/http'
 
 export type ClientConfig = {
     /** API token for authentication */
@@ -12,8 +12,8 @@ export type ClientConfig = {
     version?: ApiVersion
     /** Optional custom fetch implementation for cross-platform compatibility */
     customFetch?: CustomFetch
-    /** Optional headers sent with every request */
-    headers?: Record<string, string>
+    /** Optional headers sent with every request, or a function called once per request */
+    headers?: CustomHeaders
 }
 
 /**
@@ -25,7 +25,7 @@ export class BaseClient {
     protected readonly baseUrl?: string
     protected readonly defaultVersion: ApiVersion
     protected readonly customFetch?: CustomFetch
-    protected readonly headers?: Record<string, string>
+    protected readonly headers?: CustomHeaders
 
     constructor(config: ClientConfig) {
         this.apiToken = config.apiToken
