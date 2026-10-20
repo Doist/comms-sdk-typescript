@@ -46,6 +46,7 @@ export class WorkspaceUsersClient extends BaseClient {
             relativePath: 'workspace_users/get',
             apiToken: this.apiToken,
             payload: { id: args.workspaceId, archived: args.archived },
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then((response) => {
             const rawUsers = includeRemoved
@@ -68,6 +69,7 @@ export class WorkspaceUsersClient extends BaseClient {
             relativePath: 'workspace_users/get_ids',
             apiToken: this.apiToken,
             payload: { id: workspaceId },
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then((response) => response.data)
     }
@@ -94,6 +96,7 @@ export class WorkspaceUsersClient extends BaseClient {
             relativePath: 'workspace_users/getone',
             apiToken: this.apiToken,
             payload: { id: args.workspaceId, user_id: args.userId },
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then((response) => VisibleWorkspaceUserSchema.parse(response.data))
     }
@@ -122,6 +125,7 @@ export class WorkspaceUsersClient extends BaseClient {
             relativePath: 'workspace_users/get_by_email',
             apiToken: this.apiToken,
             payload: { id: args.workspaceId, email: args.email },
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then((response) => VisibleWorkspaceUserSchema.parse(response.data))
     }
@@ -141,6 +145,7 @@ export class WorkspaceUsersClient extends BaseClient {
             relativePath: 'workspace_users/get_info',
             apiToken: this.apiToken,
             payload: { id: args.workspaceId, user_id: args.userId },
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then((response) => response.data)
     }
@@ -169,6 +174,7 @@ export class WorkspaceUsersClient extends BaseClient {
             relativePath: 'workspace_users/get_local_time',
             apiToken: this.apiToken,
             payload: { id: args.workspaceId, user_id: args.userId },
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then((response) => response.data)
     }
@@ -197,6 +203,7 @@ export class WorkspaceUsersClient extends BaseClient {
                 email: args.email,
                 userType: args.userType,
             },
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then((response) => WorkspaceUserSchema.parse(response.data))
     }
@@ -228,6 +235,7 @@ export class WorkspaceUsersClient extends BaseClient {
                 email: args.email,
                 userId: args.userId,
             },
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then((response) => WorkspaceUserSchema.parse(response.data))
     }
@@ -251,6 +259,7 @@ export class WorkspaceUsersClient extends BaseClient {
                 email: args.email,
                 userId: args.userId,
             },
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then(() => undefined)
     }
@@ -274,6 +283,7 @@ export class WorkspaceUsersClient extends BaseClient {
                 email: args.email,
                 userId: args.userId,
             },
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then(() => undefined)
     }

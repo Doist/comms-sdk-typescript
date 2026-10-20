@@ -33,6 +33,7 @@ export class HooksClient extends BaseClient {
             relativePath: `${ENDPOINT_HOOKS}/subscribe`,
             apiToken: this.apiToken,
             payload: args,
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then((response) => HookSubscribeResponseSchema.parse(response.data))
     }
@@ -50,6 +51,7 @@ export class HooksClient extends BaseClient {
             relativePath: `${ENDPOINT_HOOKS}/unsubscribe`,
             apiToken: this.apiToken,
             payload: args,
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then((response) => StatusOkSchema.parse(response.data))
     }

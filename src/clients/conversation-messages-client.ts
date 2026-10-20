@@ -64,6 +64,7 @@ export class ConversationMessagesClient extends BaseClient {
             relativePath: `${ENDPOINT_CONVERSATION_MESSAGES}/get`,
             apiToken: this.apiToken,
             payload: params,
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then((response) => this.messageListSchema.parse(response.data))
     }
@@ -170,6 +171,7 @@ export class ConversationMessagesClient extends BaseClient {
             relativePath: `${ENDPOINT_CONVERSATION_MESSAGES}/${suffix}`,
             apiToken: this.apiToken,
             payload: params,
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then((response) => schema.parse(response.data))
     }

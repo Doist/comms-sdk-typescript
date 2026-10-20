@@ -10,6 +10,7 @@ type ClientContext = {
     baseUri: string
     apiToken: string
     customFetch?: CustomFetch
+    headers?: Record<string, string>
     /** Per-client Comment schema, base-bound for the returned comment's web `url`. */
     schema: ReturnType<typeof createCommentSchema>
 }
@@ -52,6 +53,7 @@ export function addCommentRequest(
         relativePath: `${ENDPOINT_COMMENTS}/add`,
         apiToken: context.apiToken,
         payload,
+        headers: context.headers,
         customFetch: context.customFetch,
     }).then((response) => context.schema.parse(response.data))
 }

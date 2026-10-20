@@ -93,6 +93,7 @@ export class ThreadsClient extends BaseClient {
             relativePath: `${ENDPOINT_THREADS}/get`,
             apiToken: this.apiToken,
             payload: params,
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then((response) => this.threadListSchema.parse(response.data))
     }
@@ -397,6 +398,7 @@ export class ThreadsClient extends BaseClient {
             {
                 baseUri: this.getBaseUri(),
                 apiToken: this.apiToken,
+                headers: this.headers,
                 customFetch: this.customFetch,
                 schema: this.commentSchema,
             },
@@ -417,6 +419,7 @@ export class ThreadsClient extends BaseClient {
             relativePath: `${ENDPOINT_THREADS}/${suffix}`,
             apiToken: this.apiToken,
             payload: params,
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then((response) => schema.parse(response.data))
     }

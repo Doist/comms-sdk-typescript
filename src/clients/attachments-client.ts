@@ -61,6 +61,7 @@ export class AttachmentsClient extends BaseClient {
             baseUri: this.getBaseUri(),
             relativePath: `${ENDPOINT_FILES}/image/${checkedThreadId}/${id}`,
             apiToken: this.apiToken,
+            headers: this.headers,
             customFetch: this.customFetch,
         })
         return ImageReadResultSchema.parse(response.data)
@@ -103,6 +104,7 @@ export class AttachmentsClient extends BaseClient {
             additionalFields: {
                 attachment_id: resolveAttachmentId(args.attachmentId),
             },
+            headers: this.headers,
             customFetch: this.customFetch,
         })
 

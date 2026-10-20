@@ -66,6 +66,7 @@ export class CommentsClient extends BaseClient {
             relativePath: `${ENDPOINT_COMMENTS}/get`,
             apiToken: this.apiToken,
             payload: params,
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then((response) => this.commentListSchema.parse(response.data))
     }
@@ -84,6 +85,7 @@ export class CommentsClient extends BaseClient {
             relativePath: `${ENDPOINT_COMMENTS}/getone`,
             apiToken: this.apiToken,
             payload: { id },
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then((response) => this.commentSchema.parse(response.data))
     }
@@ -120,6 +122,7 @@ export class CommentsClient extends BaseClient {
             {
                 baseUri: this.getBaseUri(),
                 apiToken: this.apiToken,
+                headers: this.headers,
                 customFetch: this.customFetch,
                 schema: this.commentSchema,
             },
@@ -142,6 +145,7 @@ export class CommentsClient extends BaseClient {
             relativePath: `${ENDPOINT_COMMENTS}/update`,
             apiToken: this.apiToken,
             payload: { ...args },
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then((response) => this.commentSchema.parse(response.data))
     }
@@ -158,6 +162,7 @@ export class CommentsClient extends BaseClient {
             relativePath: `${ENDPOINT_COMMENTS}/remove`,
             apiToken: this.apiToken,
             payload: { id },
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then((response) => StatusOkSchema.parse(response.data))
     }
@@ -183,6 +188,7 @@ export class CommentsClient extends BaseClient {
             relativePath: `${ENDPOINT_COMMENTS}/mark_position`,
             apiToken: this.apiToken,
             payload: { threadId: args.threadId, commentId: args.commentId },
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then((response) => StatusOkSchema.parse(response.data))
     }

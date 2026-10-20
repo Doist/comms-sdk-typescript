@@ -31,10 +31,12 @@ function getRequestConfiguration(
     baseURL: string,
     apiToken?: string,
     requestId?: string,
+    customHeaders?: Record<string, string>,
 ): RequestConfig {
     const authHeader = apiToken ? { Authorization: getAuthHeader(apiToken) } : undefined
     const requestIdHeader = requestId ? { 'X-Request-Id': requestId } : undefined
-    const headers = { ...defaultHeaders, ...authHeader, ...requestIdHeader }
+    // Custom headers sit below auth and request id so they can never clobber them.
+    const headers = { ...defaultHeaders, ...customHeaders, ...authHeader, ...requestIdHeader }
 
     return { baseURL, headers, timeout: 30000 }
 }
@@ -46,13 +48,23 @@ export type RequestArgs = {
     apiToken?: string
     payload?: Record<string, unknown>
     requestId?: string
+    headers?: Record<string, string>
     customFetch?: CustomFetch
 }
 
 export async function request<T>(args: RequestArgs): Promise<HttpResponse<T>> {
-    const { httpMethod, baseUri, relativePath, apiToken, payload, requestId, customFetch } = args
+    const {
+        httpMethod,
+        baseUri,
+        relativePath,
+        apiToken,
+        payload,
+        requestId,
+        headers,
+        customFetch,
+    } = args
 
-    const config = getRequestConfiguration(baseUri, apiToken, requestId)
+    const config = getRequestConfiguration(baseUri, apiToken, requestId, headers)
     const url = new URL(relativePath, config.baseURL).toString()
 
     const options: RequestInit & { timeout?: number } = {

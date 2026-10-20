@@ -37,6 +37,8 @@ type UploadMultipartFileArgs = {
     maxRetries?: number
     /** Optional request ID for tracing. */
     requestId?: string
+    /** Optional headers sent with the request. Cannot override `Authorization` or `Content-Type`. */
+    headers?: Record<string, string>
     /** Optional custom fetch implementation. */
     customFetch?: CustomFetch
 }
@@ -240,6 +242,7 @@ export async function uploadMultipartFile<T>(args: UploadMultipartFileArgs): Pro
         additionalFields,
         maxRetries = 0,
         requestId,
+        headers: customHeaders,
         customFetch,
     } = args
 
@@ -264,6 +267,7 @@ export async function uploadMultipartFile<T>(args: UploadMultipartFileArgs): Pro
     })
 
     const headers: Record<string, string> = {
+        ...customHeaders,
         Authorization: `Bearer ${authToken}`,
         // The boundary is ours, so this has to be declared explicitly — `fetch`
         // only fills it in for a `FormData` body.
