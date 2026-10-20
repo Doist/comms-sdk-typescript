@@ -23,7 +23,7 @@ describe('WorkspaceUsersClient', () => {
     describe('getWorkspaceUsers', () => {
         it('excludes removed users by default and sends no server-side filter param', async () => {
             server.use(
-                http.get(apiUrl('api/v1/workspace_users/get'), ({ request }) => {
+                http.get(apiUrl('api/v1.0/workspace_users/get'), ({ request }) => {
                     const url = new URL(request.url)
                     expect(url.searchParams.get('id')).toBe('123')
                     expect(url.searchParams.has('include_removed')).toBe(false)
@@ -41,7 +41,7 @@ describe('WorkspaceUsersClient', () => {
 
         it('includes removed users when includeRemoved is true and sends no server-side filter param', async () => {
             server.use(
-                http.get(apiUrl('api/v1/workspace_users/get'), ({ request }) => {
+                http.get(apiUrl('api/v1.0/workspace_users/get'), ({ request }) => {
                     const url = new URL(request.url)
                     expect(url.searchParams.get('id')).toBe('123')
                     expect(url.searchParams.has('include_removed')).toBe(false)

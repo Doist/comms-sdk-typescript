@@ -23,7 +23,7 @@ import { BaseClient } from './base-client'
 export const ChannelListSchema = z.array(ChannelSchema)
 
 /**
- * Client for `/api/v1/channels/`. The SDK auto-generates an `id` on
+ * Client for `/api/v1.0/channels/`. The SDK auto-generates an `id` on
  * `createChannel` when the caller doesn't supply one — pass your own `id`
  * to keep an optimistic-UI ID stable through the round-trip.
  */

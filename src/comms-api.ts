@@ -19,7 +19,7 @@ import type { CustomFetch } from './types/http'
 export type CommsApiOptions = {
     /** Optional custom API base URL. If not provided, defaults to Comms' standard API endpoint. */
     baseUrl?: string
-    /** Optional API version. Defaults to 'v1'. */
+    /** Optional API version. Defaults to 'v1.0'. */
     version?: ApiVersion
     /** Optional custom fetch implementation for cross-platform compatibility (e.g., Obsidian, React Native, Electron). */
     customFetch?: CustomFetch

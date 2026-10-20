@@ -16,7 +16,7 @@ import type {
 import { BaseClient } from './base-client'
 
 /**
- * Client for `/api/v1/workspace_users/`. The backend's `add` endpoint
+ * Client for `/api/v1.0/workspace_users/`. The backend's `add` endpoint
  * rejects non-empty `name` and `channelIds` — set neither.
  */
 export class WorkspaceUsersClient extends BaseClient {

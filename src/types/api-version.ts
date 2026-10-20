@@ -1,7 +1,7 @@
 /**
  * Supported Comms API versions
  */
-export const API_VERSIONS = ['v1'] as const
+export const API_VERSIONS = ['v1.0'] as const
 export type ApiVersion = (typeof API_VERSIONS)[number]
 
-export const DEFAULT_API_VERSION: ApiVersion = 'v1'
+export const DEFAULT_API_VERSION: ApiVersion = 'v1.0'

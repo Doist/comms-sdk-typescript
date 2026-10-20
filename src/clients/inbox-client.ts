@@ -12,7 +12,7 @@ type InboxCountResponse = {
     version: number
 }
 
-/** Client for `/api/v1/inbox/`. */
+/** Client for `/api/v1.0/inbox/`. */
 export class InboxClient extends BaseClient {
     private readonly linkBaseUrl = this.getLinkBaseUrl()
     // Reuse the shared singletons when no custom base is configured.

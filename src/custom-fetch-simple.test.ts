@@ -120,7 +120,9 @@ describe('Custom Fetch Core Functionality', () => {
             await api.users.getSessionUser()
 
             const calledUrl = mockCustomFetch.mock.calls[0]?.[0]
-            expect(calledUrl).toBe('https://proxy.example.com/comms/api/v1/users/get_session_user')
+            expect(calledUrl).toBe(
+                'https://proxy.example.com/comms/api/v1.0/users/get_session_user',
+            )
         })
     })
 

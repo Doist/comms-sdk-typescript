@@ -40,7 +40,7 @@ const GetUnreadResponseSchema = z.object({
 })
 
 /**
- * Client for `/api/v1/threads/`. The SDK auto-generates the thread `id` on
+ * Client for `/api/v1.0/threads/`. The SDK auto-generates the thread `id` on
  * `createThread` when the caller doesn't supply one.
  */
 export class ThreadsClient extends BaseClient {

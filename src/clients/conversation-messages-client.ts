@@ -19,7 +19,7 @@ import { BaseClient } from './base-client'
 export const ConversationMessageListSchema = z.array(ConversationMessageSchema)
 
 /**
- * Client for `/api/v1/conversation_messages/`. The SDK auto-generates the
+ * Client for `/api/v1.0/conversation_messages/`. The SDK auto-generates the
  * message `id` on `createMessage` when the caller doesn't supply one.
  */
 export class ConversationMessagesClient extends BaseClient {

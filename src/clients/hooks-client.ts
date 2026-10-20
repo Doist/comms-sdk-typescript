@@ -10,7 +10,7 @@ import type { SubscribeHookArgs, UnsubscribeHookArgs } from '../types/requests'
 import { BaseClient } from './base-client'
 
 /**
- * Client for `/api/v1/hooks/`. REST hooks require Todoist OAuth bearer tokens
+ * Client for `/api/v1.0/hooks/`. REST hooks require Todoist OAuth bearer tokens
  * that include Comms audience; session tokens are rejected by the backend.
  */
 export class HooksClient extends BaseClient {
