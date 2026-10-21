@@ -155,6 +155,76 @@ describe('httpClient', () => {
             )
         })
 
+        it('should drop custom headers that match auth or request id in any case', async () => {
+            const mockResponse = {
+                ok: true,
+                status: 200,
+                text: () => Promise.resolve(JSON.stringify({ id: 1 })),
+                headers: new Headers(),
+                clone: function () {
+                    return this
+                },
+            }
+            mockFetch.mockResolvedValueOnce(mockResponse as Response)
+
+            await request({
+                httpMethod: 'POST',
+                baseUri: 'https://api.test.com',
+                relativePath: '/users',
+                apiToken: 'token',
+                requestId: 'req-123',
+                headers: {
+                    'Doist-Platform': 'cli',
+                    authorization: 'Bearer forged',
+                    'x-request-id': 'forged',
+                },
+            })
+
+            expect(mockFetch).toHaveBeenCalledWith(
+                'https://api.test.com/users',
+                expect.objectContaining({
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Doist-Platform': 'cli',
+                        Authorization: 'Bearer token',
+                        'X-Request-Id': 'req-123',
+                    },
+                }),
+            )
+        })
+
+        it('should send the result of a headers function', async () => {
+            const mockResponse = {
+                ok: true,
+                status: 200,
+                text: () => Promise.resolve(JSON.stringify({ id: 1 })),
+                headers: new Headers(),
+                clone: function () {
+                    return this
+                },
+            }
+            mockFetch.mockResolvedValueOnce(mockResponse as Response)
+
+            await request({
+                httpMethod: 'GET',
+                baseUri: 'https://api.test.com',
+                relativePath: '/users',
+                apiToken: 'token',
+                headers: () => ({ 'Doist-Platform': 'cli' }),
+            })
+
+            expect(mockFetch).toHaveBeenCalledWith(
+                'https://api.test.com/users',
+                expect.objectContaining({
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Doist-Platform': 'cli',
+                        Authorization: 'Bearer token',
+                    },
+                }),
+            )
+        })
+
         it('should handle GET request with query parameters', async () => {
             const mockResponse = {
                 ok: true,
