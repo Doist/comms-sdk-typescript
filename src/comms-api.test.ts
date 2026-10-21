@@ -1,10 +1,10 @@
 import { http, HttpResponse } from 'msw'
 import { vi } from 'vitest'
 import { CommsApi } from './comms-api'
-import { DEFAULT_API_VERSION } from './types/api-version'
 import { apiUrl } from './testUtils/msw-handlers'
 import { server } from './testUtils/msw-setup'
 import { mockUser, TEST_API_TOKEN } from './testUtils/test-defaults'
+import { DEFAULT_API_VERSION } from './types/api-version'
 import type { CustomFetchResponse } from './types/http'
 
 describe('CommsApi', () => {
