@@ -1,10 +1,8 @@
 import { http, HttpResponse } from 'msw'
 import { vi } from 'vitest'
 import { CommsApi } from './comms-api'
-import { apiUrl } from './testUtils/msw-handlers'
 import { server } from './testUtils/msw-setup'
-import { mockUser, TEST_API_TOKEN } from './testUtils/test-defaults'
-import { DEFAULT_API_VERSION } from './types/api-version'
+import { mockUser, TEST_API_BASE_URL, TEST_API_TOKEN } from './testUtils/test-defaults'
 import type { CustomFetchResponse } from './types/http'
 
 describe('CommsApi', () => {
@@ -34,7 +32,7 @@ describe('CommsApi', () => {
     it('sends configured headers on client requests', async () => {
         let platformHeader: string | null = null
         server.use(
-            http.get(apiUrl(`api/${DEFAULT_API_VERSION}/users/get_session_user`), ({ request }) => {
+            http.get(`${TEST_API_BASE_URL}/users/get_session_user`, ({ request }) => {
                 platformHeader = request.headers.get('Doist-Platform')
                 return HttpResponse.json(mockUser)
             }),
@@ -49,7 +47,7 @@ describe('CommsApi', () => {
     it('calls a headers function on every request', async () => {
         const requestIds: (string | null)[] = []
         server.use(
-            http.get(apiUrl(`api/${DEFAULT_API_VERSION}/users/get_session_user`), ({ request }) => {
+            http.get(`${TEST_API_BASE_URL}/users/get_session_user`, ({ request }) => {
                 requestIds.push(request.headers.get('Request-Id'))
                 return HttpResponse.json(mockUser)
             }),
