@@ -1,3 +1,9 @@
+## [3.8.0](https://github.com/Doist/comms-sdk-typescript/compare/v3.7.0...v3.8.0) (2026-10-21)
+
+### Features
+
+* change default API version from v1 to v1.0. ([#107](https://github.com/Doist/comms-sdk-typescript/issues/107)) ([aa5f67e](https://github.com/Doist/comms-sdk-typescript/commit/aa5f67ef75a21bfcf6783ae3973d3815dfab182c))
+
 ## [3.7.0](https://github.com/Doist/comms-sdk-typescript/compare/v3.6.0...v3.7.0) (2026-10-21)
 
 ### Features
