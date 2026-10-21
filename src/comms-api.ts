@@ -23,6 +23,8 @@ export type CommsApiOptions = {
     version?: ApiVersion
     /** Optional custom fetch implementation for cross-platform compatibility (e.g., Obsidian, React Native, Electron). */
     customFetch?: CustomFetch
+    /** Optional headers sent with every request, e.g. `{ 'Doist-Platform': 'cli' }` for client attribution. Cannot override `Authorization` or `X-Request-Id`. */
+    headers?: Record<string, string>
 }
 
 /**
@@ -64,6 +66,7 @@ export class CommsApi {
             baseUrl: options?.baseUrl,
             version: options?.version,
             customFetch: options?.customFetch,
+            headers: options?.headers,
         }
 
         this.users = new UsersClient(clientConfig)

@@ -132,6 +132,7 @@ export class UsersClient extends BaseClient {
             relativePath: `${ENDPOINT_USERS}/mfa/challenge`,
             apiToken: undefined,
             payload: args,
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then((response) => response.data)
     }
@@ -144,6 +145,7 @@ export class UsersClient extends BaseClient {
             relativePath: `${ENDPOINT_USERS}/logout`,
             apiToken: this.apiToken,
             payload: undefined,
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then(() => undefined)
     }
@@ -298,6 +300,7 @@ export class UsersClient extends BaseClient {
             relativePath: `${ENDPOINT_USERS}/validate_token`,
             apiToken: undefined,
             payload: { token },
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then(() => undefined)
     }
@@ -321,6 +324,7 @@ export class UsersClient extends BaseClient {
             relativePath: `${ENDPOINT_USERS}/heartbeat`,
             apiToken: this.apiToken,
             payload: args,
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then(() => undefined)
     }
@@ -337,6 +341,7 @@ export class UsersClient extends BaseClient {
             relativePath: `${ENDPOINT_USERS}/reset_presence`,
             apiToken: this.apiToken,
             payload: { workspaceId },
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then(() => undefined)
     }
@@ -354,6 +359,7 @@ export class UsersClient extends BaseClient {
             relativePath: `${ENDPOINT_USERS}/check_email`,
             apiToken: undefined,
             payload: { email },
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then((response) => response.data)
     }
@@ -371,6 +377,7 @@ export class UsersClient extends BaseClient {
             relativePath: `${ENDPOINT_USERS}/get_unsubscribe_settings`,
             apiToken: this.apiToken,
             payload: undefined,
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then((response) => response.data)
     }
@@ -388,6 +395,7 @@ export class UsersClient extends BaseClient {
             relativePath: `${ENDPOINT_USERS}/update_unsubscribe_settings`,
             apiToken: this.apiToken,
             payload: settings,
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then((response) => response.data)
     }
@@ -403,6 +411,7 @@ export class UsersClient extends BaseClient {
             relativePath: url,
             apiToken: this.apiToken,
             payload: params,
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then((response) => schema.parse(response.data))
     }
@@ -420,6 +429,7 @@ export class UsersClient extends BaseClient {
             relativePath: url,
             apiToken: authed ? this.apiToken : undefined,
             payload: params,
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then((response) => schema.parse(response.data))
     }

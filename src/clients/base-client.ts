@@ -12,6 +12,8 @@ export type ClientConfig = {
     version?: ApiVersion
     /** Optional custom fetch implementation for cross-platform compatibility */
     customFetch?: CustomFetch
+    /** Optional headers sent with every request */
+    headers?: Record<string, string>
 }
 
 /**
@@ -23,12 +25,14 @@ export class BaseClient {
     protected readonly baseUrl?: string
     protected readonly defaultVersion: ApiVersion
     protected readonly customFetch?: CustomFetch
+    protected readonly headers?: Record<string, string>
 
     constructor(config: ClientConfig) {
         this.apiToken = config.apiToken
         this.baseUrl = config.baseUrl
         this.defaultVersion = config.version || DEFAULT_API_VERSION
         this.customFetch = config.customFetch
+        this.headers = config.headers
     }
 
     /**

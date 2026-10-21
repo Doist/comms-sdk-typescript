@@ -41,6 +41,7 @@ export class WorkspacesClient extends BaseClient {
             relativePath: `${ENDPOINT_WORKSPACES}/get`,
             apiToken: this.apiToken,
             payload: undefined,
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then((response) => response.data.map((workspace) => WorkspaceSchema.parse(workspace)))
     }
@@ -64,6 +65,7 @@ export class WorkspacesClient extends BaseClient {
             relativePath: `${ENDPOINT_WORKSPACES}/getone`,
             apiToken: this.apiToken,
             payload: { id },
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then((response) => WorkspaceSchema.parse(response.data))
     }
@@ -86,6 +88,7 @@ export class WorkspacesClient extends BaseClient {
             relativePath: `${ENDPOINT_WORKSPACES}/get_default`,
             apiToken: this.apiToken,
             payload: undefined,
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then((response) => WorkspaceSchema.parse(response.data))
     }
@@ -109,6 +112,7 @@ export class WorkspacesClient extends BaseClient {
             relativePath: `${ENDPOINT_WORKSPACES}/add`,
             apiToken: this.apiToken,
             payload: { name },
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then((response) => WorkspaceSchema.parse(response.data))
     }
@@ -132,6 +136,7 @@ export class WorkspacesClient extends BaseClient {
             relativePath: `${ENDPOINT_WORKSPACES}/update`,
             apiToken: this.apiToken,
             payload: { id, name },
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then((response) => WorkspaceSchema.parse(response.data))
     }
@@ -153,6 +158,7 @@ export class WorkspacesClient extends BaseClient {
             relativePath: `${ENDPOINT_WORKSPACES}/remove`,
             apiToken: this.apiToken,
             payload: { id },
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then(() => undefined)
     }
@@ -176,6 +182,7 @@ export class WorkspacesClient extends BaseClient {
             relativePath: `${ENDPOINT_WORKSPACES}/get_public_channels`,
             apiToken: this.apiToken,
             payload: { id },
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then((response) => this.channelListSchema.parse(response.data))
     }

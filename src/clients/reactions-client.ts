@@ -42,6 +42,7 @@ export class ReactionsClient extends BaseClient {
             relativePath: `${ENDPOINT_REACTIONS}/add`,
             apiToken: this.apiToken,
             payload: { ...reactionTarget(args), reaction: args.reaction },
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then(() => undefined)
     }
@@ -71,6 +72,7 @@ export class ReactionsClient extends BaseClient {
             relativePath: `${ENDPOINT_REACTIONS}/get`,
             apiToken: this.apiToken,
             payload: reactionTarget(args),
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then((response) => response.data)
     }
@@ -96,6 +98,7 @@ export class ReactionsClient extends BaseClient {
             relativePath: `${ENDPOINT_REACTIONS}/remove`,
             apiToken: this.apiToken,
             payload: { ...reactionTarget(args), reaction: args.reaction },
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then(() => undefined)
     }

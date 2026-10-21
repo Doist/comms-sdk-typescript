@@ -58,6 +58,7 @@ export class ChannelsClient extends BaseClient {
             relativePath: `${ENDPOINT_CHANNELS}/get`,
             apiToken: this.apiToken,
             payload: args,
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then((response) => this.channelListSchema.parse(response.data))
     }
@@ -243,6 +244,7 @@ export class ChannelsClient extends BaseClient {
             relativePath: `${ENDPOINT_CHANNELS}/${suffix}`,
             apiToken: this.apiToken,
             payload: params,
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then((response) => schema.parse(response.data))
     }

@@ -42,6 +42,7 @@ export class GroupsClient extends BaseClient {
             relativePath: `${ENDPOINT_GROUPS}/get`,
             apiToken: this.apiToken,
             payload: { workspaceId },
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then((response) => GroupListSchema.parse(response.data))
     }
@@ -195,6 +196,7 @@ export class GroupsClient extends BaseClient {
             relativePath: `${ENDPOINT_GROUPS}/${suffix}`,
             apiToken: this.apiToken,
             payload: params,
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then((response) => schema.parse(response.data))
     }

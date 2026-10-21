@@ -120,6 +120,41 @@ describe('httpClient', () => {
             )
         })
 
+        it('should send custom headers without letting them override auth', async () => {
+            const mockResponse = {
+                ok: true,
+                status: 200,
+                text: () => Promise.resolve(JSON.stringify({ id: 1 })),
+                headers: new Headers(),
+                clone: function () {
+                    return this
+                },
+            }
+            mockFetch.mockResolvedValueOnce(mockResponse as Response)
+
+            await request({
+                httpMethod: 'GET',
+                baseUri: 'https://api.test.com',
+                relativePath: '/users',
+                apiToken: 'token',
+                headers: {
+                    'Doist-Platform': 'cli',
+                    Authorization: 'Bearer forged',
+                },
+            })
+
+            expect(mockFetch).toHaveBeenCalledWith(
+                'https://api.test.com/users',
+                expect.objectContaining({
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Doist-Platform': 'cli',
+                        Authorization: 'Bearer token',
+                    },
+                }),
+            )
+        })
+
         it('should handle GET request with query parameters', async () => {
             const mockResponse = {
                 ok: true,
