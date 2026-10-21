@@ -1,3 +1,9 @@
+## [3.6.0](https://github.com/Doist/comms-sdk-typescript/compare/v3.5.0...v3.6.0) (2026-10-21)
+
+### Features
+
+* allow custom default headers on CommsApi ([#104](https://github.com/Doist/comms-sdk-typescript/issues/104)) ([cdf1a5c](https://github.com/Doist/comms-sdk-typescript/commit/cdf1a5cf7b1f3774cfe3880a3212bf1110d24c9c))
+
 ## [3.5.0](https://github.com/Doist/comms-sdk-typescript/compare/v3.4.1...v3.5.0) (2026-10-17)
 
 ### Features
