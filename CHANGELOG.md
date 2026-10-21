@@ -1,3 +1,9 @@
+## [3.8.1](https://github.com/Doist/comms-sdk-typescript/compare/v3.8.0...v3.8.1) (2026-10-21)
+
+### Bug Fixes
+
+* derive header-test fixture paths from the default API version ([#112](https://github.com/Doist/comms-sdk-typescript/issues/112)) ([cd01516](https://github.com/Doist/comms-sdk-typescript/commit/cd01516f820774016cf403c30cd2038270f8035d))
+
 ## [3.8.0](https://github.com/Doist/comms-sdk-typescript/compare/v3.7.0...v3.8.0) (2026-10-21)
 
 ### Features
