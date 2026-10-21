@@ -13,7 +13,7 @@ import { BaseClient } from './base-client'
 export const ChannelListSchema = z.array(ChannelSchema)
 
 /**
- * Client for `/api/v1/workspaces/`. Workspace IDs are integers. The backend
+ * Client for `/api/v1.0/workspaces/`. Workspace IDs are integers. The backend
  * currently rejects any `color` other than `1` on add/update.
  */
 export class WorkspacesClient extends BaseClient {

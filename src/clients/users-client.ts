@@ -38,7 +38,7 @@ type MfaChallengeArgs = {
 }
 
 /**
- * Client for the `/api/v1/users/` endpoints. Authentication flows through
+ * Client for the `/api/v1.0/users/` endpoints. Authentication flows through
  * Todoist-ID; `register` / `login` / `loginWithGoogle` / `loginWithToken` /
  * `loginWithTodoist` are the available entry points.
  */

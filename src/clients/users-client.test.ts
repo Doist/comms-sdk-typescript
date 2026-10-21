@@ -16,7 +16,7 @@ describe('UsersClient status', () => {
         it('posts the status with snake_case keys and returns the user with the status', async () => {
             let body: unknown
             server.use(
-                http.post(apiUrl('api/v1/users/set_status'), async ({ request }) => {
+                http.post(apiUrl('api/v1.0/users/set_status'), async ({ request }) => {
                     body = await request.json()
                     return HttpResponse.json({
                         ...mockUser,
@@ -54,7 +54,7 @@ describe('UsersClient status', () => {
         it('sends a Date expiry as an ISO 8601 string', async () => {
             let body: Record<string, unknown> | undefined
             server.use(
-                http.post(apiUrl('api/v1/users/set_status'), async ({ request }) => {
+                http.post(apiUrl('api/v1.0/users/set_status'), async ({ request }) => {
                     body = (await request.json()) as Record<string, unknown>
                     return HttpResponse.json(mockUser)
                 }),
@@ -74,7 +74,7 @@ describe('UsersClient status', () => {
         it('sends a pause_activity effect as pause_activity', async () => {
             let body: unknown
             server.use(
-                http.post(apiUrl('api/v1/users/set_status'), async ({ request }) => {
+                http.post(apiUrl('api/v1.0/users/set_status'), async ({ request }) => {
                     body = await request.json()
                     return HttpResponse.json(mockUser)
                 }),
@@ -100,7 +100,7 @@ describe('UsersClient status', () => {
         it('sends only the message when nothing else is given', async () => {
             let body: unknown
             server.use(
-                http.post(apiUrl('api/v1/users/set_status'), async ({ request }) => {
+                http.post(apiUrl('api/v1.0/users/set_status'), async ({ request }) => {
                     body = await request.json()
                     return HttpResponse.json(mockUser)
                 }),
@@ -115,7 +115,7 @@ describe('UsersClient status', () => {
     describe('clearStatus', () => {
         it('posts to clear_status and returns the user without a status', async () => {
             server.use(
-                http.post(apiUrl('api/v1/users/clear_status'), () =>
+                http.post(apiUrl('api/v1.0/users/clear_status'), () =>
                     HttpResponse.json({ ...mockUser, status: null }),
                 ),
             )
@@ -129,7 +129,7 @@ describe('UsersClient status', () => {
     describe('reading a status', () => {
         it('exposes the status on getSessionUser, with an absent emoji and effects', async () => {
             server.use(
-                http.get(apiUrl('api/v1/users/get_session_user'), () =>
+                http.get(apiUrl('api/v1.0/users/get_session_user'), () =>
                     HttpResponse.json({
                         ...mockUser,
                         status: { message: 'Away', emoji: null },
@@ -144,7 +144,7 @@ describe('UsersClient status', () => {
 
         it('parses a pause_activity effect next to pause_notifications', async () => {
             server.use(
-                http.get(apiUrl('api/v1/users/get_session_user'), () =>
+                http.get(apiUrl('api/v1.0/users/get_session_user'), () =>
                     HttpResponse.json({
                         ...mockUser,
                         status: {
@@ -179,7 +179,7 @@ describe('UsersClient status', () => {
                 ['with scope.mode', { scope: { mode: 'all' } }],
             ])('parses %s', async (_name, effect) => {
                 server.use(
-                    http.get(apiUrl('api/v1/users/get_session_user'), () =>
+                    http.get(apiUrl('api/v1.0/users/get_session_user'), () =>
                         HttpResponse.json({
                             ...mockUser,
                             status: { message: 'Away', effects: { [wireKey]: effect } },
@@ -195,7 +195,7 @@ describe('UsersClient status', () => {
 
         it('parses a status whose effects object is empty', async () => {
             server.use(
-                http.get(apiUrl('api/v1/users/get_session_user'), () =>
+                http.get(apiUrl('api/v1.0/users/get_session_user'), () =>
                     HttpResponse.json({ ...mockUser, status: { message: 'Away', effects: {} } }),
                 ),
             )

@@ -31,7 +31,7 @@ const GetUnreadResponseSchema = z.object({
 })
 
 /**
- * Client for `/api/v1/conversations/`. `getOrCreate` requires an `id` (the
+ * Client for `/api/v1.0/conversations/`. `getOrCreate` requires an `id` (the
  * SDK auto-generates one for new conversations); the backend dedupes on
  * `userIds`, so an existing conversation will be returned with its own
  * already-assigned `id` and your generated one is silently dropped.

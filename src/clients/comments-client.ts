@@ -20,7 +20,7 @@ import { BaseClient } from './base-client'
 export const CommentListSchema = z.array(CommentSchema)
 
 /**
- * Client for `/api/v1/comments/`. The SDK auto-generates the comment `id`
+ * Client for `/api/v1.0/comments/`. The SDK auto-generates the comment `id`
  * on `createComment` when the caller doesn't supply one.
  */
 export class CommentsClient extends BaseClient {

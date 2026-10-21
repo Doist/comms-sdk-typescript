@@ -5,7 +5,7 @@ import { TEST_API_TOKEN } from '../testUtils/test-defaults'
 import { generateId, isValidUuidV7Base58 } from '../utils/uuidv7'
 import { AttachmentsClient, ImageReadResultSchema } from './attachments-client'
 
-const UPLOAD_URL = apiUrl('api/v1/attachments/upload')
+const UPLOAD_URL = apiUrl('api/v1.0/attachments/upload')
 
 const mockAttachmentResponse = {
     attachment_id: 'abc-123',
@@ -57,7 +57,7 @@ describe('AttachmentsClient', () => {
             let requestedPath: string | null = null
             let requestedSearch: string | null = null
             server.use(
-                http.get(apiUrl(`api/v1/files/image/${threadId}/${uploadId}`), ({ request }) => {
+                http.get(apiUrl(`api/v1.0/files/image/${threadId}/${uploadId}`), ({ request }) => {
                     authorization = request.headers.get('Authorization')
                     const url = new URL(request.url)
                     requestedPath = url.pathname
@@ -77,14 +77,14 @@ describe('AttachmentsClient', () => {
                 byteLength: 3,
             })
             expect(authorization).toBe(`Bearer ${TEST_API_TOKEN}`)
-            expect(requestedPath).toBe(`/api/v1/files/image/${threadId}/${uploadId}`)
+            expect(requestedPath).toBe(`/api/v1.0/files/image/${threadId}/${uploadId}`)
             expect(requestedSearch).toBe('')
         })
 
         it('rejects invalid upload IDs before making a request', async () => {
             let handlerCalled = false
             server.use(
-                http.get(apiUrl('api/v1/files/image/*'), () => {
+                http.get(apiUrl('api/v1.0/files/image/*'), () => {
                     handlerCalled = true
                     return HttpResponse.json({})
                 }),
@@ -98,7 +98,7 @@ describe('AttachmentsClient', () => {
         it('rejects invalid thread IDs before making a request', async () => {
             let handlerCalled = false
             server.use(
-                http.get(apiUrl('api/v1/files/image/*'), () => {
+                http.get(apiUrl('api/v1.0/files/image/*'), () => {
                     handlerCalled = true
                     return HttpResponse.json({})
                 }),
@@ -113,7 +113,7 @@ describe('AttachmentsClient', () => {
             const uploadId = generateId()
             const threadId = generateId()
             server.use(
-                http.get(apiUrl(`api/v1/files/image/${threadId}/${uploadId}`), () =>
+                http.get(apiUrl(`api/v1.0/files/image/${threadId}/${uploadId}`), () =>
                     HttpResponse.json({
                         mime_type: 'text/html',
                         data_base64: 'AQID',
@@ -129,7 +129,7 @@ describe('AttachmentsClient', () => {
             const uploadId = generateId()
             const threadId = generateId()
             server.use(
-                http.get(apiUrl(`api/v1/files/image/${threadId}/${uploadId}`), () =>
+                http.get(apiUrl(`api/v1.0/files/image/${threadId}/${uploadId}`), () =>
                     HttpResponse.json({
                         mime_type: 'image/png',
                         data_base64: 'A',

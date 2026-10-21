@@ -100,7 +100,7 @@ describe('CommentsClient — baseUrl in entity links', () => {
         const responseChannelId = '7YpL3oZ4kZ9vP7Q1tR2sX3y'
         const responseCommentId = '7YpL3oZ4kZ9vP7Q1tR2sX41'
         server.use(
-            http.post(`${customBase}/api/v1/comments/add`, () =>
+            http.post(`${customBase}/api/v1.0/comments/add`, () =>
                 HttpResponse.json({
                     id: responseCommentId,
                     thread_id: TEST_THREAD_ID,
@@ -129,7 +129,7 @@ describe('CommentsClient — baseUrl in entity links', () => {
         const responseChannelId = '7YpL3oZ4kZ9vP7Q1tR2sX3y'
         const responseCommentId = '7YpL3oZ4kZ9vP7Q1tR2sX41'
         server.use(
-            http.post('https://comms.example.com/api/v1/comments/add', () =>
+            http.post('https://comms.example.com/api/v1.0/comments/add', () =>
                 HttpResponse.json({
                     id: responseCommentId,
                     thread_id: TEST_THREAD_ID,

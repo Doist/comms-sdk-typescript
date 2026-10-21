@@ -17,7 +17,7 @@ import { mergeHeaders, resolveCustomHeaders } from './headers'
 export type UploadFile = Blob | Uint8Array
 
 type UploadMultipartFileArgs = {
-    /** Base API URI with trailing slash, e.g. `https://comms.todoist.com/api/v1/`. */
+    /** Base API URI with trailing slash, e.g. `https://comms.todoist.com/api/v1.0/`. */
     baseUrl: string
     /** API token used for `Authorization: Bearer`. */
     authToken: string
