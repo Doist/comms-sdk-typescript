@@ -1,3 +1,9 @@
+## [3.7.0](https://github.com/Doist/comms-sdk-typescript/compare/v3.6.0...v3.7.0) (2026-10-21)
+
+### Features
+
+* merge custom headers case-insensitively and accept a function ([#105](https://github.com/Doist/comms-sdk-typescript/issues/105)) ([3343bfc](https://github.com/Doist/comms-sdk-typescript/commit/3343bfc6c47ecff1add316c5e14dbc363416c5c8))
+
 ## [3.6.0](https://github.com/Doist/comms-sdk-typescript/compare/v3.5.0...v3.6.0) (2026-10-21)
 
 ### Features
