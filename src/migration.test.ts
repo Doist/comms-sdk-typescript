@@ -5,7 +5,7 @@ import { CommsRequestError } from './types/errors'
 
 const MIGRATION_URL = 'https://twist.com/api/comms_migration/fetch_new_url'
 const OLD_URL = 'https://twist.com/a/123/ch/456/t/789'
-const NEW_URL = 'https://comms.todoist.com/api/v1/channels/456/threads/789'
+const NEW_URL = 'https://comms.todoist.com/api/v1.0/channels/456/threads/789'
 const TWIST_TOKEN = 'twist-token-abc'
 
 describe('migration', () => {
@@ -83,7 +83,7 @@ describe('migration', () => {
         it('should resolve mixed success/failure in input order without aborting', async () => {
             const goodUrl = 'https://twist.com/a/1/ch/2/t/3'
             const badUrl = 'https://twist.com/bad'
-            const mappedUrl = 'https://comms.todoist.com/api/v1/channels/2/threads/3'
+            const mappedUrl = 'https://comms.todoist.com/api/v1.0/channels/2/threads/3'
 
             server.use(
                 http.post(MIGRATION_URL, async ({ request }) => {

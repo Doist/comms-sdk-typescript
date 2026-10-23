@@ -14,15 +14,22 @@ import { WorkspaceUsersClient } from './clients/workspace-users-client'
 import { WorkspacesClient } from './clients/workspaces-client'
 import { closeDefaultDispatcher } from './transport/http-dispatcher'
 import type { ApiVersion } from './types/api-version'
-import type { CustomFetch } from './types/http'
+import type { CustomFetch, CustomHeaders } from './types/http'
 
 export type CommsApiOptions = {
     /** Optional custom API base URL. If not provided, defaults to Comms' standard API endpoint. */
     baseUrl?: string
-    /** Optional API version. Defaults to 'v1'. */
+    /** Optional API version. Defaults to 'v1.0'. */
     version?: ApiVersion
     /** Optional custom fetch implementation for cross-platform compatibility (e.g., Obsidian, React Native, Electron). */
     customFetch?: CustomFetch
+    /**
+     * Optional headers sent with every request, e.g. `{ 'Doist-Platform': 'cli' }` for client
+     * attribution. Pass a function instead to compute them per request, e.g. a fresh request ID;
+     * it is called once per request and retries reuse its result. Cannot override `Authorization`
+     * or `X-Request-Id`.
+     */
+    headers?: CustomHeaders
 }
 
 /**
@@ -64,6 +71,7 @@ export class CommsApi {
             baseUrl: options?.baseUrl,
             version: options?.version,
             customFetch: options?.customFetch,
+            headers: options?.headers,
         }
 
         this.users = new UsersClient(clientConfig)

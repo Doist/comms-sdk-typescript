@@ -12,7 +12,7 @@ type InboxCountResponse = {
     version: number
 }
 
-/** Client for `/api/v1/inbox/`. */
+/** Client for `/api/v1.0/inbox/`. */
 export class InboxClient extends BaseClient {
     private readonly linkBaseUrl = this.getLinkBaseUrl()
     // Reuse the shared singletons when no custom base is configured.
@@ -63,6 +63,7 @@ export class InboxClient extends BaseClient {
             relativePath: `${ENDPOINT_INBOX}/get`,
             apiToken: this.apiToken,
             payload: params,
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then((response) => this.inboxThreadListSchema.parse(response.data))
     }
@@ -86,6 +87,7 @@ export class InboxClient extends BaseClient {
             relativePath: `${ENDPOINT_INBOX}/get_count`,
             apiToken: this.apiToken,
             payload: { workspace_id: workspaceId },
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then((response) => response.data.data)
     }
@@ -107,6 +109,7 @@ export class InboxClient extends BaseClient {
             relativePath: `${ENDPOINT_INBOX}/archive`,
             apiToken: this.apiToken,
             payload: { id },
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then(() => undefined)
     }
@@ -128,6 +131,7 @@ export class InboxClient extends BaseClient {
             relativePath: `${ENDPOINT_INBOX}/unarchive`,
             apiToken: this.apiToken,
             payload: { id },
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then(() => undefined)
     }
@@ -149,6 +153,7 @@ export class InboxClient extends BaseClient {
             relativePath: `${ENDPOINT_INBOX}/mark_all_read`,
             apiToken: this.apiToken,
             payload: { workspace_id: workspaceId },
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then(() => undefined)
     }
@@ -180,6 +185,7 @@ export class InboxClient extends BaseClient {
             relativePath: `${ENDPOINT_INBOX}/archive_all`,
             apiToken: this.apiToken,
             payload: params,
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then(() => undefined)
     }

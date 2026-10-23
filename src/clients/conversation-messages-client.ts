@@ -19,7 +19,7 @@ import { BaseClient } from './base-client'
 export const ConversationMessageListSchema = z.array(ConversationMessageSchema)
 
 /**
- * Client for `/api/v1/conversation_messages/`. The SDK auto-generates the
+ * Client for `/api/v1.0/conversation_messages/`. The SDK auto-generates the
  * message `id` on `createMessage` when the caller doesn't supply one.
  */
 export class ConversationMessagesClient extends BaseClient {
@@ -64,6 +64,7 @@ export class ConversationMessagesClient extends BaseClient {
             relativePath: `${ENDPOINT_CONVERSATION_MESSAGES}/get`,
             apiToken: this.apiToken,
             payload: params,
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then((response) => this.messageListSchema.parse(response.data))
     }
@@ -170,6 +171,7 @@ export class ConversationMessagesClient extends BaseClient {
             relativePath: `${ENDPOINT_CONVERSATION_MESSAGES}/${suffix}`,
             apiToken: this.apiToken,
             payload: params,
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then((response) => schema.parse(response.data))
     }

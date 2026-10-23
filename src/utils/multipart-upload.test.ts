@@ -1,4 +1,4 @@
-import { createServer, type Server } from 'node:http'
+import { createServer, type IncomingHttpHeaders, type Server } from 'node:http'
 import type { AddressInfo } from 'node:net'
 import { afterAll, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest'
 import { uploadMultipartFile } from './multipart-upload'
@@ -16,7 +16,7 @@ vi.unmock('../transport/http-dispatcher')
 
 let httpServer: Server
 let baseUrl: string
-let received: { contentType: string; body: string } | undefined
+let received: { contentType: string; headers: IncomingHttpHeaders; body: string } | undefined
 
 beforeAll(async () => {
     httpServer = await new Promise<Server>((resolve) => {
@@ -26,6 +26,7 @@ beforeAll(async () => {
             request.on('end', () => {
                 received = {
                     contentType: request.headers['content-type'] ?? '',
+                    headers: request.headers,
                     body: Buffer.concat(chunks).toString('latin1'),
                 }
                 response.writeHead(200, { 'content-type': 'application/json' })
@@ -62,6 +63,29 @@ function boundary() {
 }
 
 describe('uploadMultipartFile over the real transport', () => {
+    test('sends custom headers without letting them replace the SDK’s own in any case', async () => {
+        await upload({
+            requestId: 'req-123',
+            headers: {
+                'Doist-Platform': 'cli',
+                authorization: 'Bearer forged',
+                'x-request-id': 'forged',
+                'content-type': 'application/json',
+            },
+        })
+
+        expect(received?.headers['doist-platform']).toBe('cli')
+        expect(received?.headers['authorization']).toBe('Bearer test-token')
+        expect(received?.headers['x-request-id']).toBe('req-123')
+        expect(received?.contentType).toMatch(/^multipart\/form-data; boundary=/)
+    })
+
+    test('sends the result of a headers function', async () => {
+        await upload({ headers: () => ({ 'Doist-Platform': 'cli' }) })
+
+        expect(received?.headers['doist-platform']).toBe('cli')
+    })
+
     test('encodes a Blob into a body undici’s fetch can send', async () => {
         const result = await upload()
 

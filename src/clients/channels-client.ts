@@ -23,7 +23,7 @@ import { BaseClient } from './base-client'
 export const ChannelListSchema = z.array(ChannelSchema)
 
 /**
- * Client for `/api/v1/channels/`. The SDK auto-generates an `id` on
+ * Client for `/api/v1.0/channels/`. The SDK auto-generates an `id` on
  * `createChannel` when the caller doesn't supply one — pass your own `id`
  * to keep an optimistic-UI ID stable through the round-trip.
  */
@@ -58,6 +58,7 @@ export class ChannelsClient extends BaseClient {
             relativePath: `${ENDPOINT_CHANNELS}/get`,
             apiToken: this.apiToken,
             payload: args,
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then((response) => this.channelListSchema.parse(response.data))
     }
@@ -243,6 +244,7 @@ export class ChannelsClient extends BaseClient {
             relativePath: `${ENDPOINT_CHANNELS}/${suffix}`,
             apiToken: this.apiToken,
             payload: params,
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then((response) => schema.parse(response.data))
     }

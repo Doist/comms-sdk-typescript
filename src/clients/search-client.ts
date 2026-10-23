@@ -53,6 +53,7 @@ export class SearchClient extends BaseClient {
             relativePath: ENDPOINT_SEARCH,
             apiToken: this.apiToken,
             payload: params,
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then((response) => ({
             ...response.data,
@@ -92,6 +93,7 @@ export class SearchClient extends BaseClient {
             relativePath: `${ENDPOINT_SEARCH}/thread`,
             apiToken: this.apiToken,
             payload: params,
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then((response) => response.data)
     }
@@ -128,6 +130,7 @@ export class SearchClient extends BaseClient {
             relativePath: `${ENDPOINT_SEARCH}/conversation`,
             apiToken: this.apiToken,
             payload: params,
+            headers: this.headers,
             customFetch: this.customFetch,
         }).then((response) => response.data)
     }

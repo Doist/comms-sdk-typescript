@@ -7,6 +7,13 @@ export type HttpResponse<T = unknown> = {
     headers: Record<string, string>
 }
 
+/**
+ * Extra headers sent with every API request: either a fixed record, or a function
+ * the SDK calls once per request (retries reuse its result) for values that change
+ * between requests, such as a per-request ID or the command currently running.
+ */
+export type CustomHeaders = Record<string, string> | (() => Record<string, string>)
+
 export type RequestConfig = {
     baseURL?: string
     headers?: Record<string, string>

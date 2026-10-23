@@ -4,6 +4,54 @@
 
 * **channels:** support `useDefaultRecipients` in create and update requests
 
+## [3.8.1](https://github.com/Doist/comms-sdk-typescript/compare/v3.8.0...v3.8.1) (2026-10-21)
+
+### Bug Fixes
+
+* derive header-test fixture paths from the default API version ([#112](https://github.com/Doist/comms-sdk-typescript/issues/112)) ([cd01516](https://github.com/Doist/comms-sdk-typescript/commit/cd01516f820774016cf403c30cd2038270f8035d))
+
+## [3.8.0](https://github.com/Doist/comms-sdk-typescript/compare/v3.7.0...v3.8.0) (2026-10-21)
+
+### Features
+
+* change default API version from v1 to v1.0. ([#107](https://github.com/Doist/comms-sdk-typescript/issues/107)) ([aa5f67e](https://github.com/Doist/comms-sdk-typescript/commit/aa5f67ef75a21bfcf6783ae3973d3815dfab182c))
+
+## [3.7.0](https://github.com/Doist/comms-sdk-typescript/compare/v3.6.0...v3.7.0) (2026-10-21)
+
+### Features
+
+* merge custom headers case-insensitively and accept a function ([#105](https://github.com/Doist/comms-sdk-typescript/issues/105)) ([3343bfc](https://github.com/Doist/comms-sdk-typescript/commit/3343bfc6c47ecff1add316c5e14dbc363416c5c8))
+
+## [3.6.0](https://github.com/Doist/comms-sdk-typescript/compare/v3.5.0...v3.6.0) (2026-10-21)
+
+### Features
+
+* allow custom default headers on CommsApi ([#104](https://github.com/Doist/comms-sdk-typescript/issues/104)) ([cdf1a5c](https://github.com/Doist/comms-sdk-typescript/commit/cdf1a5cf7b1f3774cfe3880a3212bf1110d24c9c))
+
+## [3.5.0](https://github.com/Doist/comms-sdk-typescript/compare/v3.4.1...v3.5.0) (2026-10-17)
+
+### Features
+
+* **users:** add the pause_activity status effect ([#103](https://github.com/Doist/comms-sdk-typescript/issues/103)) ([5364865](https://github.com/Doist/comms-sdk-typescript/commit/53648659ac27a6eec2ebe113429a96d8d91cef54))
+
+## [3.4.1](https://github.com/Doist/comms-sdk-typescript/compare/v3.4.0...v3.4.1) (2026-10-14)
+
+### Bug Fixes
+
+* accept a pause_notifications effect without a scope ([#102](https://github.com/Doist/comms-sdk-typescript/issues/102)) ([d2ef405](https://github.com/Doist/comms-sdk-typescript/commit/d2ef405244c5f7d0bc0546b8931f66525314b304))
+
+## [3.4.0](https://github.com/Doist/comms-sdk-typescript/compare/v3.3.1...v3.4.0) (2026-10-13)
+
+### Features
+
+* **users:** add the shared user status ([#100](https://github.com/Doist/comms-sdk-typescript/issues/100)) ([b6195bf](https://github.com/Doist/comms-sdk-typescript/commit/b6195bf24af7119e40cd64aaef18feac8e681e88))
+
+## [3.3.1](https://github.com/Doist/comms-sdk-typescript/compare/v3.3.0...v3.3.1) (2026-10-06)
+
+### Bug Fixes
+
+* move undici to 8.11.2 so a graceful HTTP/2 GOAWAY no longer fails requests ([#92](https://github.com/Doist/comms-sdk-typescript/issues/92)) ([7dac6b1](https://github.com/Doist/comms-sdk-typescript/commit/7dac6b159dd5e5a2bd69e064f9f3184cb7dd2789))
+
 ## [3.3.0](https://github.com/Doist/comms-sdk-typescript/compare/v3.2.0...v3.3.0) (2026-10-01)
 
 ### Features
