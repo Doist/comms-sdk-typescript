@@ -1,3 +1,9 @@
+## [3.9.0](https://github.com/Doist/comms-sdk-typescript/compare/v3.8.1...v3.9.0) (2026-10-23)
+
+### Features
+
+* **channels:** support default audience request flag ([#91](https://github.com/Doist/comms-sdk-typescript/issues/91)) ([0207cf1](https://github.com/Doist/comms-sdk-typescript/commit/0207cf1c2dbc07422043dacdbd1ab65c676166c8))
+
 ## [3.8.1](https://github.com/Doist/comms-sdk-typescript/compare/v3.8.0...v3.8.1) (2026-10-21)
 
 ### Bug Fixes
