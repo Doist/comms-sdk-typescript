@@ -1,9 +1,3 @@
-## Unreleased
-
-### Features
-
-* **channels:** support `useDefaultRecipients` in create and update requests
-
 ## [3.8.1](https://github.com/Doist/comms-sdk-typescript/compare/v3.8.0...v3.8.1) (2026-10-21)
 
 ### Bug Fixes
