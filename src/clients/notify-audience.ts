@@ -32,7 +32,7 @@ function collectMarkerOffenses(
  *
  * When `notifyAudience` is set it is stripped and its sentinel is appended to
  * `groups`; the backend only understands the marker in `groups`. When it is
- * unset the params are returned unchanged, preserving any explicit
+ * unset only the empty flag is dropped, preserving any explicit
  * `groups` / `directGroupMentions` (including a `null`) on the wire.
  */
 export function applyNotifyAudience<T extends NotifyAudienceParams>(
@@ -53,7 +53,8 @@ export function applyNotifyAudience<T extends NotifyAudienceParams>(
     }
 
     if (params.notifyAudience == null) {
-        return params as Omit<T, 'notifyAudience'>
+        const { notifyAudience: _unset, ...rest } = params
+        return rest
     }
 
     if (!isNotifyAudience(params.notifyAudience)) {
