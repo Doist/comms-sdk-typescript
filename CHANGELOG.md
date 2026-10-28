@@ -1,3 +1,9 @@
+## [3.9.1](https://github.com/Doist/comms-sdk-typescript/compare/v3.9.0...v3.9.1) (2026-10-28)
+
+### Bug Fixes
+
+* support partial Status updates ([#114](https://github.com/Doist/comms-sdk-typescript/issues/114)) ([0249b54](https://github.com/Doist/comms-sdk-typescript/commit/0249b54e52045ec1523163fc6c1fa56194770083))
+
 ## [3.9.0](https://github.com/Doist/comms-sdk-typescript/compare/v3.8.1...v3.9.0) (2026-10-23)
 
 ### Features
