@@ -210,16 +210,16 @@ export class UsersClient extends BaseClient {
     }
 
     /**
-     * Sets the shared status of the session user, replacing any current one.
+     * Creates or partially updates the session user's shared status.
      * The status belongs to the Todoist account, so it is shared with Todoist.
      * Requires the `user:write` scope.
      *
      * @param args - The status to set.
-     * @param args.message - 1 to 80 characters once trimmed.
-     * @param args.emoji - Optional emoji.
-     * @param args.activeUntil - Optional expiry in the future (`Date` or ISO 8601 string).
-     * @param args.effects - Optional effects, e.g. `{ pauseNotifications: {} }` to hold back
-     *   Comms notifications while the status is active.
+     * @param args.message - 1 to 80 characters once trimmed. Required when creating a status.
+     * @param args.emoji - Emoji to set; null removes it, omission preserves it.
+     * @param args.activeUntil - Future expiry (`Date` or ISO string); null removes it, omission preserves it.
+     * @param args.effects - Merge supplied effects. Omission or {} preserves effects; null clears all.
+     *   An individual effect set to null is removed; {} preserves its configuration or enables defaults.
      * @returns The updated user object.
      *
      * @example

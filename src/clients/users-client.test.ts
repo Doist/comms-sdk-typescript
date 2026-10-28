@@ -97,6 +97,38 @@ describe('UsersClient status', () => {
             })
         })
 
+        it.each([
+            {
+                args: { emoji: null, activeUntil: null },
+                expected: { emoji: null, active_until: null },
+            },
+            {
+                args: { effects: { pauseNotifications: null, pauseActivity: {} } },
+                expected: { effects: { pause_notifications: null, pause_activity: {} } },
+            },
+            {
+                args: { effects: { pauseNotifications: {}, pauseActivity: null } },
+                expected: { effects: { pause_notifications: {}, pause_activity: null } },
+            },
+            { args: { effects: null }, expected: { effects: null } },
+            {
+                args: { effects: { pauseNotifications: { scope: {} } } },
+                expected: { effects: { pause_notifications: { scope: {} } } },
+            },
+        ])('preserves partial-update values on the wire: $args', async ({ args, expected }) => {
+            let body: unknown
+            server.use(
+                http.post(apiUrl('api/v1.0/users/set_status'), async ({ request }) => {
+                    body = await request.json()
+                    return HttpResponse.json(mockUser)
+                }),
+            )
+
+            await client.setStatus(args)
+
+            expect(body).toEqual(expected)
+        })
+
         it('sends only the message when nothing else is given', async () => {
             let body: unknown
             server.use(
