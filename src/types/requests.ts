@@ -174,20 +174,22 @@ export type UpdateUserArgs = {
     theme?: number | string
 }
 
-type StatusEffectArgs = { scope?: { mode: 'all' } }
+type StatusEffectArgs = { scope?: { mode?: 'all' } }
 
+/** Only supplied fields change. Null removes optional fields and effects. */
 export type SetStatusArgs = {
-    /** 1 to 80 characters once trimmed. */
-    message: string
+    /** 1 to 80 characters once trimmed. Required when creating a status; omission preserves it. */
+    message?: string
     emoji?: string | null
-    /** When the status ends. Must be in the future. A `Date` is sent as an ISO 8601 string. */
+    /** Must be in the future; null removes expiry, omission preserves it. Dates are sent as ISO strings. */
     activeUntil?: Date | string | null
+    /** Supplied effects are merged; null clears all effects, omission or {} preserves them. */
     effects?: {
-        /** Holds back Comms notifications while the status is active. They are not sent later. */
-        pauseNotifications?: StatusEffectArgs
-        /** Meant to pause Karma and streaks while the status is active. Comms drops it until Doist/comms-backend#1081 ships. */
-        pauseActivity?: StatusEffectArgs
-    }
+        /** Holds back Comms notifications. Null removes it; {} preserves its configuration or enables it with defaults. */
+        pauseNotifications?: StatusEffectArgs | null
+        /** Pauses Todoist Karma and streaks. Null removes it; {} preserves its configuration or enables it with defaults. */
+        pauseActivity?: StatusEffectArgs | null
+    } | null
 }
 
 // Search
