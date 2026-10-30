@@ -1,3 +1,10 @@
+## [3.10.0](https://github.com/Doist/comms-sdk-typescript/compare/v3.9.1...v3.10.0) (2026-10-30)
+
+### Features
+
+* add getConversationTitle ([#122](https://github.com/Doist/comms-sdk-typescript/issues/122)) ([32579af](https://github.com/Doist/comms-sdk-typescript/commit/32579afdb3be3cc4bd60482ecb483ffeb4b01adf))
+* add getDefaultReplyRecipients ([#123](https://github.com/Doist/comms-sdk-typescript/issues/123)) ([cb24847](https://github.com/Doist/comms-sdk-typescript/commit/cb24847f78b52a6e9d725922a8e382f6b3df7971))
+
 ## [3.9.1](https://github.com/Doist/comms-sdk-typescript/compare/v3.9.0...v3.9.1) (2026-10-28)
 
 ### Bug Fixes
