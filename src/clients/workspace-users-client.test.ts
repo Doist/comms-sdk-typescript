@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { apiUrl } from '../testUtils/msw-handlers'
 import { server } from '../testUtils/msw-setup'
 import { mockWorkspaceUser, TEST_API_TOKEN } from '../testUtils/test-defaults'
+import { CommsRequestError } from '../types/errors'
 import { WorkspaceUsersClient } from './workspace-users-client'
 
 const removedWorkspaceUser = {
@@ -82,9 +83,10 @@ describe('WorkspaceUsersClient', () => {
             )
             const userIds = Array.from({ length: 101 }, (_, i) => i + 1)
 
-            await expect(client.getUsersByIds({ workspaceId: 123, userIds })).rejects.toThrow(
-                'Request failed with status 403',
-            )
+            const error = await client.getUsersByIds({ workspaceId: 123, userIds }).catch((e) => e)
+
+            expect(error).toBeInstanceOf(CommsRequestError)
+            expect(error.httpStatusCode).toBe(403)
             expect(requests).toBe(2)
         })
     })
