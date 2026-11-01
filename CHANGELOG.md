@@ -1,3 +1,9 @@
+## [3.11.0](https://github.com/Doist/comms-sdk-typescript/compare/v3.10.0...v3.11.0) (2026-11-01)
+
+### Features
+
+* add getUsersByIds for batched workspace user lookups ([#125](https://github.com/Doist/comms-sdk-typescript/issues/125)) ([fefd69b](https://github.com/Doist/comms-sdk-typescript/commit/fefd69b57a9bd21ffd1ccf38db368d3d3f7991e2))
+
 ## [3.10.0](https://github.com/Doist/comms-sdk-typescript/compare/v3.9.1...v3.10.0) (2026-10-30)
 
 ### Features
