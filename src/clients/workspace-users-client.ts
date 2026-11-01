@@ -115,6 +115,7 @@ export class WorkspaceUsersClient extends BaseClient {
      * @returns The users keyed by id, each reduced to the restricted shape when
      * the viewer may not see the full profile. An id the workspace has no record
      * of maps to `null`, where {@link getUserById} would fail.
+     * @throws If any request fails, discarding the users already loaded.
      *
      * @example
      * ```typescript

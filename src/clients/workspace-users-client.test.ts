@@ -70,6 +70,23 @@ describe('WorkspaceUsersClient', () => {
             expect(users[150]?.id).toBe(150)
             expect(none).toEqual({})
         })
+
+        it('rejects when a later chunk fails', async () => {
+            let requests = 0
+            server.use(
+                http.get(apiUrl('api/v1.0/workspace_users/get_by_ids'), () =>
+                    ++requests === 1
+                        ? HttpResponse.json({})
+                        : HttpResponse.json({ error: 'forbidden' }, { status: 403 }),
+                ),
+            )
+            const userIds = Array.from({ length: 101 }, (_, i) => i + 1)
+
+            await expect(client.getUsersByIds({ workspaceId: 123, userIds })).rejects.toThrow(
+                'Request failed with status 403',
+            )
+            expect(requests).toBe(2)
+        })
     })
 
     describe('getWorkspaceUsers', () => {
