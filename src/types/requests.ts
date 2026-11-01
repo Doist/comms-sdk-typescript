@@ -514,6 +514,11 @@ export type GetUserByIdArgs = {
     userId: number
 }
 
+export type GetUsersByIdsArgs = {
+    workspaceId: number
+    userIds: number[]
+}
+
 export type GetUserByEmailArgs = {
     workspaceId: number
     email: string
