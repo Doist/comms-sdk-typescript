@@ -11,9 +11,13 @@ import type {
     GetUserByIdArgs,
     GetUserInfoArgs,
     GetUserLocalTimeArgs,
+    GetUsersByIdsArgs,
     GetWorkspaceUsersArgs,
 } from '../types/requests'
 import { BaseClient } from './base-client'
+
+// Keeps each request's `user_ids` query string well inside URL length limits.
+const USER_IDS_PER_REQUEST = 100
 
 /**
  * Client for `/api/v1.0/workspace_users/`. The backend's `add` endpoint
@@ -99,6 +103,48 @@ export class WorkspaceUsersClient extends BaseClient {
             headers: this.headers,
             customFetch: this.customFetch,
         }).then((response) => VisibleWorkspaceUserSchema.parse(response.data))
+    }
+
+    /**
+     * Gets several users by id, one request per 100 ids. Prefer it over
+     * calling {@link getUserById} once per user.
+     *
+     * @param args - The arguments for getting users by ID.
+     * @param args.workspaceId - The workspace ID.
+     * @param args.userIds - The users' IDs. Duplicates are requested once.
+     * @returns The users keyed by id, each reduced to the restricted shape when
+     * the viewer may not see the full profile. An id the workspace has no record
+     * of maps to `null`, where {@link getUserById} would fail.
+     * @throws If any request fails, discarding the users already loaded.
+     *
+     * @example
+     * ```typescript
+     * const users = await api.workspaceUsers.getUsersByIds({ workspaceId: 123, userIds: [456, 789] })
+     * console.log(users[456]?.fullName ?? 'Unknown user')
+     * ```
+     */
+    async getUsersByIds(
+        args: GetUsersByIdsArgs,
+    ): Promise<Record<number, VisibleWorkspaceUser | null>> {
+        const userIds = [...new Set(args.userIds)]
+        const users: Record<number, VisibleWorkspaceUser | null> = {}
+        // Sequential, so a huge id list costs time rather than a burst of requests.
+        for (let i = 0; i < userIds.length; i += USER_IDS_PER_REQUEST) {
+            const chunk = userIds.slice(i, i + USER_IDS_PER_REQUEST)
+            const response = await request<Record<string, unknown>>({
+                httpMethod: 'GET',
+                baseUri: this.getBaseUri(),
+                relativePath: 'workspace_users/get_by_ids',
+                apiToken: this.apiToken,
+                payload: { workspace_id: args.workspaceId, user_ids: JSON.stringify(chunk) },
+                headers: this.headers,
+                customFetch: this.customFetch,
+            })
+            for (const [id, user] of Object.entries(response.data)) {
+                users[Number(id)] = VisibleWorkspaceUserSchema.nullable().parse(user)
+            }
+        }
+        return users
     }
 
     /**
