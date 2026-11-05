@@ -1,6 +1,7 @@
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { readJson } from './state.ts'
+import { listSome } from './text.ts'
 import type { Step } from './verify.ts'
 
 // Each step runs a package.json script, so verify and CI share one set of commands.
@@ -48,17 +49,23 @@ type PackageJson = {
     engines?: { node?: string }
     dependencies?: Record<string, string>
     devDependencies?: Record<string, string>
+    optionalDependencies?: Record<string, string>
 }
 type Lockfile = {
     packages?: Record<
         string,
         {
             version?: string
+            optional?: boolean
+            devOptional?: boolean
             dependencies?: Record<string, string>
             devDependencies?: Record<string, string>
+            optionalDependencies?: Record<string, string>
         }
     >
 }
+
+const MAX_LISTED = 10
 
 /** Problems that would make the checks fail for reasons unrelated to the change. */
 export function preflight(root: string, nodeVersion = process.versions.node): string[] {
@@ -86,7 +93,7 @@ export function preflight(root: string, nodeVersion = process.versions.node): st
     // before any check runs.
     const manifest = lock.packages[''] ?? {}
     const disagree: string[] = []
-    for (const field of ['dependencies', 'devDependencies'] as const) {
+    for (const field of ['dependencies', 'devDependencies', 'optionalDependencies'] as const) {
         const wanted = pkg?.[field] ?? {}
         const locked = manifest[field] ?? {}
         for (const name of new Set([...Object.keys(wanted), ...Object.keys(locked)])) {
@@ -104,23 +111,30 @@ export function preflight(root: string, nodeVersion = process.versions.node): st
         return problems
     }
 
+    // npm records the tree it installed in node_modules/.package-lock.json. Comparing every
+    // package with the lockfile catches a transitive dependency that changed while every direct one
+    // kept its version. Optional packages for other platforms are never installed.
+    const installed = readJson<Lockfile>(join(root, 'node_modules/.package-lock.json'))?.packages
+    if (!installed) {
+        problems.push('node_modules has no record of what npm installed. Run `npm ci`.')
+        return problems
+    }
     const stale: string[] = []
-    for (const name of Object.keys({ ...pkg?.dependencies, ...pkg?.devDependencies })) {
-        const locked = lock.packages[`node_modules/${name}`]?.version
-        if (!locked) {
-            stale.push(`${name} is not in the lockfile`)
-            continue
-        }
-        const installed = readJson<{ version?: string }>(
-            join(root, 'node_modules', name, 'package.json'),
-        )?.version
-        if (installed !== locked) {
-            stale.push(`${name} ${installed ?? 'missing'} (lockfile: ${locked})`)
+    for (const [path, entry] of Object.entries(lock.packages)) {
+        if (!path.startsWith('node_modules/')) continue
+        const name = path.slice('node_modules/'.length)
+        const version = installed[path]?.version
+        if (version === undefined) {
+            if (!entry.optional && !entry.devOptional) {
+                stale.push(`${name} missing (lockfile: ${entry.version})`)
+            }
+        } else if (version !== entry.version) {
+            stale.push(`${name} ${version} (lockfile: ${entry.version})`)
         }
     }
     if (stale.length > 0) {
         problems.push(
-            `node_modules does not match package-lock.json: ${stale.join(', ')}. Run \`npm ci\`.`,
+            `node_modules does not match package-lock.json: ${listSome(stale, MAX_LISTED)}. Run \`npm ci\`.`,
         )
     }
     return problems
