@@ -26,8 +26,12 @@ export function createReviewWorktree(root: string, target: string): void {
         '--dst-prefix=b/',
     ])
     if (!diff.ok) throw new Error(`git diff failed: ${diff.stderr.trim()}`)
-    const untracked = git(root, ['ls-files', '-z', '--others', '--exclude-standard'])
-    if (!untracked.ok) throw new Error(`git ls-files failed: ${untracked.stderr.trim()}`)
+    const listed = git(root, ['ls-files', '-z', '--others', '--exclude-standard'])
+    if (!listed.ok) throw new Error(`git ls-files failed: ${listed.stderr.trim()}`)
+    // git lists an untracked nested repository, such as an earlier review worktree or a clone, as
+    // `dir/`. It is not part of the change, and copying it whole would bring along what its own
+    // .gitignore keeps out: node_modules, build output, .env.
+    const untracked = listed.stdout.split('\0').filter((path) => path && !path.endsWith('/'))
 
     const added = git(root, ['worktree', 'add', '--quiet', '--detach', target, 'HEAD'])
     if (!added.ok) throw new Error(`git worktree add failed: ${added.stderr.trim()}`)
@@ -37,7 +41,7 @@ export function createReviewWorktree(root: string, target: string): void {
             const applied = git(target, ['apply', '--whitespace=nowarn'], { input: diff.stdout })
             if (!applied.ok) throw new Error(`git apply failed: ${applied.stderr.trim()}`)
         }
-        for (const path of untracked.stdout.split('\0').filter(Boolean)) {
+        for (const path of untracked) {
             mkdirSync(dirname(join(target, path)), { recursive: true })
             // verbatimSymlinks keeps a relative link relative, instead of pointing it back into
             // the original checkout.

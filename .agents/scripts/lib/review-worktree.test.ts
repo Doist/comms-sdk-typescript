@@ -67,6 +67,26 @@ it('works with a target inside the checkout, without copying it into itself', ()
     expect(existsSync(join(inside, 'review-copy'))).toBe(false)
 })
 
+it('leaves out a nested repository, and the ignored files inside it', () => {
+    repo.write('src/new.ts', 'untracked\n')
+    repo.run('git', ['init', '--quiet', 'nested'])
+    repo.write('nested/.gitignore', '.env\n')
+    repo.write('nested/.env', 'TOKEN=secret\n')
+    repo.write('nested/code.ts', 'nested\n')
+    createReviewWorktree(repo.dir, target)
+    expect(readFileSync(join(target, 'src/new.ts'), 'utf8')).toBe('untracked\n')
+    expect(existsSync(join(target, 'nested'))).toBe(false)
+})
+
+it('leaves an earlier review worktree inside the checkout out of the next one', () => {
+    const first = join(repo.dir, 'review-a')
+    createReviewWorktree(repo.dir, first)
+    repo.write('review-a/node_modules/dep/index.js', 'installed\n')
+    createReviewWorktree(repo.dir, join(repo.dir, 'review-b'))
+    expect(existsSync(join(repo.dir, 'review-b/src/a.ts'))).toBe(true)
+    expect(existsSync(join(repo.dir, 'review-b/review-a'))).toBe(false)
+})
+
 it('applies the real change when a textconv driver is configured', () => {
     repo.write('.gitattributes', '*.txt diff=upper\n')
     repo.write('notes.txt', 'hello\n')
