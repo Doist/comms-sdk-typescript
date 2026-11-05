@@ -115,6 +115,8 @@ describe('fingerprintChanges', () => {
 })
 
 describe('changedCodePaths', () => {
+    useRepo()
+
     it('counts a deleted doc, but not an edited or added one', () => {
         const before = snapshot(repo.dir)
         repo.write('docs/guide.md', 'new\n')

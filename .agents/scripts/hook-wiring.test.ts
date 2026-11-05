@@ -1,6 +1,7 @@
-import { existsSync, readFileSync, rmSync } from 'node:fs'
+import { existsSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { readJson } from './lib/state.ts'
 import { createTempRepo, REPO_ROOT, type TempRepo } from './lib/test-repo.ts'
 
 // Runs the exact hook commands from each agent's config, the way the agent would, in a
@@ -30,8 +31,8 @@ const AGENTS = [
 ]
 
 function command(config: string, event: string): string {
-    const parsed = JSON.parse(readFileSync(join(REPO_ROOT, config), 'utf8')) as HookConfig
-    const commands = parsed.hooks[event]?.flatMap((entry) =>
+    const parsed = readJson<HookConfig>(join(REPO_ROOT, config))
+    const commands = parsed?.hooks[event]?.flatMap((entry) =>
         entry.hooks.map((hook) => hook.command),
     )
     expect(commands, `${config} ${event}`).toHaveLength(1)

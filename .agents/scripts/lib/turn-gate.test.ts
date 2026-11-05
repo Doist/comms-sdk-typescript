@@ -12,11 +12,7 @@ const session = 'session-1'
 const start = () => startTurn({ root: repo.dir, sessionId: session })
 const end = () => endTurn({ root: repo.dir, sessionId: session })
 const markVerified = () =>
-    writeVerified(repo.dir, {
-        fingerprint: codeFingerprint(snapshot(repo.dir)),
-        head: 'x',
-        at: 'now',
-    })
+    writeVerified(repo.dir, { fingerprint: codeFingerprint(snapshot(repo.dir)) })
 
 beforeEach(() => {
     repo = createTempRepo()
