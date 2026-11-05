@@ -7,20 +7,25 @@ This repository is set up so coding agents prove their work before they call it 
 1. **Git hooks** run for everyone, people and agents alike, on every commit and push.
 2. **`npm run verify`** runs every CI check locally and records a pass.
 3. **`AGENTS.md`** tells agents what done means. Claude Code reads it through `CLAUDE.md`; Codex and Cursor read it directly.
+4. **Skills** in `.agents/skills/` give step-by-step procedures for recurring work. They load only when a task needs them.
 
 ## Rules and what holds them
 
-| Rule                                          | Held by                                                              | Certainty                                |
-| --------------------------------------------- | -------------------------------------------------------------------- | ---------------------------------------- |
-| No commits on `main`                          | `pre-commit` and `commit-msg` → `.agents/scripts/branch-guard.sh`    | Enforced locally; `--no-verify` skips it |
-| No pushes to `main`                           | `pre-push` → `branch-guard.sh`; the "Protect default branch" ruleset | Enforced on GitHub                       |
-| Committed files are linted and formatted      | `pre-commit` (lefthook, staged files only); CI                       | Enforced in CI                           |
-| Type check passes before a commit             | `pre-commit`; CI                                                     | Enforced in CI                           |
-| Tests pass before a push                      | `pre-push`; CI                                                       | Enforced in CI                           |
-| Agent tooling never ships in the npm package  | `.agents/scripts/package-contents.test.ts`                           | Enforced in CI                           |
-| `npm run verify` runs what CI runs            | `.agents/scripts/lib/steps.test.ts` compares it with the workflows   | Enforced in CI                           |
-| Run `npm run verify` before calling work done | `AGENTS.md`                                                          | Asked                                    |
-| Never weaken a check to pass it               | `AGENTS.md`                                                          | Asked                                    |
+| Rule                                                          | Held by                                                              | Certainty                                |
+| ------------------------------------------------------------- | -------------------------------------------------------------------- | ---------------------------------------- |
+| No commits on `main`                                          | `pre-commit` and `commit-msg` → `.agents/scripts/branch-guard.sh`    | Enforced locally; `--no-verify` skips it |
+| No pushes to `main`                                           | `pre-push` → `branch-guard.sh`; the "Protect default branch" ruleset | Enforced on GitHub                       |
+| Committed files are linted and formatted                      | `pre-commit` (lefthook, staged files only); CI                       | Enforced in CI                           |
+| Type check passes before a commit                             | `pre-commit`; CI                                                     | Enforced in CI                           |
+| Tests pass before a push                                      | `pre-push`; CI                                                       | Enforced in CI                           |
+| Agent tooling never ships in the npm package                  | `.agents/scripts/package-contents.test.ts`                           | Enforced in CI                           |
+| `npm run verify` runs what CI runs                            | `.agents/scripts/lib/steps.test.ts` compares it with the workflows   | Enforced in CI                           |
+| Run `npm run verify` before calling work done                 | `AGENTS.md`                                                          | Asked                                    |
+| Never weaken a check to pass it                               | `AGENTS.md`                                                          | Asked                                    |
+| Instructions name only files, links and scripts that exist    | `.agents/scripts/instructions.test.ts`                               | Enforced in CI                           |
+| Every skill says when to use it and is linked for Claude Code | `.agents/scripts/instructions.test.ts`                               | Enforced in CI                           |
+| Use the matching skill for each task                          | `AGENTS.md`                                                          | Asked                                    |
+| Tests meet the quality bar                                    | `.agents/skills/write-tests/references/test-rules.md`                | Asked                                    |
 
 "Enforced in CI" means a pull request cannot merge without it. A local hook alone is a speed bump: `git commit --no-verify` skips it.
 
@@ -44,7 +49,7 @@ One command, every check a pull request's CI runs: lint, format, both type check
 
 - **Before the checks** it stops if Node is older than `package.json` requires, or if `node_modules` does not match the lockfile. Both make checks fail for reasons unrelated to your change.
 - **Steps** run the `package.json` scripts CI runs (`lint`, `format:check`, `type-check:src`, `type-check:tools`, `build`, `test`) side by side, except the tests: they start once the build has passed, since in CI `npm ci` builds first and a test packs `dist/`.
-- **Only docs changed** since the branch left `main`: it checks just their formatting, which CI checks too, and records nothing.
+- **Only docs changed** since the branch left `main`: it checks just their formatting, which CI checks too, and records nothing. The agent instructions (`AGENTS.md`, `docs/agents.md`, `.agents/`) count as code, since a test checks every reference in them. So does deleting any doc, since they may name it; adding one makes an earlier pass out of date.
 - **Only CI files changed** (Renovate, `.github/` config other than workflows): it says no local check reads them, and checks their formatting. Every workflow counts as code, since a local test reads them all.
 - **Output:** one line per step. A failing step prints the last 30 lines of its log and the log's path under `.tmp/agents/logs/`.
 - **The record:** after a full pass it writes a content hash of every file local checks read (not docs, not CI-only files) to `.tmp/agents/verified.json`. A run that fails, or sees files change while it runs, deletes it.
@@ -53,6 +58,23 @@ One command, every check a pull request's CI runs: lint, format, both type check
 The docs site build (`.github/workflows/validate-docs.yml`) is the one pull-request check verify leaves out: it needs its own `npm ci` in `website/` and takes over a minute from cold, several times the rest put together. Run `npm ci && npm run build` in `website/` when a change touches the docs site or the public API's doc comments.
 
 If `ci.yml` gains a step, or another workflow starts running commands on pull requests, `.agents/scripts/lib/steps.test.ts` fails until verify accounts for it.
+
+## Skills
+
+Each skill is a short procedure with a check at the end of every step. Agents load one when the task matches its description.
+
+| Skill           | For                                      | Ends with                                                         |
+| --------------- | ---------------------------------------- | ----------------------------------------------------------------- |
+| `verify`        | Any change about to be called done       | `npm run verify`, proof matched to the change, an evidence report |
+| `fix-bug`       | Something broken                         | A test that failed on the symptom, the root cause, undo/restore   |
+| `build-feature` | A new client method, option or behaviour | Decisions settled up front, test-first slices, a "touches X" map  |
+| `refactor`      | Structure changes, behaviour unchanged   | Pinned tests, no changed assertions                               |
+| `write-tests`   | Writing or changing tests                | Tests that failed once, meeting the test rules                    |
+| `learn`         | A correction from you                    | A type, lint rule, test or script check that catches the mistake  |
+
+The evidence report rates each claim: **said**, **cited** (a line), **traced** (followed the code), **ran** (a test or command executed it), **seen** (against the real Comms API, or in a consumer built against the change). "Fixed" or "safe" needs **ran**. Anything less is listed under "Not verified".
+
+The test rules were measured against this repository's tests first, so they accept the patterns that are fine here: `.not.toHaveBeenCalled()`, `toMatchObject` on the request fields a test is about, the suite-wide MSW transport seam.
 
 ## Where the tooling lives
 
