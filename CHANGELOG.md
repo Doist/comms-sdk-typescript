@@ -1,3 +1,9 @@
+## [3.12.0](https://github.com/Doist/comms-sdk-typescript/compare/v3.11.0...v3.12.0) (2026-11-05)
+
+### Features
+
+* **search:** Search group chats by title ([#128](https://github.com/Doist/comms-sdk-typescript/issues/128)) ([8f1c557](https://github.com/Doist/comms-sdk-typescript/commit/8f1c557301f04746f1f72db3abba96bef8d1e0bd))
+
 ## [3.11.0](https://github.com/Doist/comms-sdk-typescript/compare/v3.10.0...v3.11.0) (2026-11-01)
 
 ### Features
