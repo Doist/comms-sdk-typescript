@@ -158,3 +158,17 @@ it('works from the command line, in a checkout whose path has a space', () => {
     expect(result.stdout).toContain(`cd '${target}' && npm ci`)
     expect(readFileSync(join(target, 'src/a.ts'), 'utf8')).toBe('unstaged edit\n')
 })
+
+it('says how to use it, and exits 2, without a directory', () => {
+    repo.copyFromCheckout('.agents/scripts/review-worktree.ts', '.agents/scripts/lib')
+    const result = repo.run(process.execPath, ['.agents/scripts/review-worktree.ts'])
+    expect(result.status).toBe(2)
+    expect(result.stderr).toBe('usage: npm run review:worktree -- <dir>\n')
+})
+
+it('says why, and exits 1, when it cannot create the worktree', () => {
+    repo.copyFromCheckout('.agents/scripts/review-worktree.ts', '.agents/scripts/lib')
+    const result = repo.run(process.execPath, ['.agents/scripts/review-worktree.ts', repo.dir])
+    expect(result.status).toBe(1)
+    expect(result.stderr).toBe(`review-worktree: ${repo.dir} already exists\n`)
+})
