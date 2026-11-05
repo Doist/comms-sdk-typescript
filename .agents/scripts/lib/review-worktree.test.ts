@@ -78,6 +78,18 @@ it('applies the real change when a textconv driver is configured', () => {
     expect(readFileSync(join(target, 'notes.txt'), 'utf8')).toBe('hello world\n')
 })
 
+it('applies a mid-file edit when the user has diff.context set to 0', () => {
+    const numbered = (edit: string) =>
+        Array.from({ length: 20 }, (_, i) => (i === 9 ? edit : `line ${i + 1}`)).join('\n') + '\n'
+    repo.write('notes.txt', numbered('line 10'))
+    repo.git(['add', 'notes.txt'])
+    repo.git(['commit', '--quiet', '-m', 'notes'])
+    repo.git(['config', 'diff.context', '0'])
+    repo.write('notes.txt', numbered('line ten'))
+    createReviewWorktree(repo.dir, target)
+    expect(readFileSync(join(target, 'notes.txt'), 'utf8')).toBe(numbered('line ten'))
+})
+
 it('copies an untracked relative symlink as a relative symlink', () => {
     symlinkSync('../src/a.ts', join(repo.dir, 'src/link.ts'))
     createReviewWorktree(repo.dir, target)
