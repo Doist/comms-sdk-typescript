@@ -57,7 +57,7 @@ If `ci.yml` gains a step, or another workflow starts running commands on pull re
 ## Where the tooling lives
 
 - `.agents/scripts/` holds scripts and their tests. Nothing under `.agents/` ships: `package.json#files` lists only `dist/`, and a test checks the packed package.
-- The tooling runs straight from TypeScript with Node's type stripping, so it only uses erasable syntax (`.agents/scripts/tsconfig.json` enforces this). `npm run type-check` covers it, and `npm run check` lints it.
+- The tooling runs straight from TypeScript with Node's type stripping, so it only uses erasable syntax (`.agents/scripts/tsconfig.json` enforces this). The one exception is `.agents/scripts/verify.mjs`, plain JavaScript that checks the Node version before loading the rest, so an old Node gets a message instead of a syntax error. `npm run type-check` covers it, and `npm run check` lints it.
 - Tests run in `npm test` and CI. They copy the tools into throwaway git repositories and never touch your checkout. A test helper clears the variables git exports to hooks, since `npm test` itself runs inside `pre-push`.
 
 ## Releases

@@ -142,13 +142,8 @@ describe('preflight', () => {
 
     afterEach(() => rmSync(root, { recursive: true, force: true }))
 
-    it('passes a current install on a supported Node', () => {
-        expect(preflight(root, '24.0.0')).toEqual([])
-    })
-
-    it('rejects a Node older than package.json engines', () => {
-        const [problem] = preflight(root, '22.22.2')
-        expect(problem).toContain('Node 22.22.2 is older than the >=24')
+    it('passes a current install', () => {
+        expect(preflight(root)).toEqual([])
     })
 
     it('names a dependency whose installed version differs from the lockfile', () => {
@@ -156,14 +151,14 @@ describe('preflight', () => {
             'node_modules/zod': { version: '0.9.0' },
             'node_modules/vitest': { version: '2.0.0' },
         })
-        expect(preflight(root, '24.0.0')).toEqual([
+        expect(preflight(root)).toEqual([
             'node_modules does not match package-lock.json: zod 0.9.0 (lockfile: 1.0.0). Run `npm ci`.',
         ])
     })
 
     it('names a dependency that is not installed', () => {
         writeInstalled({ 'node_modules/zod': { version: '1.0.0' } })
-        expect(preflight(root, '24.0.0')[0]).toContain('vitest missing (lockfile: 2.0.0)')
+        expect(preflight(root)[0]).toContain('vitest missing (lockfile: 2.0.0)')
     })
 
     it('names a transitive dependency that changed while every direct one kept its version', () => {
@@ -177,7 +172,7 @@ describe('preflight', () => {
             'node_modules/vitest': { version: '2.0.0' },
             'node_modules/undici': { version: '7.0.0' },
         })
-        expect(preflight(root, '24.0.0')).toEqual([
+        expect(preflight(root)).toEqual([
             'node_modules does not match package-lock.json: undici 7.0.0 (lockfile: 7.1.0). Run `npm ci`.',
         ])
     })
@@ -189,12 +184,12 @@ describe('preflight', () => {
         lock.packages['node_modules/@oxlint/darwin-arm64'] = { version: '1.0.0', optional: true }
         lock.packages['node_modules/@oxfmt/win32-x64'] = { version: '1.0.0', devOptional: true }
         writeJson(join(root, 'package-lock.json'), lock)
-        expect(preflight(root, '24.0.0')).toEqual([])
+        expect(preflight(root)).toEqual([])
     })
 
     it('says when node_modules has no record of what npm installed', () => {
         rmSync(join(root, 'node_modules/.package-lock.json'))
-        expect(preflight(root, '24.0.0')).toEqual([
+        expect(preflight(root)).toEqual([
             'node_modules has no record of what npm installed. Run `npm ci`.',
         ])
     })
@@ -205,7 +200,7 @@ describe('preflight', () => {
             dependencies: { zod: '1.1.0', added: '1.0.0' },
             devDependencies: { vitest: '2.0.0' },
         })
-        expect(preflight(root, '24.0.0')).toEqual([
+        expect(preflight(root)).toEqual([
             'package.json and package-lock.json disagree: zod (package.json: 1.1.0, lockfile: 1.0.0), added (package.json: 1.0.0, lockfile: none). Run `npm install`.',
         ])
     })
@@ -217,20 +212,20 @@ describe('preflight', () => {
             devDependencies: { vitest: '2.0.0' },
             optionalDependencies: { keyring: '2.0.0' },
         })
-        expect(preflight(root, '24.0.0')).toEqual([
+        expect(preflight(root)).toEqual([
             'package.json and package-lock.json disagree: keyring (package.json: 2.0.0, lockfile: none). Run `npm install`.',
         ])
     })
 
     it('says when the lockfile is missing', () => {
         rmSync(join(root, 'package-lock.json'))
-        expect(preflight(root, '24.0.0')).toEqual([
+        expect(preflight(root)).toEqual([
             'package-lock.json is missing or unreadable. Run `npm install`.',
         ])
     })
 
     it('says when node_modules is missing', () => {
         rmSync(join(root, 'node_modules'), { recursive: true })
-        expect(preflight(root, '24.0.0')).toEqual(['node_modules is missing. Run `npm ci`.'])
+        expect(preflight(root)).toEqual(['node_modules is missing. Run `npm ci`.'])
     })
 })

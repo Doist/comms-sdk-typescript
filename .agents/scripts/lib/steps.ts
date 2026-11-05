@@ -46,7 +46,6 @@ export const UNRUN_WORKFLOWS: Record<string, string> = {
 }
 
 type PackageJson = {
-    engines?: { node?: string }
     dependencies?: Record<string, string>
     devDependencies?: Record<string, string>
     optionalDependencies?: Record<string, string>
@@ -68,17 +67,10 @@ type Lockfile = {
 const MAX_LISTED = 10
 
 /** Problems that would make the checks fail for reasons unrelated to the change. */
-export function preflight(root: string, nodeVersion = process.versions.node): string[] {
+// The Node version is checked before this, by verify.mjs, since too old a Node can't load it.
+export function preflight(root: string): string[] {
     const problems: string[] = []
     const pkg = readJson<PackageJson>(join(root, 'package.json'))
-    const minimum = pkg?.engines?.node?.match(/^>=\s*(\d+)/)?.[1]
-    const major = Number(nodeVersion.split('.')[0])
-    if (minimum && major < Number(minimum)) {
-        problems.push(
-            `Node ${nodeVersion} is older than the ${pkg?.engines?.node} this repository needs. ` +
-                'Switch versions (see .nvmrc) and run again.',
-        )
-    }
 
     if (!existsSync(join(root, 'node_modules'))) {
         problems.push('node_modules is missing. Run `npm ci`.')
