@@ -29,6 +29,7 @@
         "test:watch": "vitest",
         "test:coverage": "vitest run --coverage",
         "verify": "node .agents/scripts/verify.mjs",
+        "review:worktree": "node .agents/scripts/review-worktree.ts",
         "build:esm": "npx tsc -p tsconfig.esm.json",
         "build:fix-esm": "node scripts/fix-esm-imports.cjs",
         "build:fix-dts": "node scripts/fix-dts-imports.cjs",

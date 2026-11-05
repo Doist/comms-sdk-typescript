@@ -17,9 +17,10 @@ In this order, take the first that works:
 2. **A lint rule** in `.oxlintrc.json`.
 3. **A test** that scans the code, the exports or the docs, like `.agents/scripts/instructions.test.ts`.
 4. **A script check** in `.agents/scripts/` (verify, a hook).
-5. **A line in `AGENTS.md` or a skill**, only if nothing above can hold it.
+5. **A review check** in `.agents/checks/`, for judgment a script can't make.
+6. **A line in `AGENTS.md` or a skill**, only if nothing above can hold it.
 
-A rule already written down that still got broken skips straight to 1–4. Done when you can say why the stronger options don't fit.
+A rule already written down that still got broken has outgrown prose: skip straight to 1–5. Done when you can say why the stronger options don't fit.
 
 ## 3. Prove it catches the mistake
 
