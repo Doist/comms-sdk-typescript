@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { writeJson } from './state.ts'
-import { CI_EQUIVALENTS, preflight, UNRUN_WORKFLOWS, VERIFY_STEPS } from './steps.ts'
+import { BLIND_SPOTS, CI_EQUIVALENTS, preflight, UNRUN_WORKFLOWS, VERIFY_STEPS } from './steps.ts'
 import { REPO_ROOT } from './test-repo.ts'
 
 const WORKFLOWS_DIR = join(REPO_ROOT, '.github/workflows')
@@ -99,6 +99,15 @@ describe('verify covers CI', () => {
             .map((name) => `.github/workflows/${name}`)
         expect(running.toSorted()).toEqual(
             ['.github/workflows/ci.yml', ...Object.keys(UNRUN_WORKFLOWS)].toSorted(),
+        )
+    })
+
+    it('names the Node versions CI tests on among what it cannot see', () => {
+        const matrix = readWorkflow('ci.yml').match(/node-version: \[([^\]]+)\]/)?.[1] ?? ''
+        const versions = matrix.split(',').map((version) => version.trim())
+        expect(versions.length).toBeGreaterThan(1)
+        expect(BLIND_SPOTS).toContain(
+            `Node versions other than yours: CI tests on ${versions.join(' and ')}`,
         )
     })
 

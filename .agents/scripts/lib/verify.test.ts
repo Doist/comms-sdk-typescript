@@ -57,7 +57,7 @@ describe('a code change', () => {
     })
 
     it('records nothing when a step fails, and forgets an earlier pass', async () => {
-        writeVerified(repo.dir, { fingerprint: 'earlier', head: 'x', at: 'then' })
+        writeVerified(repo.dir, { fingerprint: 'earlier' })
         const result = await verify([pass('lint'), fail('tests')])
         expect(result).toEqual({ ok: false, recorded: false })
         expect(readVerified(repo.dir)).toBeUndefined()
@@ -74,6 +74,19 @@ describe('a code change', () => {
         expect(lines[failure + 31]).toContain('full log: ')
         expect(lines[failure + 31]).toContain('tests.log')
         expect(readFileSync(logPath, 'utf8')).toContain('line 1\n')
+    })
+
+    it('prints the tail of a log too long to read whole', async () => {
+        const noisy: Step = {
+            name: 'tests',
+            command: 'sh',
+            args: ['-c', `awk 'BEGIN { for (i = 1; i <= 100000; i++) print "line " i }'; exit 1`],
+        }
+        await verify([noisy])
+        const failure = lines.findIndex((line) => line.startsWith('✗ tests'))
+        expect(lines.slice(failure + 1, failure + 31)).toEqual(
+            Array.from({ length: 30 }, (_, i) => `    line ${i + 99971}`),
+        )
     })
 
     it('runs a dependent step only after its dependency passed', async () => {
@@ -184,7 +197,7 @@ describe('what counts as a change', () => {
     })
 
     it('keeps an earlier pass when only docs changed', async () => {
-        writeVerified(repo.dir, { fingerprint: 'earlier', head: 'x', at: 'then' })
+        writeVerified(repo.dir, { fingerprint: 'earlier' })
         repo.write('README.md', 'changed\n')
         await verify([pass('lint')])
         expect(readVerified(repo.dir)?.fingerprint).toBe('earlier')
@@ -231,8 +244,8 @@ describe('what counts as a change', () => {
         expect(readVerified(repo.dir)).toBeUndefined()
     })
 
-    it('checks everything when a workflow changes along with code', async () => {
-        repo.write('.github/workflows/release.yml', 'on: push\n')
+    it('checks everything when a file only CI reads changes along with code', async () => {
+        repo.write('renovate.json', '{}\n')
         repo.write('src/a.ts', 'changed\n')
         expect(await verify([pass('lint')])).toEqual({ ok: true, recorded: true })
     })

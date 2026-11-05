@@ -23,11 +23,10 @@ export function cleanGitEnv(env: NodeJS.ProcessEnv = process.env): NodeJS.Proces
 
 export type GitResult = { ok: boolean; stdout: string; stderr: string }
 
-export function git(root: string, args: string[], options: { input?: string } = {}): GitResult {
+export function git(root: string, args: string[]): GitResult {
     const result = spawnSync('git', args, {
         cwd: root,
         env: cleanGitEnv(),
-        input: options.input,
         encoding: 'utf8',
         maxBuffer: 64 * 1024 * 1024,
     })

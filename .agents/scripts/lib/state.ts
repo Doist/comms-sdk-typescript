@@ -21,7 +21,7 @@ export function writeJson(path: string, value: unknown): void {
     writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`)
 }
 
-export type VerifiedRecord = { fingerprint: string; head: string; at: string }
+export type VerifiedRecord = { fingerprint: string }
 
 const verifiedPath = (root: string) => join(stateDir(root), 'verified.json')
 

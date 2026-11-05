@@ -1,7 +1,7 @@
 import { spawn } from 'node:child_process'
-import { createWriteStream, mkdirSync, readFileSync } from 'node:fs'
+import { closeSync, createWriteStream, fstatSync, mkdirSync, openSync, readSync } from 'node:fs'
 import { join, relative } from 'node:path'
-import { cleanGitEnv, git } from './git.ts'
+import { cleanGitEnv } from './git.ts'
 import { clearVerified, stateDir, writeVerified } from './state.ts'
 import { changedPaths, changedSince, classify, codeFingerprint, snapshot } from './tree.ts'
 
@@ -28,6 +28,8 @@ export type VerifyOptions = {
 export type VerifyResult = { ok: boolean; recorded: boolean }
 
 const LOG_TAIL_LINES = 30
+// Enough for the tail of any log; a failing step's log can run to megabytes.
+const LOG_TAIL_BYTES = 64 * 1024
 
 export async function runVerify(options: VerifyOptions): Promise<VerifyResult> {
     const { blindSpots = [], out = console.log } = options
@@ -77,19 +79,14 @@ async function check(options: VerifyOptions): Promise<VerifyResult> {
     if (!passed) return { ok: false, recorded: false }
 
     const after = snapshot(root)
-    if (codeFingerprint(after) !== codeFingerprint(before)) {
+    const fingerprint = codeFingerprint(after)
+    if (fingerprint !== codeFingerprint(before)) {
         const changed = changedPaths(before, after).filter((path) => classify(path) === 'code')
         out(`Files changed during the run: ${changed.join(', ')}. Nothing recorded; run it again.`)
         return { ok: false, recorded: false }
     }
 
-    const head = git(root, ['rev-parse', 'HEAD'])
-    const fingerprint = codeFingerprint(after)
-    writeVerified(root, {
-        fingerprint,
-        head: head.ok ? head.stdout.trim() : 'none',
-        at: new Date().toISOString(),
-    })
+    writeVerified(root, { fingerprint })
     out(`Verified. Recorded fingerprint ${fingerprint.slice(0, 12)}.`)
     return { ok: true, recorded: true }
 }
@@ -154,9 +151,9 @@ function runStep(
                     resolve(true)
                     return
                 }
-                const lines = readFileSync(logPath, 'utf8').trimEnd().split('\n')
+                const lines = tailLines(logPath, LOG_TAIL_LINES)
                 out(`✗ ${step.name} (${error ? error.message : `exit ${code}`}, ${seconds}s)`)
-                for (const line of lines.slice(-LOG_TAIL_LINES)) out(`    ${line}`)
+                for (const line of lines) out(`    ${line}`)
                 out(`    full log: ${relative(process.cwd(), logPath) || logPath}`)
                 resolve(false)
             })
@@ -164,4 +161,20 @@ function runStep(
         child.on('error', (error) => finish(null, error))
         child.on('close', (code) => finish(code))
     })
+}
+
+/** The last `count` lines of a file, read from its end so a long log isn't loaded whole. */
+function tailLines(path: string, count: number): string[] {
+    const fd = openSync(path, 'r')
+    try {
+        const size = fstatSync(fd).size
+        const length = Math.min(size, LOG_TAIL_BYTES)
+        const buffer = Buffer.alloc(length)
+        readSync(fd, buffer, 0, length, size - length)
+        const lines = buffer.toString('utf8').trimEnd().split('\n')
+        // Unless the whole file fitted, the first line read may start part-way through.
+        return (length < size ? lines.slice(1) : lines).slice(-count)
+    } finally {
+        closeSync(fd)
+    }
 }
