@@ -1,34 +1,25 @@
 // Instructions that name files or commands that don't exist send agents in circles. This checks
 // every path, link and `npm run` script named in the agent-facing docs, and the skills' shape.
 
-import { existsSync, lstatSync, readdirSync, readFileSync, readlinkSync } from 'node:fs'
+import { existsSync, lstatSync, readdirSync, readFileSync, realpathSync } from 'node:fs'
 import { basename, dirname, join, relative, resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { git } from './lib/git.ts'
 import { REPO_ROOT } from './lib/test-repo.ts'
-import { AGENT_DOCS } from './lib/tree.ts'
+import { AGENT_DOCS, snapshot } from './lib/tree.ts'
 
 const SKILLS_DIR = join(REPO_ROOT, '.agents/skills')
 const skills = readdirSync(SKILLS_DIR).filter((name) => !name.startsWith('.'))
 
-function markdownFiles(dir: string): string[] {
-    return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-        const path = join(dir, entry.name)
-        if (entry.isDirectory()) return markdownFiles(path)
-        return entry.name.endsWith('.md') ? [path] : []
-    })
-}
+// The files verify fingerprints: tracked and untracked, not ignored, and still on disk, so a file
+// deleted but not yet staged doesn't count as there.
+const files = Object.keys(snapshot(REPO_ROOT))
 
 // The same list that makes verify treat these docs as code, so a doc checked here can't be
 // skipped there as docs-only.
 const DOCS = [
-    ...[...AGENT_DOCS].map((path) => join(REPO_ROOT, path)),
-    ...markdownFiles(join(REPO_ROOT, '.agents')),
-]
-
-const tracked = git(REPO_ROOT, ['ls-files', '--cached', '--others', '--exclude-standard'])
-    .stdout.split('\n')
-    .filter(Boolean)
+    ...AGENT_DOCS,
+    ...files.filter((path) => path.startsWith('.agents/') && path.endsWith('.md')),
+].map((path) => join(REPO_ROOT, path))
 const scripts = Object.keys(
     (
         JSON.parse(readFileSync(join(REPO_ROOT, 'package.json'), 'utf8')) as {
@@ -67,7 +58,7 @@ function resolveReference(path: string, doc: string): string | { problem: string
     if (ROOTED.test(path) || path.includes('/') || existsSync(join(REPO_ROOT, path))) {
         return existsSync(join(REPO_ROOT, path)) ? path : { problem: 'does not exist' }
     }
-    const matches = tracked.filter((candidate) => basename(candidate) === path)
+    const matches = files.filter((candidate) => basename(candidate) === path)
     if (matches.length === 1) return matches[0] ?? path
     return {
         problem: matches.length === 0 ? 'does not exist' : `is ambiguous: ${matches.join(', ')}`,
@@ -81,7 +72,9 @@ function brokenReferences(text: string, doc: string): string[] {
         if (line === undefined) return []
         const full = join(REPO_ROOT, resolved)
         if (lstatSync(full).isDirectory()) return [`${path}:${line} names a line in a folder`]
-        const lines = readFileSync(full, 'utf8').split('\n').length
+        const content = readFileSync(full, 'utf8')
+        // A final newline ends the last line; it doesn't start another.
+        const lines = content.split('\n').length - (content.endsWith('\n') ? 1 : 0)
         return line > lines ? [`${path}:${line} is past the end (${lines} lines)`] : []
     })
 }
@@ -127,7 +120,7 @@ describe.each(skills)('skill %s', (skill) => {
     it('is linked for Claude Code', () => {
         const link = join(REPO_ROOT, '.claude/skills', skill)
         expect(lstatSync(link).isSymbolicLink()).toBe(true)
-        expect(resolve(dirname(link), readlinkSync(link))).toBe(join(SKILLS_DIR, skill))
+        expect(realpathSync(link)).toBe(realpathSync(join(SKILLS_DIR, skill)))
     })
 })
 
