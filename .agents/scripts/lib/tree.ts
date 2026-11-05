@@ -80,6 +80,24 @@ export function codeFingerprint(files: Snapshot): string {
     return hash.digest('hex')
 }
 
+/**
+ * Whether a changed file needs the checks: code, or a doc that is gone, since the agent docs may
+ * name it. A doc that was added or edited doesn't.
+ */
+function needsChecksWhen(path: string, exists: boolean): boolean {
+    const kind = classify(path)
+    return kind === 'code' || (kind === 'docs' && !exists)
+}
+
+/** Changed files that need the checks, between two snapshots: what the turn gate acts on. */
+export function changedCodePaths(
+    before: Snapshot,
+    after: Snapshot,
+    changed = changedPaths(before, after),
+): string[] {
+    return changed.filter((path) => needsChecksWhen(path, present(after, path)))
+}
+
 /** Changed files the fingerprint covers: code, and docs added or removed. */
 export function fingerprintChanges(before: Snapshot, after: Snapshot): string[] {
     return changedPaths(before, after).filter((path) => {
@@ -95,13 +113,9 @@ export function changedPaths(before: Snapshot, after: Snapshot): string[] {
     return [...paths].filter((path) => before[path] !== after[path]).sort()
 }
 
-/**
- * Whether a file that differs from the default branch needs the checks: code, or a doc that was
- * deleted or renamed, since the agent docs may name it.
- */
+/** Whether a file that differs from the default branch needs the checks, as it is on disk now. */
 export function needsChecks(root: string, path: string): boolean {
-    const kind = classify(path)
-    return kind === 'code' || (kind === 'docs' && !existsSync(join(root, path)))
+    return needsChecksWhen(path, existsSync(join(root, path)))
 }
 
 /** Files that differ from `base`: committed, staged, unstaged and untracked. */

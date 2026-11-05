@@ -9,6 +9,7 @@ This repository is set up so coding agents prove their work before they call it 
 3. **`AGENTS.md`** tells agents what done means. Claude Code reads it through `CLAUDE.md`; Codex and Cursor read it directly.
 4. **Skills** in `.agents/skills/` give step-by-step procedures for recurring work. They load only when a task needs them.
 5. **Review**: fresh reviewers and Doistbot check a finished change against the checks in `.agents/checks/`.
+6. **The end-of-turn gate** sends an agent back once when its turn changed code that `npm run verify` has not passed.
 
 ## Rules and what holds them
 
@@ -21,7 +22,7 @@ This repository is set up so coding agents prove their work before they call it 
 | Tests pass before a push                                                                                | `pre-push`; CI                                                       | Enforced in CI                           |
 | Agent tooling never ships in the npm package                                                            | `.agents/scripts/package-contents.test.ts`                           | Enforced in CI                           |
 | `npm run verify` runs what CI runs                                                                      | `.agents/scripts/lib/steps.test.ts` compares it with the workflows   | Enforced in CI                           |
-| Run `npm run verify` before calling work done                                                           | `AGENTS.md`                                                          | Asked                                    |
+| Run `npm run verify` before calling work done                                                           | `AGENTS.md`                                                          | Enforced at turn end (once); `AGENTS.md` |
 | Never weaken a check to pass it                                                                         | `AGENTS.md`                                                          | Asked                                    |
 | Instructions name only files, links and scripts that exist                                              | `.agents/scripts/instructions.test.ts`                               | Enforced in CI                           |
 | Every skill says when to use it and is linked for Claude Code                                           | `.agents/scripts/instructions.test.ts`                               | Enforced in CI                           |
@@ -56,12 +57,36 @@ One command, every check a pull request's CI runs: lint, format, both type check
 - **Only docs changed** since the branch left `main`: it checks just their formatting, which CI checks too, and records nothing. The agent instructions (`AGENTS.md`, `docs/agents.md`, `.agents/`) count as code, since a test checks every reference in them. So does deleting any doc, since they may name it; adding one makes an earlier pass out of date.
 - **Only CI files changed** (Renovate, `.github/` config other than workflows): it says no local check reads them, and checks their formatting. Every workflow counts as code, since a local test reads them all.
 - **Output:** one line per step. A failing step prints the last 30 lines of its log and the log's path under `.tmp/agents/logs/`.
-- **The record:** after a full pass it writes a hash of the tree to `.tmp/agents/verified.json`: the content of every file local checks read, and the names, not the content, of docs. CI-only files are left out. A run that fails, or sees files change while it runs, deletes it.
+- **The record:** after a full pass it writes a hash of the tree to `.tmp/agents/verified.json`: the content of every file local checks read, and the names, not the content, of docs. CI-only files are left out. A run that fails, or sees files change while it runs, deletes it. The end-of-turn gate reads it.
 - **What it cannot see:** the real Comms API, Node versions other than yours, the packed package as consumers resolve it (`npm run attw`, which only the release runs) and the docs site build. It prints these after every pass.
 
 The docs site build (`.github/workflows/validate-docs.yml`) is the one pull-request check verify leaves out: it needs its own `npm ci` in `website/` and takes over a minute from cold, several times the rest put together. Run `npm ci && npm run build` in `website/` when a change touches the docs site or the public API's doc comments.
 
 If `ci.yml` gains a step, or another workflow starts running commands on pull requests, `.agents/scripts/lib/steps.test.ts` fails until verify accounts for it.
+
+## The end-of-turn gate
+
+Every agent's hooks call one script, `.agents/scripts/guard.ts`, so the agents can't drift apart.
+
+- **Turn start** (you send a message): it hashes every file in the checkout, untracked ones included, into `.tmp/agents/turns/`.
+- **Turn end** (the agent stops): it compares the tree with the turn's start and with the last `npm run verify` pass. If the turn changed code and verify has not passed on exactly this tree, it sends the agent back once, naming the files. The second time, it lets the agent stop and shows you a note.
+- **Passes without a word:** turns that changed nothing, changed only docs, or undid their edits. Deleting a doc counts as code, since the agent docs may name it.
+- **"Once"** is deliberate: an agent can stop on purpose and say what is unfinished.
+
+| Agent       | Wiring                                                                                                                | Known limits                                                                                                                                                                            |
+| ----------- | --------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Claude Code | `.claude/settings.json`: `UserPromptSubmit` and `Stop`                                                                | Tested in a real headless session (`claude -p`): it sent the agent back once with the message, and the agent ran verify and stopped.                                                    |
+| Codex       | `.codex/hooks.json`: `UserPromptSubmit` and `Stop`                                                                    | Runs only in a trusted project, after each person reviews the hooks in `/hooks`. Versions 0.154 and 0.162.1 ran no project hooks in a linked worktree. Not yet tried in a real session. |
+| Cursor      | Runs the Claude Code hooks itself; the command falls back to the git root if Cursor does not set `CLAUDE_PROJECT_DIR` | No Cursor hooks file: a second one would run every hook twice. A test keeps it out. Not yet tried in a real session.                                                                    |
+
+**Other limits:**
+
+- Two sessions in one checkout share its files, so each may be told about the other's edits. Use a worktree per session.
+- If the branch's code is back to what `main` has (an undo, a stash, a switch), the turn passes: CI already checked that code.
+
+**Fails open, visibly:** a broken guard, bad input or a checkout without the script lets the turn end and says why in a message. `DISABLE_AGENT_GUARD=1` in the agent's environment turns the gate off for you.
+
+**Speed:** turn start takes under 0.1 seconds on this repository.
 
 ## Skills
 
@@ -129,5 +154,6 @@ semantic-release publishes from `main` on every merge, and prereleases from `nex
 ## What fails open
 
 - No node on `PATH` in a GUI client: the hooks skip lint, the type check and the tests, with a message. The branch rule still applies.
+- The end-of-turn gate: any error lets the turn end, with a message saying why. `DISABLE_AGENT_GUARD=1` turns it off.
 - `git commit --no-verify`: every local hook is skipped. CI and branch protection still apply.
 - A push that changes no files, such as an empty commit or a branch deletion: lefthook runs no pre-push job for it, so the branch rule is skipped too. The ruleset still refuses it on GitHub.
