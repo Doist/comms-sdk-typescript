@@ -45,7 +45,7 @@ export class SearchClient extends BaseClient {
         if (args.dateFrom) params.date_from = args.dateFrom
         if (args.dateTo) params.date_to = args.dateTo
         if (args.limit) params.limit = args.limit
-        if (args.cursor) params.cursor = args.cursor
+        if (args.cursor) params.cursor_mark = args.cursor
 
         return request<SearchResponse>({
             httpMethod: 'GET',

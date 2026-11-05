@@ -107,6 +107,33 @@ describe('SearchResultSchema', () => {
     })
 })
 
+describe('SearchClient — request parameters', () => {
+    function captureSearchParams(): { params: URLSearchParams } {
+        const captured = { params: new URLSearchParams() }
+        server.use(
+            http.get(`${BASE}/search`, ({ request }) => {
+                captured.params = new URL(request.url).searchParams
+                return HttpResponse.json({
+                    items: [],
+                    has_more: false,
+                    is_plan_restricted: false,
+                })
+            }),
+        )
+        return captured
+    }
+
+    it('sends the cursor as cursor_mark', async () => {
+        const captured = captureSearchParams()
+
+        const api = new CommsApi(TEST_API_TOKEN)
+        await api.search.search({ query: 'match', workspaceId: 1, cursor: 'next-page' })
+
+        expect(captured.params.get('cursor_mark')).toBe('next-page')
+        expect(captured.params.has('cursor')).toBe(false)
+    })
+})
+
 describe('SearchClient — result parsing', () => {
     it('keeps typed ids on thread and conversation results', async () => {
         server.use(
