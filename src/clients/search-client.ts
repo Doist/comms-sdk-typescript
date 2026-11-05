@@ -19,6 +19,7 @@ export class SearchClient extends BaseClient {
      * @param args - The arguments for searching.
      * @param args.query - The search query string. Optional when `mentionSelf: true` is set; required otherwise.
      * @param args.workspaceId - The workspace ID to search in.
+     * @param args.type - Optional result type. `conversations` matches group chat titles, and its results have no `messageId`. When omitted, results are threads, comments, and messages.
      * @param args.channelIds - Optional array of channel IDs to filter by.
      * @param args.authorIds - Optional array of author user IDs to filter by.
      * @param args.mentionSelf - Optional flag to filter by mentions of the current user. When true, `query` may be omitted.
@@ -39,6 +40,7 @@ export class SearchClient extends BaseClient {
     search(args: SearchArgs): Promise<SearchResponse> {
         const params: Record<string, unknown> = { workspace_id: args.workspaceId }
         if (args.query !== undefined) params.query = args.query
+        if (args.type) params.type = args.type
         if (args.channelIds) params.channel_ids = args.channelIds
         if (args.authorIds) params.author_ids = args.authorIds
         if (args.mentionSelf !== undefined) params.mention_self = args.mentionSelf

@@ -592,8 +592,10 @@ export const ConversationSearchResultSchema = z.object({
     type: z.literal('conversation'),
     /** The owning conversation id. */
     conversationId: z.string(),
-    /** The matched message id. */
+    /** The matched message id. Absent when the match is the conversation's title. */
     messageId: z.union([z.string(), z.number()]).transform(String).nullable().optional(),
+    /** The conversation's members. */
+    userIds: z.array(z.number()).optional(),
 })
 export type ConversationSearchResult = z.infer<typeof ConversationSearchResultSchema>
 

@@ -193,8 +193,12 @@ export type SetStatusArgs = {
 }
 
 // Search
+export const SEARCH_TYPES = ['threads', 'messages', 'conversations', 'all'] as const
+export type SearchType = (typeof SEARCH_TYPES)[number]
+
 type SearchArgsCommon = {
     workspaceId: number
+    type?: SearchType
     channelIds?: string[]
     authorIds?: number[]
     dateFrom?: string
