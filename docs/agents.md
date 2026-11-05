@@ -40,7 +40,7 @@ The release workflow commits and pushes to `main` and `next` from GitHub Actions
 
 ## `npm run verify`
 
-One command, every check a pull request's CI runs: lint, format, both type checks, all tests and the build (which `npm ci` runs in CI, through `prepare`). It takes about ten seconds, so it always checks the whole tree. Picking only the affected tests would save a few seconds and add a way to miss something.
+One command, every check a pull request's CI runs: lint, format, both type checks, all tests and the build (which `npm ci` runs in CI, through `prepare`). It takes about fifteen seconds, so it always checks the whole tree. Picking only the affected tests would save a few seconds and add a way to miss something.
 
 - **Before the checks** it stops if Node is older than `package.json` requires, or if `node_modules` does not match the lockfile. Both make checks fail for reasons unrelated to your change.
 - **Steps** run the `package.json` scripts CI runs (`lint`, `format:check`, `type-check:src`, `type-check:tools`, `build`, `test`) side by side, except the tests: they start once the build has passed, since in CI `npm ci` builds first and a test packs `dist/`.

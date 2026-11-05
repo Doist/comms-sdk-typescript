@@ -1,4 +1,4 @@
-// `npm run verify`: every check CI runs on a pull request, in about ten seconds.
+// `npm run verify`: every check CI runs on a pull request, in about fifteen seconds.
 // Records a fingerprint of the tree only when everything passed.
 // It sets process.exitCode rather than calling process.exit(): stdout to a pipe can be
 // asynchronous, and exiting early could cut off the last lines, which say what failed.
