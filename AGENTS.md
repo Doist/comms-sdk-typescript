@@ -25,3 +25,9 @@ z.enum(EXAMPLE_VALUES)
 ## Zod Schemas
 
 - **Export**: All Zod schemas should be exported
+
+## Git hooks and agent tooling
+
+- Commits and pushes to `main` are refused by the git hooks. Work on a branch.
+- Agent tooling lives in `.agents/scripts/`. It never ships: `package.json#files` lists only `dist/`, and a test checks the packed package.
+- How it all fits together: [`docs/agents.md`](docs/agents.md).

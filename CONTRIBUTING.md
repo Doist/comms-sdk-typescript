@@ -29,7 +29,7 @@ After cloning the repository and installing dependencies with `npm install`, sev
 - `npm run test:watch`: Runs tests in watch mode
 - `npm run integrity-checks`: Runs the full CI validation pipeline
 
-`npm install` also installs the git hooks, run by [lefthook](https://github.com/evilmartians/lefthook) and configured in `lefthook.yml`. `pre-commit` lints and formats the staged files (re-staging what the tools fix) and runs the type check; `pre-push` runs the tests. Without node on `PATH`, as in some GUI git clients, they skip the checks and say so. CI runs the same checks either way.
+`npm install` also installs the git hooks, run by [lefthook](https://github.com/evilmartians/lefthook) and configured in `lefthook.yml`. `pre-commit` refuses a commit on `main`, then lints and formats the staged files (re-staging what the tools fix) and runs the type check; `pre-push` refuses a push to `main`, then runs the tests. Without node on `PATH`, as in some GUI git clients, they keep the branch rule, skip the checks and say so. CI runs the same checks either way. [docs/agents.md](docs/agents.md) explains the hooks and the agent tooling.
 
 ## Sending a Pull Request
 
