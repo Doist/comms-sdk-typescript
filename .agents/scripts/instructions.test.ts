@@ -149,9 +149,9 @@ const checks = readdirSync(join(REPO_ROOT, '.agents/checks')).filter((name) => n
 describe.each(checks)('check %s', (check) => {
     const text = readFileSync(join(REPO_ROOT, '.agents/checks', check), 'utf8')
 
-    it('says what to report and what is fine', () => {
-        expect(text).toMatch(/^## Report$/m)
-        expect(text).toMatch(/^## Fine$/m)
+    it('says what to report and what is fine, with at least one item under each', () => {
+        expect(text).toMatch(/^## Report\n\n- \S/m)
+        expect(text).toMatch(/^## Fine\n\n- \S/m)
     })
 
     it('is linked from AGENTS.md, where Doistbot finds it', () => {

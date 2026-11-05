@@ -1,6 +1,6 @@
 # Check: public API
 
-What other packages and apps see: everything exported from `src/index.ts` (`CommsApi` and its options, the clients and their methods, the types and Zod schemas, the helpers in `src/utils/`), its names, signatures, types and behaviour, plus `package.json#exports`, `engines` and the runtime dependencies. Every change here reaches every consumer, and the PR title sets the version: `feat:` a minor, `fix:` or `perf:` a patch, `feat!:` or `fix!:` (or a `BREAKING CHANGE:` footer) a major.
+What other packages and apps see: everything exported from `src/index.ts` (`CommsApi` and its options, the clients and their methods, the types and Zod schemas, the helpers in `src/utils/`), its names, signatures, types and behaviour, plus `package.json#exports`, `engines` and the runtime dependencies. Every change here reaches every consumer, and the PR title sets the version: `feat:` a minor, `fix:` or `perf:` a patch, and any type with `!` (`feat!:`, `fix!:`, `perf!:`) or a `BREAKING CHANGE:` footer a major.
 
 ## Report
 

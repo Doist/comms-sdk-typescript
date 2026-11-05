@@ -1,6 +1,6 @@
 # Check: security
 
-The SDK carries each caller's Comms API token, and OAuth client secrets, inside every app that uses it. Apply to changes in `src/`.
+The SDK carries each caller's Comms API token, and OAuth client secrets, inside every app that uses it. Apply to changes in `src/`, `package.json` and `package-lock.json`.
 
 ## Report
 
