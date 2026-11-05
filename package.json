@@ -39,7 +39,7 @@
         "audit": "npm audit --audit-level=moderate",
         "integrity-checks": "npm-run-all clean check test build attw",
         "prepublishOnly": "npm run integrity-checks",
-        "prepare": "if [ -e .git ]; then lefthook install --reset-hooks-path; fi && npm run build"
+        "prepare": "node -e \"require('fs').existsSync('.git') && require('child_process').execSync('lefthook install --reset-hooks-path', { stdio: 'inherit' })\" && npm run build"
     },
     "dependencies": {
         "@doist/sdk-kmp": "0.6.0",
