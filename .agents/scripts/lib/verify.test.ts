@@ -131,6 +131,44 @@ describe('a code change', () => {
     })
 })
 
+describe('what the checks cannot see', () => {
+    const spots = ['the real API', 'the docs site build']
+    const withSpots = (steps: Step[]) =>
+        runVerify({
+            root: repo.dir,
+            steps,
+            base,
+            blindSpots: spots,
+            out: (line) => lines.push(line),
+        })
+
+    it('lists them after a full pass', async () => {
+        repo.write('src/a.ts', 'export const a = 2\n')
+        expect(await withSpots([pass('lint')])).toEqual({ ok: true, recorded: true })
+        expect(lines.slice(-3)).toEqual([
+            'Not covered by these checks:',
+            '- the real API',
+            '- the docs site build',
+        ])
+    })
+
+    it('lists them after a docs-only pass, which checked only the formatting', async () => {
+        repo.write('README.md', 'changed\n')
+        expect(await withSpots([pass('format')])).toEqual({ ok: true, recorded: false })
+        expect(lines.slice(-3)).toEqual([
+            'Not covered by these checks:',
+            '- the real API',
+            '- the docs site build',
+        ])
+    })
+
+    it('leaves them out when a check failed', async () => {
+        repo.write('src/a.ts', 'export const a = 2\n')
+        expect(await withSpots([fail('lint')])).toEqual({ ok: false, recorded: false })
+        expect(lines).not.toContain('Not covered by these checks:')
+    })
+})
+
 describe('what counts as a change', () => {
     it('sees an untracked file as a change', async () => {
         repo.write('src/new.ts', 'new\n')

@@ -20,6 +20,8 @@ export type VerifyOptions = {
     /** Where the branch left the default branch; undefined when there is no default branch. */
     base: string | undefined
     baseName?: string
+    /** What the checks cannot see, listed after every run that passed. */
+    blindSpots?: string[]
     out?: (line: string) => void
 }
 
@@ -28,6 +30,17 @@ export type VerifyResult = { ok: boolean; recorded: boolean }
 const LOG_TAIL_LINES = 30
 
 export async function runVerify(options: VerifyOptions): Promise<VerifyResult> {
+    const { blindSpots = [], out = console.log } = options
+    const result = await check(options)
+    // A docs-only pass skips most checks, so it needs this list as much as a full one does.
+    if (result.ok && blindSpots.length > 0) {
+        out('Not covered by these checks:')
+        for (const spot of blindSpots) out(`- ${spot}`)
+    }
+    return result
+}
+
+async function check(options: VerifyOptions): Promise<VerifyResult> {
     const { root, steps, base, baseName = 'main', out = console.log } = options
 
     if (base === undefined) {
