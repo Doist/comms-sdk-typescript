@@ -28,6 +28,7 @@ After cloning the repository and installing dependencies with `npm install`, sev
 - `npm test`: Runs all tests
 - `npm run test:watch`: Runs tests in watch mode
 - `npm run integrity-checks`: Runs the full CI validation pipeline
+- `npm run verify`: Runs every check CI runs on a pull request, and lists what it cannot check
 
 `npm install` also installs the git hooks, run by [lefthook](https://github.com/evilmartians/lefthook) and configured in `lefthook.yml`. `pre-commit` refuses a commit on `main`, then lints and formats the staged files (re-staging what the tools fix) and runs the type check; `pre-push` refuses a push to `main`, then runs the tests. Without node on `PATH`, as in some GUI git clients, they keep the branch rule, skip the checks and say so. CI runs the same checks either way. [docs/agents.md](docs/agents.md) explains the hooks and the agent tooling.
 
@@ -38,7 +39,7 @@ Before submitting a pull request, please take the following into consideration:
 - Create your branch from `main` (or from `next` if working on a pre-release feature)
 - Follow the [Commit Message Guidelines](#commit-message-guidelines) below
 - Add tests for code that should be tested
-- Ensure the test suite passes
+- Run `npm run verify`: it runs every check CI runs, including the test suite
 - Do not override built-in validation and formatting checks
 
 ## Commit Message Guidelines

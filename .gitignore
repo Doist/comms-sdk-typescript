@@ -6,6 +6,7 @@ dist
 .npm
 *.tgz
 .claude/settings.local.json
+.tmp/
 scratch.ts
 scratch-*.ts
 .vscode/launch.json
