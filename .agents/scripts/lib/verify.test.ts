@@ -148,6 +148,16 @@ describe('a code change', () => {
         expect(readVerified(repo.dir)).toBeUndefined()
     })
 
+    it('forgets an earlier pass when a doc is added, even if the formatting then fails', async () => {
+        await verify([pass('lint')])
+        repo.git(['add', '.'])
+        repo.git(['commit', '--quiet', '-m', 'code'])
+        const head = repo.git(['rev-parse', 'HEAD']).stdout.trim()
+        repo.write('docs/new.md', 'new\n')
+        await runVerify({ root: repo.dir, steps: [fail('format')], base: head, out: () => {} })
+        expect(readVerified(repo.dir)).toBeUndefined()
+    })
+
     it('keeps the pass when only a file CI alone reads changes during the run', async () => {
         const editor = pass('tests', {
             args: ['-c', 'echo x > renovate.json'],

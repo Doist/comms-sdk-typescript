@@ -15,7 +15,7 @@ List what the request leaves open: the method's name and which client carries it
 
 ## 3. Write "done" as checkable behaviours
 
-Write each behaviour as a call and the expected request and result, for example: "`api.workspaceUsers.getUsersByIds({ workspaceId: 1, userIds: [2, 2, 3] })` sends one request with `user_ids=[2,3]` and returns `{ 2: user, 3: null }` when the API omits 3". Each becomes a test. Done when a test could pass or fail on every one.
+Write each behaviour as a call and the expected request and result, for example: "`api.workspaceUsers.getUsersByIds({ workspaceId: 1, userIds: [2, 2, 3] })` sends one request with `user_ids=[2,3]` and returns `{ 2: user, 3: null }` when the API answers `3: null`". Each becomes a test. Done when a test could pass or fail on every one.
 
 ## 4. Build in thin slices, test first
 

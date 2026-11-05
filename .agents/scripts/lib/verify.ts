@@ -60,16 +60,16 @@ async function check(options: VerifyOptions): Promise<VerifyResult> {
             changes.map((path) => (needsChecks(root, path) ? 'code' : classify(path))),
         )
         if (changes.length > 0 && !kinds.has('code')) {
+            // Docs count by name in the fingerprint, so an added or removed doc makes an earlier
+            // pass describe a different tree. Forget it first, whatever the format step says.
+            const earlier = readVerified(root)
+            if (earlier && earlier.fingerprint !== codeFingerprint(snapshot(root)))
+                clearVerified(root)
             // Docs and CI config are still formatted, and CI checks that, so the format step runs.
             const format = steps.find((step) => step.name === 'format')
             if (format && !(await runStep(root, format, logDirFor(root), out))) {
                 return { ok: false, recorded: false }
             }
-            // Docs count by name in the fingerprint, so an added or removed doc makes an earlier
-            // pass describe a different tree.
-            const earlier = readVerified(root)
-            if (earlier && earlier.fingerprint !== codeFingerprint(snapshot(root)))
-                clearVerified(root)
             const checked = format ? 'only their formatting was checked' : 'nothing to check'
             if (kinds.has('unchecked')) {
                 const unchecked = changes.filter((path) => classify(path) === 'unchecked')

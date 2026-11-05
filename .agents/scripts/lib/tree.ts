@@ -75,7 +75,7 @@ export function codeFingerprint(files: Snapshot): string {
     for (const path of Object.keys(files).sort()) {
         const kind = classify(path)
         if (kind === 'code') hash.update(`${path}\0${files[path]}\n`)
-        else if (kind === 'docs' && present(files, path)) hash.update(`${path}\0doc\n`)
+        else if (kind === 'docs') hash.update(`${path}\0doc\n`)
     }
     return hash.digest('hex')
 }
