@@ -107,7 +107,92 @@ describe('SearchResultSchema', () => {
     })
 })
 
+describe('SearchClient — request parameters', () => {
+    function captureSearchParams(): { params: URLSearchParams } {
+        const captured = { params: new URLSearchParams() }
+        server.use(
+            http.get(`${BASE}/search`, ({ request }) => {
+                captured.params = new URL(request.url).searchParams
+                return HttpResponse.json({
+                    items: [],
+                    has_more: false,
+                    is_plan_restricted: false,
+                })
+            }),
+        )
+        return captured
+    }
+
+    it('sends the cursor as cursor_mark', async () => {
+        const captured = captureSearchParams()
+
+        const api = new CommsApi(TEST_API_TOKEN)
+        await api.search.search({ query: 'match', workspaceId: 1, cursor: 'next-page' })
+
+        expect(captured.params.get('cursor_mark')).toBe('next-page')
+        expect(captured.params.has('cursor')).toBe(false)
+    })
+
+    it('sends the search type', async () => {
+        const captured = captureSearchParams()
+
+        const api = new CommsApi(TEST_API_TOKEN)
+        await api.search.search({ query: 'match', workspaceId: 1, type: 'conversations' })
+
+        expect(captured.params.get('type')).toBe('conversations')
+    })
+
+    it('leaves out the search type by default', async () => {
+        const captured = captureSearchParams()
+
+        const api = new CommsApi(TEST_API_TOKEN)
+        await api.search.search({ query: 'match', workspaceId: 1 })
+
+        expect(captured.params.has('type')).toBe(false)
+    })
+})
+
 describe('SearchClient — result parsing', () => {
+    it('parses a chat title result, which has no message id', async () => {
+        server.use(
+            http.get(`${BASE}/search`, () => {
+                return HttpResponse.json({
+                    items: [
+                        {
+                            id: `conversation_${TEST_CONVERSATION_ID}`,
+                            type: 'conversation',
+                            title: 'Roadmap',
+                            snippet: 'Roadmap',
+                            snippet_creator_id: 2,
+                            snippet_last_updated_ts: 1700000000,
+                            conversation_id: TEST_CONVERSATION_ID,
+                            user_ids: [1, 2, 3],
+                            extra_matches: [],
+                        },
+                    ],
+                    has_more: false,
+                    is_plan_restricted: false,
+                })
+            }),
+        )
+
+        const api = new CommsApi(TEST_API_TOKEN)
+        const response = await api.search.search({
+            query: 'roadmap',
+            workspaceId: 1,
+            type: 'conversations',
+        })
+
+        expect(response.items).toHaveLength(1)
+        expect(response.items[0]).toMatchObject({
+            type: 'conversation',
+            title: 'Roadmap',
+            conversationId: TEST_CONVERSATION_ID,
+            userIds: [1, 2, 3],
+        })
+        expect(response.items[0]).not.toHaveProperty('messageId')
+    })
+
     it('keeps typed ids on thread and conversation results', async () => {
         server.use(
             http.get(`${BASE}/search`, () => {
