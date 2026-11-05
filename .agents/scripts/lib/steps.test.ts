@@ -1,6 +1,6 @@
 import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { basename, join } from 'node:path'
+import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { writeJson } from './state.ts'
 import { CI_EQUIVALENTS, preflight, UNRUN_WORKFLOWS, VERIFY_STEPS } from './steps.ts'
@@ -28,11 +28,17 @@ const runsACommand = (text: string) => /^\s+(?:- )?run: /m.test(text)
 const pkg = JSON.parse(readFileSync(join(REPO_ROOT, 'package.json'), 'utf8')) as {
     scripts: Record<string, string>
 }
-// `npx tsc` and node_modules/.bin/tsc are the same command; `--silent` changes output only.
-const normalize = (command: string) => command.trim().replace(/^npx /, '').replace(' --silent', '')
-const stepCommand = (name: string) => {
+/** The package.json script a verify step runs, if it runs one. */
+const stepScript = (name: string) => {
     const step = VERIFY_STEPS.find((candidate) => candidate.name === name)
-    return normalize([basename(step?.command ?? ''), ...(step?.args ?? [])].join(' '))
+    const [run, silent, script] = step?.args ?? []
+    return step?.command === 'npm' && run === 'run' && silent === '--silent' ? script : undefined
+}
+
+/** A script, or the scripts it runs through npm-run-all, in order. */
+function leafScripts(name: string): string[] {
+    const runs = pkg.scripts[name]?.match(/^npm-run-all (?:--parallel |-p )?([\w: -]+)$/)?.[1]
+    return runs ? runs.trim().split(/\s+/).flatMap(leafScripts) : [name]
 }
 
 describe('reading workflows', () => {
@@ -54,19 +60,33 @@ describe('verify covers CI', () => {
         expect(commands.toSorted()).toEqual(CI_EQUIVALENTS.map((entry) => entry.run).toSorted())
     })
 
-    it('runs the same commands as the package.json scripts CI calls', () => {
+    it('runs every step as a package.json script', () => {
+        for (const step of VERIFY_STEPS) {
+            expect(pkg.scripts, step.name).toHaveProperty([
+                stepScript(step.name) ?? `(${step.name})`,
+            ])
+        }
+    })
+
+    it('runs the same scripts as the package.json scripts CI calls', () => {
         for (const entry of CI_EQUIVALENTS) {
             const script = entry.run.match(/^npm run (\S+)$/)?.[1]
             if (!script) continue
-            const commands = (pkg.scripts[script] ?? '').split('&&').map(normalize)
-            expect({ script, commands }).toEqual({ script, commands: entry.steps.map(stepCommand) })
+            expect({ script, runs: leafScripts(script) }).toEqual({
+                script,
+                runs: entry.steps.map(stepScript),
+            })
         }
     })
 
     it('builds, as npm ci does through the prepare script', () => {
         expect(pkg.scripts.prepare).toMatch(/&& npm run build$/)
         expect(CI_EQUIVALENTS.find((entry) => entry.run === 'npm ci')?.steps).toEqual(['build'])
-        expect(stepCommand('build')).toBe('npm run build')
+        expect(stepScript('build')).toBe('build')
+    })
+
+    it('starts the tests once the build has passed, as CI does after npm ci', () => {
+        expect(VERIFY_STEPS.find((step) => step.name === 'tests')?.after).toBe('build')
     })
 
     it('accounts for every workflow that runs a command on pull requests', () => {

@@ -43,6 +43,7 @@ The release workflow commits and pushes to `main` and `next` from GitHub Actions
 One command, every check a pull request's CI runs: lint, format, both type checks, all tests and the build (which `npm ci` runs in CI, through `prepare`). It takes about ten seconds, so it always checks the whole tree. Picking only the affected tests would save a few seconds and add a way to miss something.
 
 - **Before the checks** it stops if Node is older than `package.json` requires, or if `node_modules` does not match the lockfile. Both make checks fail for reasons unrelated to your change.
+- **Steps** run the `package.json` scripts CI runs (`lint`, `format:check`, `type-check:src`, `type-check:tools`, `build`, `test`) side by side, except the tests: they start once the build has passed, since in CI `npm ci` builds first and a test packs `dist/`.
 - **Only docs changed** since the branch left `main`: it checks just their formatting, which CI checks too, and records nothing.
 - **Only CI files changed** (Renovate, `.github/` config other than workflows): it says no local check reads them, and checks their formatting. Every workflow counts as code, since a local test reads them all.
 - **Output:** one line per step. A failing step prints the last 30 lines of its log and the log's path under `.tmp/agents/logs/`.

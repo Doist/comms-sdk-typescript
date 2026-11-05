@@ -3,7 +3,8 @@ import { join } from 'node:path'
 import { readJson } from './state.ts'
 import type { Step } from './verify.ts'
 
-const bin = (tool: string) => `node_modules/.bin/${tool}`
+// Each step runs a package.json script, so verify and CI share one set of commands.
+const script = (name: string) => ({ command: 'npm', args: ['run', '--silent', name] })
 
 // The same environment CI's test job sets. CI=true makes vitest fail on `.only`, so checks run
 // with it to match CI.
@@ -11,17 +12,19 @@ const CI_ENV = { NODE_ENV: 'test', CI: 'true' }
 
 /** Every check `.github/workflows/ci.yml` runs on a pull request. */
 export const VERIFY_STEPS: Step[] = [
-    { name: 'lint', command: bin('oxlint'), args: ['src', '.agents/scripts'] },
-    { name: 'format', command: bin('oxfmt'), args: ['--check'] },
-    { name: 'types', command: bin('tsc'), args: ['--noEmit'] },
-    { name: 'types:tools', command: bin('tsc'), args: ['--noEmit', '-p', '.agents/scripts'] },
-    { name: 'tests', command: bin('vitest'), args: ['run'], env: CI_ENV },
-    { name: 'build', command: 'npm', args: ['run', '--silent', 'build'], env: CI_ENV },
+    { name: 'lint', ...script('lint'), env: CI_ENV },
+    { name: 'format', ...script('format:check'), env: CI_ENV },
+    { name: 'types', ...script('type-check:src'), env: CI_ENV },
+    { name: 'types:tools', ...script('type-check:tools'), env: CI_ENV },
+    { name: 'build', ...script('build'), env: CI_ENV },
+    // In CI, `npm ci` builds before the tests run, and package-contents.test.ts packs dist/, which
+    // the build empties and rewrites, so the tests wait for it here too.
+    { name: 'tests', ...script('test'), after: 'build', env: CI_ENV },
 ]
 
 /**
  * How each `run:` in CI's test job maps to verify steps. For `npm run <script>`, the steps must
- * run the script's commands, in order; steps.test.ts compares them with package.json and ci.yml,
+ * run the scripts it runs, in order; steps.test.ts compares them with package.json and ci.yml,
  * so CI and verify cannot drift apart silently.
  */
 export const CI_EQUIVALENTS: { run: string; steps: string[] }[] = [
