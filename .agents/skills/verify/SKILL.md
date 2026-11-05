@@ -11,7 +11,7 @@ description: Proves a change works before it is called done, and reports the evi
 npm run verify
 ```
 
-It runs every check CI runs on a pull request (about ten seconds) and records the pass. Fix every failure; never weaken a check to pass it. Done when it prints `Verified.`, or says only docs changed and only their formatting was checked.
+It runs every check CI runs on a pull request (about fifteen seconds) and records the pass. Fix every failure; never weaken a check to pass it. Done when it prints `Verified.`, or says only docs changed and only their formatting was checked.
 
 ## 2. Prove the change itself
 
