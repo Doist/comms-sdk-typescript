@@ -18,8 +18,9 @@ function fixture(copies: Record<string, unknown> = {}) {
             events.push({ args, options })
             if (args[0] === 'config')
                 return readFileSync(options.env.NPM_CONFIG_USERCONFIG, 'utf8')
-                    .split('\n')[0]
-                    .slice('registry='.length)
+                    .split('\n')
+                    .find((line) => line.startsWith(`${args[2]}=`))
+                    ?.slice(args[2].length + 1)
             if (args[0] === 'publish')
                 copies[args.some((x) => x.includes('npm.pkg.github.com')) ? 'github' : 'npmjs'] =
                     metadata.integrity

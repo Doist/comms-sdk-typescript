@@ -2,24 +2,13 @@ import assert from 'node:assert/strict'
 import { execFileSync, spawnSync } from 'node:child_process'
 import { readFileSync, appendFileSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { githubReleaseApi, completeReleaseRecord, releaseFiles } from './github-release-record.mjs'
 import { REPOSITORY, VERSION, SHA } from './release-policy.mjs'
 
 const directory = resolve(process.argv[2])
 const metadata = JSON.parse(readFileSync(resolve(directory, 'release.json'), 'utf8'))
 const run = (bin, args, options = {}) =>
     execFileSync(bin, args, { encoding: 'utf8', ...options }).trim()
-const api = (path, body) =>
-    JSON.parse(
-        run(
-            'gh',
-            [
-                'api',
-                `repos/${REPOSITORY}/${path}`,
-                ...(body ? ['--method', 'POST', '--input', '-'] : []),
-            ],
-            body ? { input: JSON.stringify(body) } : {},
-        ),
-    )
 assert.equal(process.env.GITHUB_REPOSITORY?.toLowerCase(), REPOSITORY)
 assert.match(metadata.version, VERSION)
 assert.match(metadata.sourceSha, SHA)
@@ -46,18 +35,11 @@ for (const destination of ['npmjs', 'github']) {
     )
 }
 const tag = `v${metadata.version}`
-const refs = api(`git/matching-refs/tags/${tag}`)
-const existing = refs.find((ref) => ref.ref === `refs/tags/${tag}`)
-if (existing) {
-    assert.equal(existing.object.type, 'commit')
-    assert.equal(
-        existing.object.sha,
-        metadata.sourceSha,
-        'Existing tag belongs to another source; never overwrite it',
-    )
-} else {
-    api('git/refs', { ref: `refs/tags/${tag}`, sha: metadata.sourceSha })
-}
+const created = completeReleaseRecord(
+    githubReleaseApi(),
+    metadata,
+    releaseFiles(directory, metadata),
+)
 
 // semantic-release needs the channel note to continue next.N as well as the v<version> tag.
 // Push only notes; never commit or push a source branch and never rewrite a release tag.
@@ -97,22 +79,4 @@ if (!channels.includes(channel)) {
     ])
     run('git', [...gitAuth, 'push', remote, notesRef])
 }
-const releases = JSON.parse(
-    run('gh', ['api', '--paginate', '--slurp', `repos/${REPOSITORY}/releases?per_page=100`]),
-).flat()
-const release = releases.find((item) => item.tag_name === tag)
-if (release) {
-    assert.equal(release.draft, false, 'Existing draft release requires maintainer reconciliation')
-    appendFileSync(process.env.GITHUB_OUTPUT, 'created=false\n')
-} else {
-    api('releases', {
-        tag_name: tag,
-        target_commitish: metadata.sourceSha,
-        name: tag,
-        body: metadata.notes,
-        draft: false,
-        prerelease: metadata.branch === 'next',
-        make_latest: metadata.branch === 'next' ? 'false' : 'true',
-    })
-    appendFileSync(process.env.GITHUB_OUTPUT, 'created=true\n')
-}
+appendFileSync(process.env.GITHUB_OUTPUT, `created=${created}\n`)

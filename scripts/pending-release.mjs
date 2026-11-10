@@ -3,15 +3,23 @@ import { execFileSync, spawnSync } from 'node:child_process'
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { resolve } from 'node:path'
+import { githubPages } from './github-pages.mjs'
+import {
+    githubReleaseApi,
+    assertRecordedBaseline,
+    assertPublishedRecord,
+    findRelease,
+    releaseFiles,
+} from './github-release-record.mjs'
 import { REPOSITORY, VERSION } from './release-policy.mjs'
 
 // Analysis and publication are separate jobs. Do not make two different tarballs for the same
 // next version when another push arrives before the earlier artifact's publication is recorded.
-export function requireRecordedPlans(plans, tagExists) {
+export function requireRecordedPlans(plans, isRecorded) {
     for (const plan of plans) {
         assert.match(plan.version, VERSION)
         assert.ok(
-            tagExists(`v${plan.version}`),
+            isRecorded(plan),
             `Retained release ${plan.version} from run ${plan.runId} is not recorded. Finish that exact artifact first, then dispatch a new build from the current release branch.`,
         )
     }
@@ -25,7 +33,9 @@ export function requireUnallocatedVersion(version, tagExists) {
     )
 }
 
-export function checkPendingReleases(baselineTag, proposedVersion) {
+export async function checkPendingReleases(baselineTag, proposedVersion) {
+    const releases = githubReleaseApi()
+    await assertRecordedBaseline(releases, baselineTag)
     const api = (path) =>
         JSON.parse(execFileSync('gh', ['api', `repos/${REPOSITORY}/${path}`], { encoding: 'utf8' }))
     requireUnallocatedVersion(
@@ -36,22 +46,15 @@ export function checkPendingReleases(baselineTag, proposedVersion) {
     )
     const branch = process.env.GITHUB_REF_NAME
     assert.ok(['main', 'next'].includes(branch))
-    const runs = JSON.parse(
-        execFileSync(
-            'gh',
-            [
-                'api',
-                '--paginate',
-                '--slurp',
-                `repos/${REPOSITORY}/actions/workflows/release.yml/runs?branch=${branch}&status=success&per_page=100`,
-            ],
-            { encoding: 'utf8' },
-        ),
-    ).flatMap((page) => page.workflow_runs)
+    const runs = githubPages(
+        `actions/workflows/release.yml/runs?branch=${branch}&status=success`,
+        'workflow_runs',
+    )
     const directory = mkdtempSync(resolve(tmpdir(), 'comms-sdk-pending-'))
     try {
         for (const run of runs) {
-            // Already released history needs no artifact download and may legitimately expire.
+            // The baseline's published record and original assets were verified above.
+            // Earlier completed history needs no artifact download and may legitimately expire.
             if (
                 spawnSync('git', ['merge-base', '--is-ancestor', run.head_sha, baselineTag], {
                     stdio: 'ignore',
@@ -84,13 +87,15 @@ export function checkPendingReleases(baselineTag, proposedVersion) {
                 { stdio: 'pipe' },
             )
             const plan = JSON.parse(readFileSync(resolve(target, 'release.json'), 'utf8'))
-            requireRecordedPlans(
-                [plan],
-                (tag) =>
-                    spawnSync('git', ['rev-parse', '--verify', `refs/tags/${tag}`], {
-                        stdio: 'ignore',
-                    }).status === 0,
-            )
+            requireRecordedPlans([plan], (metadata) => {
+                assertPublishedRecord(
+                    releases,
+                    findRelease(releases, `v${metadata.version}`),
+                    metadata,
+                    releaseFiles(target, metadata),
+                )
+                return true
+            })
         }
     } finally {
         rmSync(directory, { recursive: true, force: true })

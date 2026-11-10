@@ -21,6 +21,22 @@ describe('retained release source', () => {
     it('accepts a successful main build with checkout at the run SHA', async () => {
         await expect(validateSourceRun(run, 7, sha, compare)).resolves.toBeUndefined()
     })
+    it('accepts a reviewed source when its release branch has advanced', async () => {
+        await expect(
+            validateSourceRun(run, 7, sha, async () => ({
+                status: 'ahead',
+                merge_base_commit: { sha },
+            })),
+        ).resolves.toBeUndefined()
+    })
+    it('rejects an ahead response with a different merge base', async () => {
+        await expect(
+            validateSourceRun(run, 7, sha, async () => ({
+                status: 'ahead',
+                merge_base_commit: { sha: 'b'.repeat(40) },
+            })),
+        ).rejects.toThrow()
+    })
     it.each([
         { event: 'pull_request' },
         { conclusion: 'failure' },

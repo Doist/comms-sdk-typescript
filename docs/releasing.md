@@ -58,7 +58,7 @@ same-version copies before each publication. Conflicting bytes, auth failures or
 ambiguous network responses stop before any write. Matching copies are skipped.
 The interactive helper also downloads the authenticated run artifact and compares both the tarball and full metadata byte for byte; edited local checksums cannot authorize a replacement. No retry rebuilds or recalculates a version.
 
-A second push can arrive while the first retained artifact awaits publication. The builder refuses to produce another plan while an earlier retained plan has no release tag. Finish the earlier artifact and release record, then dispatch `release.yml` on the current release branch to analyze the later commits against the new baseline. Do not rebuild the partially published version. The proposed version must also be untagged: a prerelease tag with a channel note still pending cannot produce a second artifact. Build and publish queues stay separate so GitHub's single pending-run limit cannot replace a pending publisher with a new build.
+A second push can arrive while the first retained artifact awaits publication. The builder refuses to produce another plan while an earlier retained plan lacks a verified, published release record with both original assets. A bare tag or interrupted draft is not completed history. Before skipping ancestor runs, it verifies the baseline record, exact tag commit, stable/prerelease state, published timestamp, original tarball and `release.json`, hashes, and authenticated source run/attempt. The only asset-free exception is the inspected legacy `v4.0.0` at `96d5ca358cf8346471d08fb8b08c0f8474445cc5`; that record must still be published and stable. Completed records retain their assets beyond Actions artifact expiry. Finish the earlier artifact and release record, then dispatch `release.yml` on the current release branch to analyze the later commits against the new baseline. Do not rebuild the partially published version. The proposed version must also be untagged: a prerelease tag with a channel note still pending cannot produce a second artifact. Build and publish queues stay separate so GitHub's single pending-run limit cannot replace a pending publisher with a new build.
 
 ## Administrator setup
 
@@ -153,9 +153,13 @@ gh workflow run publish-release.yml --repo todoist/comms-sdk-typescript --ref ma
 
 The job's GitHub token supplies package read/write; it rechecks npm anonymously.
 Only after both copies and their normal channels match does it create the normal
-`v<version>` tag, channel note and attributed GitHub release, then announce a newly
-created stable release through the bootstrap action. Repeated release-record runs
-skip an existing matching tag/release and do not announce again. No source commit
+`v<version>` tag and attributed draft release, upload the exact retained tarball and
+`release.json`, publish that same release ID, then write the semantic-release channel
+note. Every retry verifies the exact tag commit, target SHA, notes, draft/published
+state, stable/prerelease flag, publication timestamp and both original asset bytes.
+Only a newly completed stable record is announced through the bootstrap action.
+An already complete published record is skipped without another announcement; a
+lost publish response may therefore omit an announcement rather than duplicate it. No source commit
 or branch push is necessary to establish the new-scope baseline.
 
 ## Partial publication and recovery
@@ -183,3 +187,35 @@ permission. If an existing identical copy has an unexpected normal dist-tag,
 publication skips it and release recording stops: inspect and approve a separate
 promotion rather than silently changing tags. If artifacts expire, stop and
 recover the original bytes; do not regenerate an already-published version.
+
+### Interrupted GitHub release recording
+
+A successful `gh release list` lookup is not completion: it also returns drafts.
+Retry the **same** `publish-release.yml` command above with the original run ID and
+SHA, `destination=github` (or the missing registry), and `tag=normal`. Matching
+registry copies are skipped. A matching draft resumes under its existing release
+ID, verifies every uploaded asset before any write, uploads only missing original
+assets, then publishes and re-reads the record. A lost tag/create/upload/publish
+response is safe to retry. Never delete/recreate a release, clobber an asset, or
+move/recreate an existing release's tag.
+
+Inspect the exact record and its assets read-only before recovery:
+
+```sh
+# VERSION and RELEASE_ID identify the interrupted original record.
+gh api --paginate --slurp repos/todoist/comms-sdk-typescript/releases \
+  --jq 'add | map({id,tag_name,target_commitish,draft,prerelease,published_at})'
+gh api "repos/todoist/comms-sdk-typescript/git/matching-refs/tags/v$VERSION"
+gh api "repos/todoist/comms-sdk-typescript/releases/$RELEASE_ID"
+gh api --paginate --slurp "repos/todoist/comms-sdk-typescript/releases/$RELEASE_ID/assets"
+```
+
+A different source, notes, prerelease state, duplicate/changed asset, missing tag
+on an existing record, or an asset left in `starter` state stops before writes.
+Keep the original run/attempt tarball and `release.json`; inspect the named release
+and asset IDs without deleting or replacing anything. A published release with a
+missing required asset also stops with its original run/attempt: recover those
+exact bytes into the same record through a separately reviewed maintainer action.
+The retry helper does not silently repair an incomplete published record. If the
+retained Actions artifact has expired or the original bytes cannot be recovered,
+stop; rebuilding or editing metadata is not an acceptable substitute.

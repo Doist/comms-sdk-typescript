@@ -45,8 +45,6 @@ jobs:
         env:
             ARTIFACT_RUN_ID: ${{ inputs.artifact_run_id || github.event.workflow_run.id }}
             RELEASE_SHA: ${{ inputs.source_sha || github.event.workflow_run.head_sha }}
-            GH_TOKEN: ${{ github.token }}
-            GH_PACKAGES_TOKEN: ${{ github.token }}
         steps:
             # Validation/publishing code always comes from the publisher's reviewed default branch.
             - uses: actions/checkout@v4
@@ -58,6 +56,8 @@ jobs:
                   node-version-file: .nvmrc
             - name: Validate successful source run
               id: source
+              env:
+                  GH_TOKEN: ${{ github.token }}
               run: |
                   mkdir -p .tmp
                   node scripts/validate-source-run.mjs
@@ -72,6 +72,7 @@ jobs:
               id: artifact
               if: steps.source.outputs.available == 'true'
               env:
+                  GH_TOKEN: ${{ github.token }}
                   REQUESTED_TAG: ${{ inputs.tag || 'normal' }}
               run: |
                   node scripts/release.mjs verify .tmp/release
@@ -84,12 +85,21 @@ jobs:
                   JS
             - name: Publish missing npm mirror using configured trust
               if: steps.source.outputs.available == 'true' && inputs.destination != 'github'
+              env:
+                  GH_TOKEN: ${{ github.token }}
+                  GH_PACKAGES_TOKEN: ${{ github.token }}
               run: node scripts/release.mjs publish .tmp/release npmjs
             - name: Publish missing GitHub mirror
               if: steps.source.outputs.available == 'true' && inputs.destination != 'npmjs'
+              env:
+                  GH_TOKEN: ${{ github.token }}
+                  GH_PACKAGES_TOKEN: ${{ github.token }}
               run: node scripts/release.mjs publish .tmp/release github
             - name: Require identical bytes in both registries
               if: steps.source.outputs.available == 'true'
+              env:
+                  GH_TOKEN: ${{ github.token }}
+                  GH_PACKAGES_TOKEN: ${{ github.token }}
               run: |
                   node scripts/release.mjs check-registry .tmp/release npmjs
                   node scripts/release.mjs check-registry .tmp/release github
@@ -108,6 +118,7 @@ jobs:
               env:
                   GH_TOKEN: ${{ steps.generate_token.outputs.token }}
                   SOURCE_GH_TOKEN: ${{ github.token }}
+                  GH_PACKAGES_TOKEN: ${{ github.token }}
             - name: Announce stable release in Comms
               if: steps.record.outputs.created == 'true' && steps.source.outputs.branch == 'main'
               uses: todoist/comms-actions/post-comment-action@aeeefe3270ad30d0c4cdd7dbf94b2fac1dcb8ceb
