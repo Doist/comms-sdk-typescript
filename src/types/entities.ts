@@ -144,6 +144,8 @@ export const WorkspaceSchema = z.object({
         .nullable()
         .optional(),
     plan: z.string().nullable().optional(),
+    /** Largest file `attachments.upload()` accepts in this workspace, in MiB (× 1024²). */
+    uploadLimitMb: z.number().nullable().optional(),
 })
 
 export type Workspace = z.infer<typeof WorkspaceSchema>
