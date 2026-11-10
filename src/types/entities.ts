@@ -5,7 +5,7 @@ import { USER_TYPES } from './enums'
 // EVERYONE / EVERYONE_IN_THREAD / GROUP_ID_MARKERS / GroupId / GroupIdMarker
 // are defined in `./enums` (re-exported through `./index`) to keep this
 // module from depending back on `./enums` for them. They're available
-// from the same public surface (`@doist/comms-sdk`) either way.
+// from the same public surface (`@todoist/comms-sdk`) either way.
 
 // Reusable schema for system messages that can be either a string or an
 // object. Nullable — the backend returns `null` when there is no system

@@ -37,7 +37,7 @@ export type CommsApiOptions = {
  *
  * @example
  * ```typescript
- * import { CommsApi } from '@doist/comms-sdk'
+ * import { CommsApi } from '@todoist/comms-sdk'
  *
  * const api = new CommsApi('your-api-token')
  * const user = await api.users.getSessionUser()
