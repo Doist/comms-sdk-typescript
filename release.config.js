@@ -1,3 +1,7 @@
+// The former stable-only changelog/git prepare hooks are completed by record-release.mjs
+// AFTER exact-artifact dual publication. Build analysis must never commit these files.
+export const stableSourceRecordAssets = ['CHANGELOG.md', 'package.json', 'package-lock.json']
+
 /** @type {import('semantic-release').GlobalConfig} */
 export default {
     branches: ['main', { name: 'next', prerelease: true }],

@@ -94,6 +94,7 @@ export async function checkPendingReleases(baselineTag, proposedVersion) {
                     metadata,
                     releaseFiles(target, metadata),
                 )
+                if (metadata.branch === 'main') releases.sourceRecord(metadata)
                 return true
             })
         }

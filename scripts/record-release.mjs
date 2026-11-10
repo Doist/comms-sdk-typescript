@@ -4,6 +4,7 @@ import { readFileSync, appendFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { githubReleaseApi, completeReleaseRecord, releaseFiles } from './github-release-record.mjs'
 import { REPOSITORY, VERSION, SHA } from './release-policy.mjs'
+import { recordStableSource, releaseChannelNote } from './source-release-record.mjs'
 
 const directory = resolve(process.argv[2])
 const metadata = JSON.parse(readFileSync(resolve(directory, 'release.json'), 'utf8'))
@@ -40,9 +41,12 @@ const created = completeReleaseRecord(
     metadata,
     releaseFiles(directory, metadata),
 )
+// Stable-only compatibility with the former changelog/git prepare hooks. Both registry copies
+// and the completed GitHub record were verified above. Never change/repack the source artifact.
+const sourceRecord = recordStableSource(metadata)
 
 // semantic-release needs the channel note to continue next.N as well as the v<version> tag.
-// Push only notes; never commit or push a source branch and never rewrite a release tag.
+// Keep the tag at the original build SHA; the separate stable source commit is recorded here.
 const remote = `https://github.com/${REPOSITORY}.git`
 const gitAuth = [
     '-c',
@@ -58,11 +62,17 @@ if (run('git', [...gitAuth, 'ls-remote', remote, notesRef])) {
 }
 run('git', [...gitAuth, 'fetch', remote, `refs/tags/${tag}:refs/tags/${tag}`])
 const note = spawnSync('git', ['notes', '--ref', notesRef, 'show', tag], { encoding: 'utf8' })
-const channels = note.status === 0 ? JSON.parse(note.stdout).channels : []
-assert.ok(Array.isArray(channels))
-const channel = metadata.branch === 'next' ? 'next' : null
-if (!channels.includes(channel)) {
-    channels.push(channel)
+if (note.status !== 0) {
+    assert.equal(note.status, 1)
+    assert.match(
+        note.stderr,
+        /no note found for object/,
+        'Cannot read existing semantic-release note; never replace unknown history',
+    )
+}
+const existingNote = note.status === 0 ? JSON.parse(note.stdout) : { channels: [] }
+const updatedNote = releaseChannelNote(existingNote, metadata, sourceRecord)
+if (JSON.stringify(updatedNote) !== JSON.stringify(existingNote)) {
     run('git', [
         '-c',
         'user.name=github-actions[bot]',
@@ -74,9 +84,11 @@ if (!channels.includes(channel)) {
         'add',
         '-f',
         '-m',
-        JSON.stringify({ channels }),
+        JSON.stringify(updatedNote),
         tag,
     ])
     run('git', [...gitAuth, 'push', remote, notesRef])
 }
 appendFileSync(process.env.GITHUB_OUTPUT, `created=${created}\n`)
+if (sourceRecord)
+    appendFileSync(process.env.GITHUB_OUTPUT, `source_record_sha=${sourceRecord.recordSha}\n`)
