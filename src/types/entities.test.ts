@@ -253,8 +253,9 @@ describe('VisibleWorkspaceUserSchema', () => {
 })
 
 describe('WorkspaceSchema', () => {
-    it('keeps the upload limit', () => {
-        const workspace = WorkspaceSchema.parse({ ...mockWorkspace, uploadLimitMb: 5 })
-        expect(workspace.uploadLimitMb).toBe(5)
+    it.each([5, null, undefined])('parses an upload limit of %s', (uploadLimitMb) => {
+        // Older backends send no limit at all.
+        const workspace = WorkspaceSchema.parse({ ...mockWorkspace, uploadLimitMb })
+        expect(workspace.uploadLimitMb).toBe(uploadLimitMb)
     })
 })
