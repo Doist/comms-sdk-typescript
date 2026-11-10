@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { registryJson, validatePublicationTag, validateSourceRun } from './release-policy.mjs'
+import {
+    registryJson,
+    validatePublicationTag,
+    validateSourceRun,
+    readSourceRun,
+} from './release-policy.mjs'
 
 const sha = 'a'.repeat(40)
 const run = {
@@ -88,5 +93,39 @@ describe('registry recovery', () => {
         expect(registryJson({ status: 0, stdout: '"sha512-value"' })).toBe('sha512-value')
         expect(() => registryJson({ status: 1, stderr: '{"error":{"code":"E401"}}' })).toThrow()
         expect(() => registryJson({ status: 1, stderr: 'upstream unavailable' })).toThrow()
+    })
+})
+
+describe('original source run attempt', () => {
+    it('reads the selected successful attempt instead of the latest rerun', () => {
+        const selected = readSourceRun(
+            (path: string) => {
+                expect(path).toBe('actions/runs/42/attempts/2')
+                return { id: 42, run_attempt: 2 }
+            },
+            { ARTIFACT_RUN_ID: '42', ARTIFACT_RUN_ATTEMPT: '2' },
+        )
+        expect(selected).toEqual({ id: 42, run_attempt: 2 })
+    })
+    it.each([undefined, '', '0', 'latest'])(
+        'rejects an unspecified original attempt %s',
+        (attempt) => {
+            expect(() =>
+                readSourceRun(
+                    () => {
+                        throw new Error('must not request')
+                    },
+                    { ARTIFACT_RUN_ID: '42', ARTIFACT_RUN_ATTEMPT: attempt },
+                ),
+            ).toThrow(/original/)
+        },
+    )
+    it('rejects a response for another attempt', () => {
+        expect(() =>
+            readSourceRun(() => ({ id: 42, run_attempt: 3 }), {
+                ARTIFACT_RUN_ID: '42',
+                ARTIFACT_RUN_ATTEMPT: '2',
+            }),
+        ).toThrow()
     })
 })

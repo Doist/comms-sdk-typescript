@@ -52,6 +52,7 @@ export function publishArtifact(
             Object.assign(env, {
                 NPM_CONFIG_USERCONFIG: userconfig,
                 NPM_CONFIG_GLOBALCONFIG: globalconfig,
+                NPM_CONFIG_CACHE: resolve(isolated, `${name}-cache`),
             })
             options[name] = { cwd: isolated, env }
             for (const key of ['registry', '@todoist:registry']) {
@@ -71,10 +72,57 @@ export function publishArtifact(
             registryJson(
                 io.spawnSync(
                     'npm',
-                    ['view', target, field, '--json', `--registry=${registries[name]}`],
+                    [
+                        'view',
+                        target,
+                        field,
+                        '--prefer-online',
+                        '--json',
+                        `--registry=${registries[name]}`,
+                    ],
                     { ...options[name], encoding: 'utf8' },
                 ),
             )
+        const requireGitHubAbsenceAccess = () => {
+            // Package-level readability makes a version-level 404 meaningful. An ACL-filtered
+            // package 404 is otherwise ambiguous, even with valid registry login or list[].
+            const packageName = view('github', metadata.name, 'name')
+            if (packageName !== undefined) {
+                assert.equal(packageName, metadata.name, 'Unexpected GitHub package metadata')
+                return
+            }
+            const response = io.execFileSync(
+                'gh',
+                ['api', '--hostname', 'github.com', '--include', 'user/memberships/orgs/todoist'],
+                {
+                    encoding: 'utf8',
+                    env: { ...environment, GH_TOKEN: environment.GH_PACKAGES_TOKEN },
+                },
+            )
+            const separator = /\r?\n\r?\n/.exec(response)
+            assert.ok(separator, 'Cannot verify GitHub organization owner response')
+            const headers = response.slice(0, separator.index)
+            assert.match(headers, /^HTTP\/\S+ 200\b/)
+            const scopes = (headers.match(/^x-oauth-scopes:[ \t]*([^\r\n]*)/im)?.[1] || '')
+                .split(',')
+                .map((scope) => scope.trim())
+            assert.ok(
+                scopes.some((scope) => ['read:packages', 'write:packages'].includes(scope)),
+                'Owner absence proof requires a classic PAT with read:packages',
+            )
+            const membership = JSON.parse(response.slice(separator.index + separator[0].length))
+            assert.equal(membership.organization?.login?.toLowerCase(), 'todoist')
+            assert.equal(
+                membership.state,
+                'active',
+                'GitHub package is unreadable; active org-owner proof required',
+            )
+            assert.equal(
+                membership.role,
+                'admin',
+                'GitHub package is unreadable; organization-owner proof required',
+            )
+        }
         const preflightBoth = () => {
             const copies = {}
             for (const name of Object.keys(registries)) {
@@ -85,6 +133,7 @@ export function publishArtifact(
                         metadata.integrity,
                         `Different same-version bytes on ${name}; no write permitted`,
                     )
+                else if (name === 'github') requireGitHubAbsenceAccess()
             }
             return copies
         }

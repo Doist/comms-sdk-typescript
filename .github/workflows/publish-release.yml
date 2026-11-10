@@ -6,6 +6,9 @@ on:
             artifact_run_id:
                 description: Successful Release artifact run ID
                 required: true
+            artifact_run_attempt:
+                description: Original successful build attempt (never a later rerun)
+                required: true
             source_sha:
                 description: Full reviewed build commit SHA
                 required: true
@@ -44,6 +47,7 @@ jobs:
         timeout-minutes: 30
         env:
             ARTIFACT_RUN_ID: ${{ inputs.artifact_run_id || github.event.workflow_run.id }}
+            ARTIFACT_RUN_ATTEMPT: ${{ inputs.artifact_run_attempt || github.event.workflow_run.run_attempt }}
             RELEASE_SHA: ${{ inputs.source_sha || github.event.workflow_run.head_sha }}
         steps:
             # Validation/publishing code always comes from the publisher's reviewed default branch.

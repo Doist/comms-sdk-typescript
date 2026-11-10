@@ -1,13 +1,13 @@
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
 import { appendFileSync } from 'node:fs'
-import { REPOSITORY, validateSourceRun } from './release-policy.mjs'
+import { REPOSITORY, validateSourceRun, readSourceRun } from './release-policy.mjs'
 
 assert.equal(process.env.GITHUB_REPOSITORY?.toLowerCase(), REPOSITORY)
 assert.match(process.env.ARTIFACT_RUN_ID || '', /^\d+$/)
 const api = (path) =>
     JSON.parse(execFileSync('gh', ['api', `repos/${REPOSITORY}/${path}`], { encoding: 'utf8' }))
-const run = api(`actions/runs/${process.env.ARTIFACT_RUN_ID}`)
+const run = readSourceRun(api)
 const workflow = api('actions/workflows/release.yml')
 await validateSourceRun(run, workflow.id, process.env.RELEASE_SHA, async (base, head) =>
     api(`compare/${base}...${head}`),
