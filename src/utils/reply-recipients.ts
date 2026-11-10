@@ -1,14 +1,14 @@
 /**
  * Who a new reply in a thread notifies by default.
  *
- * The rule comes from `@doist/sdk-kmp`, the shared implementation of Comms
+ * The rule comes from `@todoist/sdk-kmp`, the shared implementation of Comms
  * logic, so replies default to the same people as in the other Comms clients.
  */
 
 import {
     getDefaultReplyRecipients as getSharedDefaultReplyRecipients,
     ReplyRecipientsProvidable,
-} from '@doist/sdk-kmp/shared-comms-clients'
+} from '@todoist/sdk-kmp/shared-comms-clients'
 import type { Comment, Thread } from '../types/entities'
 import { EVERYONE, EVERYONE_IN_THREAD, GROUP_ID_MARKERS, type NotifyAudience } from '../types/enums'
 
