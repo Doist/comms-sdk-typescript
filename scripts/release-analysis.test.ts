@@ -44,6 +44,12 @@ describe('release lineage', () => {
         expect(() => requireRecordedPlans(plans, () => false)).toThrow(
             /Finish that exact artifact first/,
         )
-        expect(() => requireRecordedPlans(plans, (tag: string) => tag === 'v4.0.1')).not.toThrow()
+        expect(() =>
+            requireRecordedPlans(
+                plans,
+                (plan: { version: string; runId: string }) =>
+                    plan.version === '4.0.1' && plan.runId === '42',
+            ),
+        ).not.toThrow()
     })
 })

@@ -13,7 +13,7 @@ assert.equal(
 )
 // semantic-release's dry run checks push authorization but never pushes, tags or publishes.
 const result = await semanticRelease()
-if (result) checkPendingReleases(result.lastRelease.gitTag, result.nextRelease.version)
+if (result) await checkPendingReleases(result.lastRelease.gitTag, result.nextRelease.version)
 assert.equal(
     execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(),
     process.env.GITHUB_SHA,
