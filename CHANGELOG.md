@@ -1,3 +1,18 @@
+## [4.0.0](https://github.com/Doist/comms-sdk-typescript/compare/v3.12.0...v4.0.0) (2026-11-10)
+
+### ⚠ BREAKING CHANGES
+
+* **attachments:** `attachments.upload()` now requires `workspaceId`. Calls
+without it were already failing at the API.
+
+### Features
+
+* **workspaces:** expose the workspace's upload limit ([#137](https://github.com/Doist/comms-sdk-typescript/issues/137)) ([457a78e](https://github.com/Doist/comms-sdk-typescript/commit/457a78e49898bac065eb97ebac01bbad07c15fee)), closes [comms-backend#1363](https://github.com/Doist/comms-backend/issues/1363)
+
+### Bug Fixes
+
+* **attachments:** send workspace_id with uploads ([#136](https://github.com/Doist/comms-sdk-typescript/issues/136)) ([6a92dab](https://github.com/Doist/comms-sdk-typescript/commit/6a92dabac733174d2ff46e34cae8dc950e5b3f7f))
+
 ## [3.12.0](https://github.com/Doist/comms-sdk-typescript/compare/v3.11.0...v3.12.0) (2026-11-05)
 
 ### Features
