@@ -46,7 +46,7 @@ This repository is set up so coding agents prove their work before they call it 
 - Worktrees share the hooks in `.git/hooks`, so the branch rule works in a new worktree at once. Lint, format, types and tests need `npm ci` in that worktree first.
 - Without the lefthook binary (no `node_modules` in any checkout), the hooks print "Can't find lefthook in PATH" and let the commit through.
 
-The release workflow commits and pushes to `main` and `next` from GitHub Actions, and `npm ci` runs `prepare` there, which installs the hooks. The release step sets `LEFTHOOK=0`, so they do not run, and the guard also skips itself when `GITHUB_ACTIONS=true`. Branch protection on GitHub is the real enforcement; the hooks only catch mistakes early.
+The artifact workflow installs with lifecycle scripts disabled and runs verification explicitly. The publisher records tags and channel notes after both registries match; it does not push source branches. The branch guard also skips itself when `GITHUB_ACTIONS=true`. Branch protection on GitHub is the real enforcement; the hooks only catch mistakes early.
 
 ## `npm run verify`
 
@@ -149,7 +149,7 @@ Your part: answer the decision questions, and read the evidence report, especial
 
 ## Releases
 
-semantic-release publishes from `main` on every merge, and prereleases from `next`. The squash-merged PR title decides whether anything ships: `feat:`, `fix:`, `perf:` and any breaking change (`!`) release; `chore:`, `ci:`, `docs:`, `test:` and `refactor:` do not. Changes to the agent tooling use `chore:` or `ci:`, so they never publish a new version. No path filter is needed.
+semantic-release analyzes `main` and `next` to prepare retained release artifacts. Publication and release recording happen separately, after both registry copies match; see [releasing](releasing.md). Automatic publication is off until bootstrap and administrator setup are complete. The squash-merged PR title decides whether anything ships: `feat:`, `fix:`, `perf:` and any breaking change (`!`) release; `chore:`, `ci:`, `docs:`, `test:` and `refactor:` do not. Changes to the agent tooling use `chore:` or `ci:`, so they do not normally publish a new version. The one explicit exception is the approved migration from the existing 4.0.0 tag to the first new-scope 4.0.1 artifact; it remains build-only until the separate publication step. No path filter is needed.
 
 ## What fails open
 

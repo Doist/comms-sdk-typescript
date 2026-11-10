@@ -10,7 +10,7 @@ All work on Comms SDK happens directly on [GitHub](https://github.com/todoist/co
 
 Comms SDK follows [semantic versioning](https://semver.org/). We release patch versions for bugfixes, minor versions for new features or non-essential changes, and major versions for any breaking changes.
 
-Every significant change is documented in the [CHANGELOG.md](CHANGELOG.md) file.
+Historical changes are in [CHANGELOG.md](CHANGELOG.md); future release notes accompany each GitHub release.
 
 ## Branch Organization
 
@@ -68,7 +68,7 @@ PR titles are validated against the Conventional Commits format by CI. When squa
 
 ## Release Process (core team only)
 
-The release process is fully automated with [semantic-release](https://github.com/semantic-release/semantic-release). Pushing to `main` (after CI passes) triggers a stable release automatically.
+A push to `main` builds and retains a release artifact using semantic-release version analysis. Publication uses the same tarball for npmjs and GitHub Packages through a separate protected workflow. Automatic publication is enabled only after the first real new-scope release and registry setup. Follow [the release runbook](docs/releasing.md) for bootstrap, normal releases and retries.
 
 ### Pre-releases
 
@@ -84,16 +84,16 @@ To test features before publishing a stable release:
 
 2. **Develop on a feature branch** based off `next` and open a PR targeting `next`.
 
-3. **Automatic pre-release:** Each PR merge into `next` triggers CI and publishes a pre-release version (e.g., `1.1.0-next.1`) to the `next` dist-tag on npm.
+3. **Pre-release artifact:** Each PR merge into `next` triggers CI and prepares a pre-release artifact (e.g., `4.1.0-next.1`). Once automatic publication is enabled, the publisher uses the `next` dist-tag in both registries. Bootstrap stable 4.0.1 first.
 
 4. **Promote to stable:** When ready, open a PR to merge `next` into `main`. Use a regular merge commit (not squash), as this preserves the individual commit history and allows semantic-release to correctly generate a comprehensive changelog and determine the version bump automatically.
 
-> **Note:** The `CHANGELOG.md` is only updated for stable releases on `main`. Pre-releases still get GitHub release notes and npm publication.
+> **Note:** Release notes are recorded on GitHub after both registries contain the same bytes. Existing changelog entries and release tags are preserved.
 
 ### Installing a pre-release
 
 ```sh
-npm install @doist/comms-sdk@next
+npm install @todoist/comms-sdk@next
 ```
 
 ## License

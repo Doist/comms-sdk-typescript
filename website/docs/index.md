@@ -11,13 +11,13 @@ The official TypeScript SDK for the Comms REST API.
 ## Installation
 
 ```bash
-npm install @doist/comms-sdk
+npm install @todoist/comms-sdk
 ```
 
 ## Quick Start
 
 ```typescript
-import { CommsApi } from '@doist/comms-sdk'
+import { CommsApi } from '@todoist/comms-sdk'
 
 const api = new CommsApi('your-api-token')
 

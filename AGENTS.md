@@ -1,6 +1,6 @@
 # Comms SDK TypeScript
 
-`@doist/comms-sdk`, the TypeScript SDK for the Comms REST API. ESM-only, Node 24 or newer. Its users are other packages and apps, so everything exported from `src/index.ts` is public API.
+`@todoist/comms-sdk`, the TypeScript SDK for the Comms REST API. ESM-only, Node 24 or newer. Its users are other packages and apps, so everything exported from `src/index.ts` is public API.
 
 ## Definition of done
 

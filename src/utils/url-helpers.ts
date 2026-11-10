@@ -1,7 +1,7 @@
 /**
  * Helper functions for creating Comms permalinks (`https://comms.todoist.com/...`).
  *
- * Paths come from `@doist/sdk-kmp`, the shared implementation of Comms link
+ * Paths come from `@todoist/sdk-kmp`, the shared implementation of Comms link
  * routes, so they stay in step with the other Comms clients. The path builders
  * are used rather than the URL builders so that `getFullCommsURL` can keep
  * serving an arbitrary base URL.
@@ -18,7 +18,7 @@ import {
     commsThreadCommentPath,
     commsThreadPath,
     parseCommsLink,
-} from '@doist/sdk-kmp/comms'
+} from '@todoist/sdk-kmp/comms'
 
 export type CommsURLParams = {
     workspaceId: number

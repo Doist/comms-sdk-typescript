@@ -2,13 +2,13 @@ import {
     ConversationKind,
     getConversationTitle as getSharedConversationTitle,
     ConversationTitleType as SharedConversationTitleType,
-} from '@doist/sdk-kmp/shared-comms-all'
+} from '@todoist/sdk-kmp/shared-comms-all'
 import { CONVERSATION_TITLE_TYPES, getConversationTitle } from './conversation-title'
 
 // Calls through, so the tests can check the kind the SDK passes in, which the
 // library's titles can't always show.
-vi.mock('@doist/sdk-kmp/shared-comms-all', async (importOriginal) => {
-    const actual = await importOriginal<typeof import('@doist/sdk-kmp/shared-comms-all')>()
+vi.mock('@todoist/sdk-kmp/shared-comms-all', async (importOriginal) => {
+    const actual = await importOriginal<typeof import('@todoist/sdk-kmp/shared-comms-all')>()
     return { ...actual, getConversationTitle: vi.fn(actual.getConversationTitle) }
 })
 

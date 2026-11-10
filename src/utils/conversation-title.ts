@@ -1,7 +1,7 @@
 /**
  * The title a conversation shows when nobody has named it.
  *
- * The rules come from `@doist/sdk-kmp`, the shared implementation of Comms
+ * The rules come from `@todoist/sdk-kmp`, the shared implementation of Comms
  * logic, so titles match the other Comms clients. The wording stays with each
  * caller, which joins the names in the user's language.
  */
@@ -11,7 +11,7 @@ import {
     ConversationMemberProvidable,
     type ConversationTitleType as SharedConversationTitleType,
     getConversationTitle as getSharedConversationTitle,
-} from '@doist/sdk-kmp/shared-comms-all'
+} from '@todoist/sdk-kmp/shared-comms-all'
 import type { Conversation, WorkspaceUser } from '../types/entities'
 
 /** The ways a conversation's title can be shown. */
