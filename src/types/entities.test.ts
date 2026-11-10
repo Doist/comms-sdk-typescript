@@ -1,4 +1,4 @@
-import { mockWorkspaceUser } from '../testUtils/test-defaults'
+import { mockWorkspace, mockWorkspaceUser } from '../testUtils/test-defaults'
 import {
     AttachmentSchema,
     createChannelSchema,
@@ -6,6 +6,7 @@ import {
     isRestrictedWorkspaceUser,
     RequestAttachmentSchema,
     VisibleWorkspaceUserSchema,
+    WorkspaceSchema,
 } from './entities'
 
 describe('AttachmentSchema', () => {
@@ -248,5 +249,12 @@ describe('VisibleWorkspaceUserSchema', () => {
         expect(() =>
             VisibleWorkspaceUserSchema.parse({ ...restrictedPayload, restricted: false }),
         ).toThrow()
+    })
+})
+
+describe('WorkspaceSchema', () => {
+    it('keeps the upload limit', () => {
+        const workspace = WorkspaceSchema.parse({ ...mockWorkspace, uploadLimitMb: 5 })
+        expect(workspace.uploadLimitMb).toBe(5)
     })
 })
