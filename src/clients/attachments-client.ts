@@ -71,8 +71,8 @@ export class AttachmentsClient extends BaseClient {
      * Uploads a file and returns the created {@link Attachment}.
      *
      * Mirrors the canonical multipart upload: `POST /attachments/upload` with the `file`
-     * binary plus `file_name`, `file_size`, `attachment_id`, and `underlying_type` form
-     * fields.
+     * binary plus `workspace_id`, `file_name`, `file_size`, `attachment_id`, and
+     * `underlying_type` form fields.
      *
      * @param args - The file to upload and optional metadata.
      * @returns The created attachment, ready to attach to a comment or message.
@@ -82,6 +82,7 @@ export class AttachmentsClient extends BaseClient {
      * import { readFile } from 'node:fs/promises'
      *
      * const attachment = await api.attachments.upload({
+     *   workspaceId: 12345,
      *   file: await readFile('./diagram.png'),
      *   fileName: 'diagram.png',
      * })
@@ -102,6 +103,7 @@ export class AttachmentsClient extends BaseClient {
             fileName: args.fileName,
             contentType: args.contentType,
             additionalFields: {
+                workspace_id: args.workspaceId,
                 attachment_id: resolveAttachmentId(args.attachmentId),
             },
             headers: this.headers,
