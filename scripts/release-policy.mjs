@@ -4,6 +4,21 @@ export const REPOSITORY = 'todoist/comms-sdk-typescript'
 export const VERSION = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-next\.([1-9]\d*))?$/
 export const SHA = /^[a-f0-9]{40}$/
 
+export function readSourceRun(api, environment = process.env) {
+    const id = environment.ARTIFACT_RUN_ID || ''
+    const attempt = environment.ARTIFACT_RUN_ATTEMPT || ''
+    assert.match(id, /^[1-9]\d*$/)
+    assert.match(
+        attempt,
+        /^[1-9]\d*$/,
+        'Select the original successful ARTIFACT_RUN_ATTEMPT; never substitute the latest attempt',
+    )
+    const run = api(`actions/runs/${id}/attempts/${attempt}`)
+    assert.equal(String(run.id), id)
+    assert.equal(String(run.run_attempt), attempt)
+    return run
+}
+
 export async function validateSourceRun(run, workflowId, sourceSha, compare) {
     assert.match(sourceSha, SHA)
     assert.equal(run.repository.full_name.toLowerCase(), REPOSITORY)

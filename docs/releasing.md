@@ -56,7 +56,7 @@ in that release branch. It downloads the exact run/attempt artifact, checks pack
 name/version/dependencies and its SHA-256/SHA-512, and checks **both registries'**
 same-version copies before each publication. Conflicting bytes, auth failures or
 ambiguous network responses stop before any write. Matching copies are skipped.
-The interactive helper also downloads the authenticated run artifact and compares both the tarball and full metadata byte for byte; edited local checksums cannot authorize a replacement. No retry rebuilds or recalculates a version.
+The interactive helper selects the explicit original successful run/attempt, finds its unique artifact ID, verifies the downloaded ZIP against GitHub's authenticated SHA-256 archive digest, and compares both the tarball and full metadata byte for byte; edited local checksums cannot authorize a replacement. No retry rebuilds or recalculates a version.
 
 A second push can arrive while the first retained artifact awaits publication. The builder refuses to produce another plan while an earlier retained plan lacks a verified, published release record with both original assets. A bare tag or interrupted draft is not completed history. Before skipping ancestor runs, it verifies the baseline record, exact tag commit, stable/prerelease state, published timestamp, original tarball and `release.json`, hashes, and authenticated source run/attempt. The only asset-free exception is the inspected legacy `v4.0.0` at `96d5ca358cf8346471d08fb8b08c0f8474445cc5`; that record must still be published and stable. Completed records retain their assets beyond Actions artifact expiry. Finish the earlier artifact and release record, then dispatch `release.yml` on the current release branch to analyze the later commits against the new baseline. Do not rebuild the partially published version. The proposed version must also be untagged: a prerelease tag with a channel note still pending cannot produce a second artifact. Build and publish queues stay separate so GitHub's single pending-run limit cannot replace a pending publisher with a new build.
 
@@ -113,22 +113,35 @@ gh run list --repo todoist/comms-sdk-typescript --workflow release.yml --limit 1
 ```
 
 Set `ARTIFACT_RUN_ID` to the successful reviewed run, `RELEASE_SHA` to its full
-head SHA, `RUN_ATTEMPT` to its run attempt, and `RELEASE_DIR` to a new absolute
+head SHA, `ARTIFACT_RUN_ATTEMPT` to its run attempt, and `RELEASE_DIR` to a new absolute
 local directory. These are real operator-selected values, never placeholder
-artifacts. Keep the tarball and `release.json` together for all retries.
+artifacts. Do not replace the original attempt with a later rerun. Keep the tarball
+and `release.json` together for all retries; unsupported/missing archive digests
+stop for original-byte recovery rather than accepting local metadata. The digest
+comes from the authenticated [artifact API](https://docs.github.com/en/rest/actions/artifacts#get-an-artifact).
 
 ```sh
-export ARTIFACT_RUN_ID RELEASE_SHA
+export ARTIFACT_RUN_ID ARTIFACT_RUN_ATTEMPT RELEASE_SHA
 gh run download "$ARTIFACT_RUN_ID" --repo todoist/comms-sdk-typescript \
-  --name "release-$ARTIFACT_RUN_ID-$RUN_ATTEMPT" --dir "$RELEASE_DIR"
+  --name "release-$ARTIFACT_RUN_ID-$ARTIFACT_RUN_ATTEMPT" --dir "$RELEASE_DIR"
 ```
 
 Use an authenticated `gh` session with Actions/contents read access. Separately
 supply `GH_PACKAGES_TOKEN` from the approved credential store: a GitHub token with
 `read:packages`, repository access and any required organization SSO authorization.
 This token is required even for npm-only bootstrap because the GitHub copy must
-be checked before writing npm. Do not paste credentials into commands/history.
-The helper passes that token only to the GitHub registry subprocess; it removes
+be checked before writing npm. A GitHub version 404 is accepted only if the same
+credential can read the package metadata. If the entire package is unreadable,
+the helper requires that same credential to prove active `todoist` owner
+membership (`role=admin`) and package-read scope. Use an authorized owner classic
+PAT with `read:org` and `read:packages` for initial absence proof, plus
+`write:packages` for the first GitHub mirror write. Required organization SSO
+authorization still applies. Token presence, registry `whoami`, a bare 404 and
+an empty organization package list are never absence proof. See the
+[authenticated membership API](https://docs.github.com/en/rest/orgs/members#get-an-organization-membership-for-the-authenticated-user)
+and [GitHub package permissions](https://docs.github.com/en/packages/learn-github-packages/about-permissions-for-github-packages). Auth/network
+ambiguity stops; there is no local confirmation-file bypass. Do not paste credentials into commands/history.
+The helper passes that token only to GitHub registry and owner-proof requests; it removes
 GitHub tokens and inherited npm tokens/config from npm login and publish.
 
 ```sh
@@ -142,16 +155,30 @@ access. Both login and publish inherit the terminal for browser auth/fresh 2FA.
 The temporary login is removed afterward; global npm configuration is untouched.
 The package must exist before configuring npm trust. No dummy/staged publication.
 
-After npm succeeds, the same artifact can supply the GitHub mirror and record the
-release without needing npm trust yet:
+After npm succeeds, create the first GitHub mirror locally with the same verified
+artifact and an authorized owner classic PAT including `write:packages` and
+`read:org` in `GH_PACKAGES_TOKEN`:
+
+```sh
+node scripts/release.mjs publish "$RELEASE_DIR" github
+```
+
+This command repeats both-registry preflight and owner/read proof before writing.
+An ordinary Actions token cannot establish package-level absence. Confirm the
+GitHub package visibility, repository linkage and Actions read/write grant after
+creation. Once both real copies are readable, the following workflow skips both
+matching copies and records the release without needing npm trust yet:
 
 ```sh
 gh workflow run publish-release.yml --repo todoist/comms-sdk-typescript --ref main \
-  -f artifact_run_id="$ARTIFACT_RUN_ID" -f source_sha="$RELEASE_SHA" \
+  -f artifact_run_id="$ARTIFACT_RUN_ID" -f artifact_run_attempt="$ARTIFACT_RUN_ATTEMPT" \
+  -f source_sha="$RELEASE_SHA" \
   -f destination=github -f tag=normal
 ```
 
-The job's GitHub token supplies package read/write; it rechecks npm anonymously.
+The job's GitHub token supplies package read/write for the linked readable mirror;
+it rechecks npm anonymously. If that mirror is ACL-hidden, the run stops rather
+than interpreting an empty inventory as absence.
 Only after both copies and their normal channels match does it create the normal
 `v<version>` tag and attributed draft release, upload the exact retained tarball and
 `release.json`, publish that same release ID, then write the semantic-release channel
@@ -164,7 +191,7 @@ or branch push is necessary to establish the new-scope baseline.
 
 ## Partial publication and recovery
 
-Retry the same run ID, source SHA and bytes, selecting `github`, `npmjs` or `both`.
+Retry the same run ID, original attempt, source SHA and bytes, selecting `github`, `npmjs` or `both`.
 For first npm publication use the interactive helper again; subsequent trusted
 npm copies can use the publisher. All choices preflight both copies. If either
 normal channel has advanced, choose `tag=migration-recovery` (or
@@ -191,8 +218,8 @@ recover the original bytes; do not regenerate an already-published version.
 ### Interrupted GitHub release recording
 
 A successful `gh release list` lookup is not completion: it also returns drafts.
-Retry the **same** `publish-release.yml` command above with the original run ID and
-SHA, `destination=github` (or the missing registry), and `tag=normal`. Matching
+Retry the **same** `publish-release.yml` command above with the original run ID,
+attempt and SHA, `destination=github` (or the missing registry), and `tag=normal`. Matching
 registry copies are skipped. A matching draft resumes under its existing release
 ID, verifies every uploaded asset before any write, uploads only missing original
 assets, then publishes and re-reads the record. A lost tag/create/upload/publish

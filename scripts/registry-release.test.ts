@@ -10,17 +10,43 @@ const environment = {
     NODE_AUTH_TOKEN: 'fixture-old',
     NPM_CONFIG_REGISTRY: 'https://wrong.invalid',
 }
-function fixture(copies: Record<string, unknown> = {}) {
+function fixture(
+    copies: Record<string, unknown> = {},
+    access: {
+        readable: boolean
+        role: string
+        state: string
+        scopes: string
+        loseAfterLogin?: boolean
+        ownerError?: boolean
+    } = { readable: true, role: 'member', state: 'active', scopes: 'read:org, read:packages' },
+) {
     const events: { args: string[]; options: any }[] = []
     let ghReads = 0
     const io = {
-        execFileSync(_bin: string, args: string[], options: any) {
+        execFileSync(bin: string, args: string[], options: any) {
             events.push({ args, options })
+            if (bin === 'gh') {
+                if (access.ownerError) throw new Error('owner proof unavailable')
+                expect(args).toEqual([
+                    'api',
+                    '--hostname',
+                    'github.com',
+                    '--include',
+                    'user/memberships/orgs/todoist',
+                ])
+                expect(options.env.GH_TOKEN).toBe('fixture-gh')
+                return `HTTP/2.0 200 OK\r\nx-oauth-scopes: ${access.scopes}\r\n\r\n${JSON.stringify({ role: access.role, state: access.state, organization: { login: 'todoist' } })}`
+            }
             if (args[0] === 'config')
                 return readFileSync(options.env.NPM_CONFIG_USERCONFIG, 'utf8')
                     .split('\n')
                     .find((line) => line.startsWith(`${args[2]}=`))
                     ?.slice(args[2].length + 1)
+            if (args[0] === 'login' && access.loseAfterLogin) {
+                access.readable = false
+                access.state = 'pending'
+            }
             if (args[0] === 'publish')
                 copies[args.some((x) => x.includes('npm.pkg.github.com')) ? 'github' : 'npmjs'] =
                     metadata.integrity
@@ -31,6 +57,10 @@ function fixture(copies: Record<string, unknown> = {}) {
             const destination = args.some((x) => x.includes('npm.pkg.github.com'))
                 ? 'github'
                 : 'npmjs'
+            if (args[2] === 'name')
+                return access.readable
+                    ? { status: 0, stdout: JSON.stringify('@todoist/comms-sdk') }
+                    : { status: 1, stdout: '{"error":{"code":"E404"}}' }
             if (args[2] === 'dist-tags')
                 return {
                     status: 0,
@@ -58,6 +88,82 @@ function fixture(copies: Record<string, unknown> = {}) {
 }
 
 describe('same artifact dual registry publication', () => {
+    it.each(['publish', 'bootstrap-npm'])(
+        'rejects an ACL-hidden GitHub package before %s despite a nonempty token',
+        (command) => {
+            const f = fixture(
+                {},
+                {
+                    readable: false,
+                    role: 'member',
+                    state: 'active',
+                    scopes: 'read:org, read:packages',
+                },
+            )
+            expect(() => f.execute(command)).toThrow(/owner|readable/i)
+            expect(f.events.filter((e) => ['publish', 'login'].includes(e.args[0]))).toEqual([])
+        },
+    )
+    it('does not let an already-matching selected mirror hide an unreadable opposite package', () => {
+        const f = fixture(
+            { npmjs: metadata.integrity },
+            { readable: false, role: 'member', state: 'active', scopes: 'read:org, read:packages' },
+        )
+        expect(() => f.execute()).toThrow(/owner|readable/i)
+    })
+
+    it('permits a version 404 only when the same credential can read the package', () => {
+        const f = fixture({})
+        expect(f.execute().status).toBe('published')
+        expect(f.events.some((e) => e.args[0] === 'api')).toBe(false)
+    })
+    it('allows initial absence only with active owner and package-read proof from the same token', () => {
+        const f = fixture(
+            {},
+            { readable: false, role: 'admin', state: 'active', scopes: 'read:org, read:packages' },
+        )
+        expect(f.execute().status).toBe('published')
+        expect(f.events.filter((e) => e.args[0] === 'api')).toHaveLength(3)
+    })
+    it.each([
+        { readable: false, role: 'admin', state: 'pending', scopes: 'read:org, read:packages' },
+        { readable: false, role: 'admin', state: 'active', scopes: 'read:org' },
+    ])('rejects insufficient owner access %j before any write', (access) => {
+        const f = fixture({}, access)
+        expect(() => f.execute()).toThrow()
+        expect(f.events.filter((e) => ['publish', 'login'].includes(e.args[0]))).toEqual([])
+    })
+
+    it('rechecks read access after interactive login before publication', () => {
+        const f = fixture(
+            {},
+            {
+                readable: true,
+                role: 'admin',
+                state: 'active',
+                scopes: 'read:org, read:packages',
+                loseAfterLogin: true,
+            },
+        )
+        expect(() => f.execute('bootstrap-npm')).toThrow(/owner/)
+        expect(f.events.some((e) => e.args[0] === 'login')).toBe(true)
+        expect(f.events.some((e) => e.args[0] === 'publish')).toBe(false)
+    })
+    it('stops when owner proof has an auth or network failure', () => {
+        const f = fixture(
+            {},
+            {
+                readable: false,
+                role: 'admin',
+                state: 'active',
+                scopes: 'read:org, read:packages',
+                ownerError: true,
+            },
+        )
+        expect(() => f.execute()).toThrow('owner proof unavailable')
+        expect(f.events.filter((e) => ['publish', 'login'].includes(e.args[0]))).toEqual([])
+    })
+
     it.each(['sha512-conflict', 'E401'])(
         'stops before any write when the other mirror returns %s',
         (github) => {

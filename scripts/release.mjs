@@ -7,7 +7,7 @@ import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { compareRetainedArtifact } from './artifact-source.mjs'
 import { publishArtifact } from './registry-release.mjs'
-import { validateSourceRun, REPOSITORY, VERSION, SHA } from './release-policy.mjs'
+import { validateSourceRun, readSourceRun, REPOSITORY, VERSION, SHA } from './release-policy.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const [command, directory = 'release-artifact', requestedDestination] = process.argv.slice(2)
@@ -59,7 +59,7 @@ async function verify() {
     assert.equal(metadata.sourceSha, process.env.RELEASE_SHA)
     assert.match(process.env.ARTIFACT_RUN_ID || '', /^\d+$/)
     const api = (path) => JSON.parse(run('gh', ['api', `repos/${REPOSITORY}/${path}`]))
-    const sourceRun = api(`actions/runs/${process.env.ARTIFACT_RUN_ID}`)
+    const sourceRun = readSourceRun(api)
     await validateSourceRun(
         sourceRun,
         api('actions/workflows/release.yml').id,
