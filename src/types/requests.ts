@@ -540,6 +540,8 @@ export type GetUserLocalTimeArgs = {
 
 // Attachments
 type UploadAttachmentCommonArgs = {
+    /** The workspace the file belongs to. Its plan sets the largest file it accepts. */
+    workspaceId: number
     /** MIME type. Defaults to the `Blob`'s type or one inferred from the file extension. */
     contentType?: string
     /** Attachment ID to use. A random ID is generated when omitted. */

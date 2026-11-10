@@ -1,7 +1,7 @@
 import { HttpResponse, http } from 'msw'
 import { apiUrl } from '../testUtils/msw-handlers'
 import { server } from '../testUtils/msw-setup'
-import { TEST_API_TOKEN } from '../testUtils/test-defaults'
+import { mockWorkspace, TEST_API_TOKEN } from '../testUtils/test-defaults'
 import { generateId, isValidUuidV7Base58 } from '../utils/uuidv7'
 import { AttachmentsClient, ImageReadResultSchema } from './attachments-client'
 
@@ -158,6 +158,7 @@ describe('AttachmentsClient', () => {
             )
 
             const result = await client.upload({
+                workspaceId: mockWorkspace.id,
                 file: Buffer.from('hello world'),
                 fileName: 'diagram.png',
             })
@@ -168,6 +169,7 @@ describe('AttachmentsClient', () => {
 
             const file = capturedForm?.get('file')
             expect(file).toBeInstanceOf(Blob)
+            expect(capturedForm?.get('workspace_id')).toBe(String(mockWorkspace.id))
             expect(capturedForm?.get('file_name')).toBe('diagram.png')
             expect(capturedForm?.get('file_size')).toBe('11')
             expect(capturedForm?.get('underlying_type')).toBe('image/png')
@@ -196,6 +198,7 @@ describe('AttachmentsClient', () => {
             )
 
             const result = await client.upload({
+                workspaceId: mockWorkspace.id,
                 file: Buffer.from('data'),
                 fileName: 'notes.txt',
                 attachmentId: callerId,
@@ -219,7 +222,7 @@ describe('AttachmentsClient', () => {
                 type: 'image/jpeg',
             })
 
-            await client.upload({ file: blob })
+            await client.upload({ workspaceId: mockWorkspace.id, file: blob })
 
             expect(capturedForm?.get('file_name')).toBe('photo.jpg')
             expect(capturedForm?.get('file_size')).toBe('4')
@@ -240,7 +243,7 @@ describe('AttachmentsClient', () => {
             // infers the type from the Blob's own `type`.
             const blob = new Blob([new Uint8Array([1, 2, 3])], { type: 'image/png' })
 
-            await client.upload({ file: blob })
+            await client.upload({ workspaceId: mockWorkspace.id, file: blob })
 
             expect(capturedForm?.get('file')).toBeInstanceOf(Blob)
             expect(capturedForm?.get('file_name')).toBe('upload')
@@ -259,6 +262,7 @@ describe('AttachmentsClient', () => {
 
             // `data.bin` would infer application/octet-stream; the override wins.
             await client.upload({
+                workspaceId: mockWorkspace.id,
                 file: new Uint8Array([1, 2, 3]),
                 fileName: 'data.bin',
                 contentType: 'text/csv',
@@ -277,7 +281,11 @@ describe('AttachmentsClient', () => {
                 }),
             )
 
-            await client.upload({ file: new Uint8Array([1, 2, 3]), fileName: 'bytes.bin' })
+            await client.upload({
+                workspaceId: mockWorkspace.id,
+                file: new Uint8Array([1, 2, 3]),
+                fileName: 'bytes.bin',
+            })
 
             expect(capturedForm?.get('file')).toBeInstanceOf(Blob)
             expect(capturedForm?.get('file_name')).toBe('bytes.bin')
@@ -289,7 +297,7 @@ describe('AttachmentsClient', () => {
             await expect(
                 // @ts-expect-error — the discriminated union requires `fileName` for raw
                 // bytes at compile time; this asserts the runtime guard still fires.
-                client.upload({ file: Buffer.from('x') }),
+                client.upload({ workspaceId: mockWorkspace.id, file: Buffer.from('x') }),
             ).rejects.toThrow('fileName is required when uploading raw bytes')
         })
 
@@ -305,6 +313,7 @@ describe('AttachmentsClient', () => {
 
             await expect(
                 client.upload({
+                    workspaceId: mockWorkspace.id,
                     file: Buffer.from('x'),
                     fileName: 'notes.txt',
                     attachmentId: 'not-a-valid-id',
