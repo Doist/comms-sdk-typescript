@@ -123,6 +123,10 @@ function fixture() {
             return state.sourceRun
         },
         workflowId: () => 7,
+        sourceRecord: (plan: typeof metadata) => {
+            expect(plan).toEqual(metadata)
+            return { recordSha: 'c'.repeat(40) }
+        },
         compare: () => ({ status: 'ahead', merge_base_commit: { sha: metadata.sourceSha } }),
     }
     const populate = () => {
@@ -240,6 +244,16 @@ describe('release record recovery', () => {
 })
 
 describe('recorded semantic-release baseline', () => {
+    it('does not accept a stable baseline whose source changelog/version record is still pending', async () => {
+        const f = fixture()
+        f.published()
+        f.api.sourceRecord = () => {
+            throw new Error('source record incomplete')
+        }
+        await expect(f.baseline()).rejects.toThrow('source record incomplete')
+        expect(f.state.writes).toEqual([])
+    })
+
     it('accepts durable original assets after Actions artifact expiry', async () => {
         const f = fixture()
         f.published()

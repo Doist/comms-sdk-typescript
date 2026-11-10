@@ -38,8 +38,11 @@ requires the existing `v4.0.0` baseline and explicitly selects the approved patc
 Subsequent conventional commits determine the normal next version. The `next`
 branch resumes only after stable 4.0.1. No old tags are rewritten. Release records
 include semantic-release channel notes, so the next prerelease increments normally.
-Future release notes are kept on GitHub releases; the historical CHANGELOG remains
-untouched. Source manifests declare the migration version; each packed manifest gets
+Stable releases also retain the existing source changelog/version record policy:
+only after completed dual publication, the recorder prepends the original notes to
+`CHANGELOG.md` and commits the versions in `package.json` and `package-lock.json`.
+Prior changelog bytes and current-main dependencies are preserved. `next` excludes
+this source commitback. Source manifests declare the latest recorded stable version; each packed manifest gets
 the version calculated from the actual tags and commits.
 
 `publish-release.yml` is separate. Manual runs must use main. Automatic publication
@@ -58,7 +61,7 @@ same-version copies before each publication. Conflicting bytes, auth failures or
 ambiguous network responses stop before any write. Matching copies are skipped.
 The interactive helper selects the explicit original successful run/attempt, finds its unique artifact ID, verifies the downloaded ZIP against GitHub's authenticated SHA-256 archive digest, and compares both the tarball and full metadata byte for byte; edited local checksums cannot authorize a replacement. No retry rebuilds or recalculates a version.
 
-A second push can arrive while the first retained artifact awaits publication. The builder refuses to produce another plan while an earlier retained plan lacks a verified, published release record with both original assets. A bare tag or interrupted draft is not completed history. Before skipping ancestor runs, it verifies the baseline record, exact tag commit, stable/prerelease state, published timestamp, original tarball and `release.json`, hashes, and authenticated source run/attempt. The only asset-free exception is the inspected legacy `v4.0.0` at `96d5ca358cf8346471d08fb8b08c0f8474445cc5`; that record must still be published and stable. Completed records retain their assets beyond Actions artifact expiry. Finish the earlier artifact and release record, then dispatch `release.yml` on the current release branch to analyze the later commits against the new baseline. Do not rebuild the partially published version. The proposed version must also be untagged: a prerelease tag with a channel note still pending cannot produce a second artifact. Build and publish queues stay separate so GitHub's single pending-run limit cannot replace a pending publisher with a new build.
+A second push can arrive while the first retained artifact awaits publication. The builder refuses to produce another plan while an earlier retained plan lacks a verified, published release record with both original assets. A bare tag or interrupted draft is not completed history. Before skipping ancestor runs, it verifies the baseline record, exact tag commit, stable/prerelease state, published timestamp, original tarball and `release.json`, hashes, and authenticated source run/attempt. The only asset-free exception is the inspected legacy `v4.0.0` at `96d5ca358cf8346471d08fb8b08c0f8474445cc5`; that record must still be published and stable. Completed records retain their assets beyond Actions artifact expiry. A new stable baseline additionally requires its verified source changelog/version commit; unfinished commitback blocks the next artifact build. Finish the earlier artifact and release record, then dispatch `release.yml` on the current release branch to analyze the later commits against the new baseline. Do not rebuild the partially published version. The proposed version must also be untagged: a prerelease tag with a channel note still pending cannot produce a second artifact. Build and publish queues stay separate so GitHub's single pending-run limit cannot replace a pending publisher with a new build.
 
 ## Administrator setup
 
@@ -91,7 +94,10 @@ Before publication, maintainers must inspect and configure these exact resources
   New GitHub packages can start private; verify the approved visibility separately.
 - Preserve `DOIST_RELEASE_BOT_ID` and `DOIST_RELEASE_BOT_PRIVATE_KEY`. Their App needs
   contents-write access to the renamed repository for new tags, semantic-release
-  notes and release records. Existing Comms secrets and service IDs stay unchanged.
+  notes, release records and the existing stable-only main commitback. Preserve the
+  release App's approved main-branch access; if a branch rule rejects the normal
+  push, stop and retry the original publisher after maintainers resolve access.
+  This preparation changes no branch rule or App permission. Existing Comms secrets and service IDs stay unchanged.
 
 The packed manifest has no `publishConfig`, lifecycle scripts, or dev dependencies.
 Each destination uses a temporary, isolated npm config with an explicit registry
@@ -181,13 +187,50 @@ it rechecks npm anonymously. If that mirror is ACL-hidden, the run stops rather
 than interpreting an empty inventory as absence.
 Only after both copies and their normal channels match does it create the normal
 `v<version>` tag and attributed draft release, upload the exact retained tarball and
-`release.json`, publish that same release ID, then write the semantic-release channel
-note. Every retry verifies the exact tag commit, target SHA, notes, draft/published
+`release.json`, publish that same release ID, then complete the stable source record
+and write the semantic-release channel note. Every retry verifies the exact tag commit, target SHA, notes, draft/published
 state, stable/prerelease flag, publication timestamp and both original asset bytes.
 Only a newly completed stable record is announced through the bootstrap action.
 An already complete published record is skipped without another announcement; a
-lost publish response may therefore omit an announcement rather than duplicate it. No source commit
-or branch push is necessary to establish the new-scope baseline.
+lost publish response or a later source-record/channel-note failure may therefore
+omit an announcement rather than duplicate it. A stable release is fully recorded
+only after the source commitback and channel note complete.
+
+## Stable source changelog and version record
+
+The original stable-only changelog/git behavior is performed in
+`scripts/source-release-record.mjs` after both registries and the published GitHub
+record verify. The build remains analysis/pack-only. The recorder uses a temporary
+Git checkout of current main and changes only `CHANGELOG.md`, `package.json`, and
+`package-lock.json`. It prepends the exact retained release notes and updates only
+root versions in an already synchronized real lock; it never regenerates a lock,
+installs dependencies, rebuilds or repacks the immutable artifact.
+
+The source record uses the existing `chore(release): VERSION [skip ci]` message,
+with original run/attempt/source/hash identity trailers for recovery. Full notes
+remain in the changelog and GitHub release; they are excluded from the commit body
+so a copied breaking-change note cannot trigger another release after the build tag. Current main must
+descend from the original build. User changes on main become the parent of this
+commit and remain intact. A normal, non-force push rejects a concurrent main
+advance; retrying the same publisher then reads the new tip. An already matching
+record is verified by its message, parent, exact three-file change and original
+artifact identity, then reused without another commit or changelog entry. A
+conflicting record, unsynchronized lock, newer source version, or existing release
+entry without a verified marker stops for maintainer inspection.
+
+The **original build SHA remains the artifact source and tag target**. The generated
+source record is a separate commit; its SHA is stored as `sourceRecord.recordSha`
+in the semantic-release note alongside `sourceSha`, version, run/attempt and hash.
+Existing note fields and channels are preserved. `next` adds its semantic channel
+but makes no source-file commit. No tag is moved and the generated commit is never
+substituted for the artifact's original build identity.
+
+If commitback or channel recording is interrupted, retry the same original
+run/attempt publisher command above. A lost successful main-push response is
+recovered by finding that record in main's history. Stable baseline validation
+refuses a new build until the source record exists and verifies. Do not dispatch a
+replacement artifact to repair commitback. No actual main commitback runs during
+migration preparation.
 
 ## Partial publication and recovery
 

@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { githubPages } from './github-pages.mjs'
 import { REPOSITORY, SHA, VERSION, validateSourceRun } from './release-policy.mjs'
+import { recordStableSource } from './source-release-record.mjs'
 
 export function githubReleaseApi() {
     const request = (path, body, method) =>
@@ -25,6 +26,7 @@ export function githubReleaseApi() {
         sourceRun: (id, attempt) => request(`actions/runs/${id}/attempts/${attempt}`),
         workflowId: () => request('actions/workflows/release.yml').id,
         compare: (base, head) => request(`compare/${base}...${head}`),
+        sourceRecord: (metadata) => recordStableSource(metadata, { verifyOnly: true }),
         assets: (id) => [...githubPages(`releases/${id}/assets`)],
         readAsset: (id) =>
             execFileSync(
@@ -250,6 +252,7 @@ export async function assertRecordedBaseline(api, tag) {
     assert.equal(String(run.run_attempt), metadata.runAttempt)
     assert.equal(run.head_branch, metadata.branch)
     await validateSourceRun(run, api.workflowId(), metadata.sourceSha, api.compare)
+    if (metadata.branch === 'main') api.sourceRecord(metadata)
 }
 
 // Caller has already authenticated the source artifact and both registry copies. Every API
