@@ -101,15 +101,16 @@ publisher-run provenance would attest the wrong build. See
 [npm trusted publishing](https://docs.npmjs.com/trusted-publishers/) and
 [GitHub package access](https://docs.github.com/en/packages/learn-github-packages/configuring-a-packages-access-control-and-visibility).
 
-## First real artifact — future maintainer commands
+## First real artifact — maintainer commands
 
-Only after merge prerequisites and rename, in a reviewed checkout:
+Merging the scope change to main runs `release.yml` on that push, which builds and
+retains the `5.0.0` artifact. Use that run. Dispatch `release.yml` only if the push
+run produced no artifact; while a retained artifact is unrecorded, a second build
+stops (see above), and a dispatch never recovers a partially published version.
 
 ```sh
-# Build/pack only. Do not dispatch again to recover a partially published version.
-gh workflow run release.yml --repo todoist/comms-sdk-typescript --ref main
 gh run list --repo todoist/comms-sdk-typescript --workflow release.yml --limit 10 \
-  --json databaseId,headSha,headBranch,event,conclusion
+  --json databaseId,headSha,headBranch,event,conclusion,attempt
 ```
 
 Set `ARTIFACT_RUN_ID` to the successful reviewed run, `RELEASE_SHA` to its full
