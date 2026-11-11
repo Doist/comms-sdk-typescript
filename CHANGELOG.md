@@ -1,3 +1,9 @@
+## [5.0.1](https://github.com/todoist/comms-sdk-typescript/compare/v5.0.0...v5.0.1) (2026-11-11)
+
+### Bug Fixes
+
+* **search:** accept a null snippet in search results ([#145](https://github.com/todoist/comms-sdk-typescript/issues/145)) ([578a02f](https://github.com/todoist/comms-sdk-typescript/commit/578a02f75fb179ff4303bcd5823ba5f791a437ca))
+
 ## [5.0.0](https://github.com/todoist/comms-sdk-typescript/compare/v4.0.1...v5.0.0) (2026-11-11)
 
 ### ⚠ BREAKING CHANGES
