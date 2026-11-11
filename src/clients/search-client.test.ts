@@ -258,4 +258,61 @@ describe('SearchClient — result parsing', () => {
         })
         expect(legacyConversationResult).toMatchObject({ messageId: '123456' })
     })
+
+    it('keeps the whole page when a result has a null snippet', async () => {
+        server.use(
+            http.get(`${BASE}/search`, () => {
+                return HttpResponse.json({
+                    items: [
+                        {
+                            id: `thread_${TEST_THREAD_ID}`,
+                            type: 'thread',
+                            snippet: 'a comment match',
+                            snippet_creator_id: 1,
+                            snippet_last_updated_ts: 1700000000,
+                            thread_id: TEST_THREAD_ID,
+                        },
+                        {
+                            id: `thread_${TEST_THREAD_ID}`,
+                            type: 'thread',
+                            snippet: null,
+                            snippet_creator_id: 1,
+                            snippet_last_updated_ts: 1700000001,
+                            thread_id: TEST_THREAD_ID,
+                            comment_id: TEST_COMMENT_ID,
+                        },
+                        {
+                            id: `conversation_${TEST_CONVERSATION_ID}`,
+                            type: 'conversation',
+                            snippet: null,
+                            snippet_creator_id: 2,
+                            snippet_last_updated_ts: 1700000002,
+                            conversation_id: TEST_CONVERSATION_ID,
+                            message_id: TEST_MESSAGE_ID,
+                        },
+                    ],
+                    next_cursor_mark: 'next-page',
+                    has_more: true,
+                    is_plan_restricted: false,
+                })
+            }),
+        )
+
+        const api = new CommsApi(TEST_API_TOKEN)
+        const response = await api.search.search({ query: 'in:threads', workspaceId: 1 })
+
+        expect(response.items.map((result) => result.snippet)).toEqual(['a comment match', '', ''])
+        expect(response.items[1]).toMatchObject({
+            type: 'thread',
+            threadId: TEST_THREAD_ID,
+            commentId: TEST_COMMENT_ID,
+        })
+        expect(response.items[2]).toMatchObject({
+            type: 'conversation',
+            conversationId: TEST_CONVERSATION_ID,
+            messageId: TEST_MESSAGE_ID,
+        })
+        expect(response.nextCursorMark).toBe('next-page')
+        expect(response.hasMore).toBe(true)
+    })
 })
