@@ -5,13 +5,15 @@ The official TypeScript SDK for the Comms REST API.
 ## Installation
 
 ```bash
-npm install @doist/comms-sdk
+npm install @todoist/comms-sdk
 ```
+
+Versions up to 4.x were published as `@doist/comms-sdk`.
 
 ## Usage
 
 ```typescript
-import { CommsApi } from '@doist/comms-sdk'
+import { CommsApi } from '@todoist/comms-sdk'
 
 const api = new CommsApi('YOUR_API_TOKEN')
 
@@ -46,7 +48,7 @@ for optimistic UI — the ID survives the round-trip unchanged) or omit
 `id` and let the SDK mint one:
 
 ```typescript
-import { CommsApi, generateId } from '@doist/comms-sdk'
+import { CommsApi, generateId } from '@todoist/comms-sdk'
 
 const api = new CommsApi('YOUR_API_TOKEN')
 
@@ -83,7 +85,7 @@ await api.comments.createComment({
 ### OAuth 2.0
 
 ```typescript
-import { getAuthorizationUrl, getAuthToken, CommsApi } from '@doist/comms-sdk'
+import { getAuthorizationUrl, getAuthToken, CommsApi } from '@todoist/comms-sdk'
 
 const authUrl = getAuthorizationUrl(
     'your-client-id',
@@ -108,7 +110,7 @@ Access tokens expire (see `tokenResponse.expiresIn`). When they do, use the
 the user back through the authorization flow:
 
 ```typescript
-import { refreshAuthToken } from '@doist/comms-sdk'
+import { refreshAuthToken } from '@todoist/comms-sdk'
 
 const refreshed = await refreshAuthToken({
     clientId: 'your-client-id',
@@ -129,7 +131,7 @@ with an HTTPS target URL up to 150 characters and one of the exported
 matching events happen:
 
 ```typescript
-import { CommsApi, HOOK_EVENTS } from '@doist/comms-sdk'
+import { CommsApi, HOOK_EVENTS } from '@todoist/comms-sdk'
 
 const api = new CommsApi('TODOIST_OAUTH_ACCESS_TOKEN')
 
