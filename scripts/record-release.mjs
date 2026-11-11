@@ -13,7 +13,7 @@ const run = (bin, args, options = {}) =>
 assert.equal(process.env.GITHUB_REPOSITORY?.toLowerCase(), REPOSITORY)
 assert.match(metadata.version, VERSION)
 assert.match(metadata.sourceSha, SHA)
-assert.ok(metadata.notes.startsWith('[Posted by Jarvis]\n\n'))
+assert.ok(typeof metadata.notes === 'string' && metadata.notes.trim(), 'Release notes are missing')
 assert.notEqual(
     process.env.RELEASE_TAG,
     'migration-recovery',

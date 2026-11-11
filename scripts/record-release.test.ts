@@ -15,7 +15,7 @@ function runRecord(overrides: Record<string, unknown>) {
             version: '5.0.0',
             sourceSha,
             branch: 'main',
-            notes: '[Posted by Jarvis]\n\nNotes',
+            notes: 'Notes',
             filename: 'todoist-comms-sdk-5.0.0.tgz',
         }
         const release = {

@@ -14,7 +14,7 @@ function fixture() {
         version: '5.0.0',
         sourceSha: 'a'.repeat(40),
         branch: 'main',
-        notes: '[Posted by Jarvis]\n\nOriginal notes',
+        notes: 'Original notes',
         filename: 'todoist-comms-sdk-5.0.0.tgz',
         runId: '123',
         runAttempt: '2',

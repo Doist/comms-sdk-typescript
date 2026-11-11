@@ -58,7 +58,7 @@ function fixture(version = '4.0.1') {
         sha256: 'a'.repeat(64),
         runId: '42',
         runAttempt: '2',
-        notes: '[Posted by Jarvis]\n\n## 5.0.0\n\n- Original release notes',
+        notes: '## 5.0.0\n\n- Original release notes',
     }
     // A test-only tag proves commitback does not move the original source tag.
     git(['update-ref', 'refs/tags/v5.0.0', sourceSha])
@@ -123,6 +123,8 @@ describe('stable source release record', () => {
             }
             f.metadata.notes = await generateNotes({}, context)
             expect(f.metadata.notes).toContain('* BREAKING CHANGE: the response format is new')
+            // The notes are the generator's own output: they open with its version heading.
+            expect(f.metadata.notes).toMatch(/^#+ \[?5\.0\.0\]?/)
             const record = f.record()
             assert.ok(record)
             const message = f.git(['show', '-s', '--format=%B', record.recordSha], f.remote)

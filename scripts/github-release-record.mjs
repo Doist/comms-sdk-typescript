@@ -100,7 +100,10 @@ function assertIdentity(release, metadata) {
     assert.match(metadata.sourceSha, SHA)
     assert.ok(['main', 'next'].includes(metadata.branch))
     assert.equal(metadata.version.includes('-next.'), metadata.branch === 'next')
-    assert.ok(metadata.notes.startsWith('[Posted by Jarvis]\n\n'))
+    assert.ok(
+        typeof metadata.notes === 'string' && metadata.notes.trim(),
+        'Release notes are missing',
+    )
     assert.equal(
         release.tag_name,
         `v${metadata.version}`,

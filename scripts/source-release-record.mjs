@@ -12,7 +12,10 @@ function identity(metadata) {
     assert.match(metadata.sha256, /^[a-f0-9]{64}$/)
     assert.match(metadata.runId, /^[1-9]\d*$/)
     assert.match(metadata.runAttempt, /^[1-9]\d*$/)
-    assert.ok(metadata.notes.startsWith('[Posted by Jarvis]\n\n'))
+    assert.ok(
+        typeof metadata.notes === 'string' && metadata.notes.trim(),
+        'Release notes are missing',
+    )
     const marker = `Comms-Release-Version: ${metadata.version}`
     const artifact = `Comms-Release-Artifact: ${metadata.sourceSha}/${metadata.runId}/${metadata.runAttempt}/sha256:${metadata.sha256}`
     return {

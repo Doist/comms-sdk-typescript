@@ -77,7 +77,10 @@ async function verify() {
     assert.equal(metadata.runAttempt, String(sourceRun.run_attempt))
     assert.equal(metadata.branch, sourceRun.head_branch)
     assert.equal(metadata.version.includes('-next.'), metadata.branch === 'next')
-    assert.ok(metadata.notes.startsWith('[Posted by Jarvis]\n\n'))
+    assert.ok(
+        typeof metadata.notes === 'string' && metadata.notes.trim(),
+        'Release notes are missing',
+    )
     assert.equal(metadata.filename, `todoist-comms-sdk-${metadata.version}.tgz`)
     const tarball = resolve(output, metadata.filename)
     const actual = inspect(tarball)

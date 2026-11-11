@@ -27,6 +27,5 @@ export async function analyzeCommits(config, context) {
 }
 
 export async function generateNotes(config, context) {
-    const body = await notes({ ...config, preset: 'conventionalcommits' }, context)
-    return `[Posted by Jarvis]\n\n${body}`
+    return notes({ ...config, preset: 'conventionalcommits' }, context)
 }
