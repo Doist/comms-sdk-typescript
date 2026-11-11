@@ -1,3 +1,13 @@
+## [5.0.0](https://github.com/todoist/comms-sdk-typescript/compare/v4.0.1...v5.0.0) (2026-11-11)
+
+### ⚠ BREAKING CHANGES
+
+* publish as @todoist/comms-sdk (#143)
+
+### Features
+
+* publish as @todoist/comms-sdk ([#143](https://github.com/todoist/comms-sdk-typescript/issues/143)) ([cf0e9c1](https://github.com/todoist/comms-sdk-typescript/commit/cf0e9c11cb9d6ba22de6dbfad67ad3187b5acdb6))
+
 ## [4.0.1](https://github.com/todoist/comms-sdk-typescript/compare/v4.0.0...v4.0.1) (2026-11-11)
 
 ### Bug Fixes
