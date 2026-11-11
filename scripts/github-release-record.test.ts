@@ -11,11 +11,11 @@ import { assertRecordedBaseline, completeReleaseRecord } from './github-release-
 function fixture() {
     const metadata = {
         name: '@todoist/comms-sdk',
-        version: '4.0.1',
+        version: '5.0.0',
         sourceSha: 'a'.repeat(40),
         branch: 'main',
         notes: '[Posted by Jarvis]\n\nOriginal notes',
-        filename: 'todoist-comms-sdk-4.0.1.tgz',
+        filename: 'todoist-comms-sdk-5.0.0.tgz',
         runId: '123',
         runAttempt: '2',
         sha256: 'f75a2e8a5a6cb4e64169f570ada8d4916aa4f0b684b2a39894a46a9bfe2d7264',
@@ -36,7 +36,7 @@ function fixture() {
     ]
     const original = {
         id: 42,
-        tag_name: 'v4.0.1',
+        tag_name: 'v5.0.0',
         target_commitish: metadata.sourceSha,
         body: metadata.notes,
         draft: true,
@@ -80,7 +80,7 @@ function fixture() {
         })
     }
     const api = {
-        list: () => (state.release ? [{ id: 42, tag_name: 'v4.0.1' }] : []),
+        list: () => (state.release ? [{ id: 42, tag_name: 'v5.0.0' }] : []),
         get: (id: number) => {
             expect(id).toBe(42)
             return { ...state.release }
@@ -91,7 +91,7 @@ function fixture() {
         },
         readAsset: (id: number) => required(state.assets.find((asset) => asset.id === id)).bytes,
         tagSha: (tag: string) => {
-            expect(tag).toMatch(/^v4\.0\.[01]$/)
+            expect(tag).toMatch(/^v(?:4\.0\.1|5\.0\.0)$/)
             return state.tag
         },
         createTag: (tag: string, sha: string) => {
@@ -138,7 +138,7 @@ function fixture() {
         populate()
     }
     const record = () => completeReleaseRecord(api, metadata, files)
-    const baseline = () => assertRecordedBaseline(api, 'v4.0.1')
+    const baseline = () => assertRecordedBaseline(api, 'v5.0.0')
     return { metadata, files, state, api, populate, published, record, baseline }
 }
 
@@ -178,9 +178,9 @@ describe('release record recovery', () => {
             expect(f.record).toThrow(`lost ${operation} response`)
             expect(f.record()).toBe(operation !== 'publish')
             expect(f.state.writes).toEqual([
-                ['tag', 'v4.0.1', f.metadata.sourceSha],
+                ['tag', 'v5.0.0', f.metadata.sourceSha],
                 ['draft', f.metadata],
-                ['upload', 42, 'todoist-comms-sdk-4.0.1.tgz', '/original/package.tgz'],
+                ['upload', 42, 'todoist-comms-sdk-5.0.0.tgz', '/original/package.tgz'],
                 ['upload', 42, 'release.json', '/original/release.json'],
                 ['publish', 42, f.metadata],
             ])
@@ -286,16 +286,26 @@ describe('recorded semantic-release baseline', () => {
         await expect(f.baseline()).rejects.toThrow()
         expect(f.state.writes).toEqual([])
     })
-    it('binds the asset-free legacy exception to the inspected v4.0.0 commit and published state', async () => {
+    it('binds the asset-free exception to the last @doist/comms-sdk release, v4.0.1, its commit and published state', async () => {
+        const f = fixture()
+        f.state.tag = 'b6c13f63d9e4914ed83c550081a9a503596f4d56'
+        required(f.state.release).tag_name = 'v4.0.1'
+        required(f.state.release).draft = false
+        required(f.state.release).published_at = '2026-11-11T11:32:29Z'
+        f.api.list = () => [{ id: 42, tag_name: 'v4.0.1' }]
+        await expect(assertRecordedBaseline(f.api, 'v4.0.1')).resolves.toBeUndefined()
+        f.state.tag = 'b'.repeat(40)
+        await expect(assertRecordedBaseline(f.api, 'v4.0.1')).rejects.toThrow()
+        expect(f.state.writes).toEqual([])
+    })
+    it('no longer accepts the earlier asset-free v4.0.0 as a baseline', async () => {
         const f = fixture()
         f.state.tag = '96d5ca358cf8346471d08fb8b08c0f8474445cc5'
         required(f.state.release).tag_name = 'v4.0.0'
         required(f.state.release).draft = false
         required(f.state.release).published_at = '2026-11-10T17:24:58Z'
         f.api.list = () => [{ id: 42, tag_name: 'v4.0.0' }]
-        await expect(assertRecordedBaseline(f.api, 'v4.0.0')).resolves.toBeUndefined()
-        f.state.tag = 'b'.repeat(40)
-        await expect(assertRecordedBaseline(f.api, 'v4.0.0')).rejects.toThrow()
+        await expect(assertRecordedBaseline(f.api, 'v4.0.0')).rejects.toThrow(/release\.json/)
         expect(f.state.writes).toEqual([])
     })
 })

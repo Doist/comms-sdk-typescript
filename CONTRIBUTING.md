@@ -84,7 +84,7 @@ To test features before publishing a stable release:
 
 2. **Develop on a feature branch** based off `next` and open a PR targeting `next`.
 
-3. **Pre-release artifact:** Each PR merge into `next` triggers CI and prepares a pre-release artifact (e.g., `4.1.0-next.1`). Once automatic publication is enabled, the publisher uses the `next` dist-tag in both registries. Bootstrap stable 4.0.1 first.
+3. **Pre-release artifact:** Each PR merge into `next` triggers CI and prepares a pre-release artifact (e.g., `5.1.0-next.1`). Once automatic publication is enabled, the publisher uses the `next` dist-tag in both registries. Bootstrap stable 5.0.0 first.
 
 4. **Promote to stable:** When ready, open a PR to merge `next` into `main`. Use a regular merge commit (not squash), as this preserves the individual commit history and allows semantic-release to correctly generate a comprehensive changelog and determine the version bump automatically.
 

@@ -5,7 +5,7 @@ import { findRelease } from './github-release-record.mjs'
 describe('GitHub history reads', () => {
     it('finds a draft on a later page without one unbounded subprocess response', () => {
         const routes: string[] = []
-        const release = { id: 42, tag_name: 'v4.0.1', draft: true }
+        const release = { id: 42, tag_name: 'v5.0.0', draft: true }
         const api = {
             list: () =>
                 githubPages('releases', undefined, (route: string) => {
@@ -19,7 +19,7 @@ describe('GitHub history reads', () => {
                 return release
             },
         }
-        expect(findRelease(api, 'v4.0.1')).toEqual(release)
+        expect(findRelease(api, 'v5.0.0')).toEqual(release)
         expect(routes).toEqual(['releases?per_page=100&page=1', 'releases?per_page=100&page=2'])
     })
     it('reads workflow result envelopes with their existing filters intact', () => {
@@ -51,6 +51,6 @@ describe('GitHub history reads', () => {
                     throw new Error('network failure')
                 }),
         }
-        expect(() => findRelease(api, 'v4.0.1')).toThrow('network failure')
+        expect(() => findRelease(api, 'v5.0.0')).toThrow('network failure')
     })
 })

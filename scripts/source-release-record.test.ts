@@ -8,7 +8,7 @@ import { analyzeCommits, generateNotes } from './release-analysis.mjs'
 import { recordStableSource, releaseChannelNote } from './source-release-record.mjs'
 
 // A disposable bare filesystem remote is the Git boundary; never the project remote/main.
-function fixture(version = '4.0.0') {
+function fixture(version = '4.0.1') {
     const directory = mkdtempSync(join(tmpdir(), 'source-record-fixture-'))
     const remote = join(directory, 'remote.git')
     const work = join(directory, 'work')
@@ -52,17 +52,17 @@ function fixture(version = '4.0.0') {
     git(['push', remote, 'HEAD:refs/heads/main'])
     const sourceSha = git(['rev-parse', 'HEAD'])
     const metadata = {
-        version: '4.0.1',
+        version: '5.0.0',
         branch: 'main',
         sourceSha,
         sha256: 'a'.repeat(64),
         runId: '42',
         runAttempt: '2',
-        notes: '[Posted by Jarvis]\n\n## 4.0.1\n\n- Original release notes',
+        notes: '[Posted by Jarvis]\n\n## 5.0.0\n\n- Original release notes',
     }
     // A test-only tag proves commitback does not move the original source tag.
-    git(['update-ref', 'refs/tags/v4.0.1', sourceSha])
-    git(['push', remote, 'refs/tags/v4.0.1'])
+    git(['update-ref', 'refs/tags/v5.0.0', sourceSha])
+    git(['push', remote, 'refs/tags/v5.0.0'])
     const events: string[][] = []
     const io = {
         execFileSync(bin: string, args: string[], options: any) {
@@ -111,7 +111,7 @@ describe('stable source release record', () => {
                 logger: { log: () => {} },
                 options: { repositoryUrl: 'https://github.com/todoist/comms-sdk-typescript' },
                 branch: { name: 'main' },
-                lastRelease: { version: '4.0.0', gitTag: 'v4.0.0' },
+                lastRelease: { version: '4.0.1', gitTag: 'v4.0.1' },
                 nextRelease: { version: '5.0.0', gitTag: 'v5.0.0' },
                 commits: [
                     {
@@ -121,7 +121,6 @@ describe('stable source release record', () => {
                     },
                 ],
             }
-            f.metadata.version = '5.0.0'
             f.metadata.notes = await generateNotes({}, context)
             expect(f.metadata.notes).toContain('* BREAKING CHANGE: the response format is new')
             const record = f.record()
@@ -143,8 +142,8 @@ describe('stable source release record', () => {
         }
     })
 
-    it('handles the first migration release whose real source versions already equal the artifact', () => {
-        const f = fixture('4.0.1')
+    it('changes only the changelog when the source versions already equal the artifact', () => {
+        const f = fixture('5.0.0')
         try {
             const beforeManifest = f.file(f.main(), 'package.json')
             const beforeLock = f.file(f.main(), 'package-lock.json')
@@ -178,21 +177,21 @@ describe('stable source release record', () => {
             )
             expect(JSON.parse(f.file(result.recordSha, 'package.json'))).toEqual({
                 name: '@todoist/comms-sdk',
-                version: '4.0.1',
+                version: '5.0.0',
                 dependencies: { '@doist/sdk-kmp': '0.6.0' },
                 userField: 'preserve me',
             })
             const lock = JSON.parse(f.file(result.recordSha, 'package-lock.json'))
-            expect(lock.version).toBe('4.0.1')
-            expect(lock.packages[''].version).toBe('4.0.1')
+            expect(lock.version).toBe('5.0.0')
+            expect(lock.packages[''].version).toBe('5.0.0')
             expect(lock.packages['node_modules/example']).toEqual({
                 version: '1.0.0',
                 integrity: 'fixture-original',
             })
             expect(f.file(result.recordSha, 'user.txt')).toBe('later user edit')
-            expect(f.git(['rev-parse', 'refs/tags/v4.0.1'], f.remote)).toBe(f.metadata.sourceSha)
+            expect(f.git(['rev-parse', 'refs/tags/v5.0.0'], f.remote)).toBe(f.metadata.sourceSha)
             expect(f.git(['show', '-s', '--format=%B', result.recordSha], f.remote)).toContain(
-                'chore(release): 4.0.1 [skip ci]',
+                'chore(release): 5.0.0 [skip ci]',
             )
             expect(
                 f.events.some(
@@ -269,7 +268,7 @@ describe('stable source release record', () => {
         const f = fixture()
         try {
             f.metadata.branch = 'next'
-            f.metadata.version = '4.1.0-next.1'
+            f.metadata.version = '5.1.0-next.1'
             expect(f.record()).toBeUndefined()
             expect(f.events).toEqual([])
             expect(f.main()).toBe(f.metadata.sourceSha)
@@ -306,8 +305,8 @@ describe('stable source release record', () => {
 })
 
 describe('semantic release channels and separate source identity', () => {
-    const metadata = { branch: 'main', version: '4.0.1', sourceSha: 'a'.repeat(40) }
-    const record = { version: '4.0.1', sourceSha: metadata.sourceSha, recordSha: 'b'.repeat(40) }
+    const metadata = { branch: 'main', version: '5.0.0', sourceSha: 'a'.repeat(40) }
+    const record = { version: '5.0.0', sourceSha: metadata.sourceSha, recordSha: 'b'.repeat(40) }
     it('preserves existing note fields/channels and records the generated commit separately', () => {
         const existing = { channels: ['next'], userHistory: { preserve: true } }
         const expected = { ...existing, channels: ['next', null], sourceRecord: record }
@@ -347,7 +346,7 @@ describe('actual recorder ordering with external GitHub and registry fixtures', 
         (branch) => {
             const f = fixture()
             try {
-                const version = branch === 'main' ? '4.0.1' : '4.1.0-next.1'
+                const version = branch === 'main' ? '5.0.0' : '5.1.0-next.1'
                 const metadata = {
                     ...f.metadata,
                     branch,
@@ -427,7 +426,7 @@ describe('actual recorder ordering with external GitHub and registry fixtures', 
                 const accepted = f.main()
                 if (branch === 'main') {
                     expect(accepted).not.toBe(metadata.sourceSha)
-                    expect(JSON.parse(f.file(accepted, 'package.json')).version).toBe('4.0.1')
+                    expect(JSON.parse(f.file(accepted, 'package.json')).version).toBe('5.0.0')
                     expect(f.file(accepted, 'CHANGELOG.md')).toBe(
                         `${metadata.notes}\n\n${f.history}`,
                     )

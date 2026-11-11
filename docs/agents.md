@@ -149,7 +149,7 @@ Your part: answer the decision questions, and read the evidence report, especial
 
 ## Releases
 
-semantic-release analyzes `main` and `next` to prepare retained release artifacts. Publication and release recording happen separately, after both registry copies match; see [releasing](releasing.md). Automatic publication is off until bootstrap and administrator setup are complete. The squash-merged PR title decides whether anything ships: `feat:`, `fix:`, `perf:` and any breaking change (`!`) release; `chore:`, `ci:`, `docs:`, `test:` and `refactor:` do not. Changes to the agent tooling use `chore:` or `ci:`, so they do not normally publish a new version. The one explicit exception is the approved migration from the existing 4.0.0 tag to the first new-scope 4.0.1 artifact; it remains build-only until the separate publication step. No path filter is needed.
+semantic-release analyzes `main` and `next` to prepare retained release artifacts. Publication and release recording happen separately, after both registry copies match; see [releasing](releasing.md). Automatic publication is off until bootstrap and administrator setup are complete. The squash-merged PR title decides whether anything ships: `feat:`, `fix:`, `perf:` and any breaking change (`!`) release; `chore:`, `ci:`, `docs:`, `test:` and `refactor:` do not. Changes to the agent tooling use `chore:` or `ci:`, so they never publish a new version. The move from `@doist/comms-sdk` to `@todoist/comms-sdk` is breaking for every consumer: on the `v4.0.1` baseline, the last `@doist/comms-sdk` release, the release script accepts only a major, so the first `@todoist/comms-sdk` release is 5.0.0, and it stays build-only until the separate publication step. No path filter is needed.
 
 ## What fails open
 

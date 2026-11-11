@@ -11,8 +11,8 @@ describe('authenticated retained artifact binding', () => {
         'checks %s against the actual selected run artifact',
         (scenario) => {
             const directory = mkdtempSync(join(tmpdir(), 'artifact-fixture-'))
-            const filename = 'todoist-comms-sdk-4.0.1.tgz'
-            const metadata = JSON.stringify({ filename, version: '4.0.1', integrity: 'original' })
+            const filename = 'todoist-comms-sdk-5.0.0.tgz'
+            const metadata = JSON.stringify({ filename, version: '5.0.0', integrity: 'original' })
             try {
                 writeFileSync(
                     join(directory, 'release.json'),
@@ -54,9 +54,9 @@ describe('original GitHub archive binding', () => {
         try {
             const target = join(directory, 'download')
             mkdirSync(target)
-            const filename = 'todoist-comms-sdk-4.0.1.tgz'
+            const filename = 'todoist-comms-sdk-5.0.0.tgz'
             const metadata = {
-                version: '4.0.1',
+                version: '5.0.0',
                 filename,
                 runId: '42',
                 runAttempt: '2',

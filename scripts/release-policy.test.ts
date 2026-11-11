@@ -67,27 +67,27 @@ describe('retained release source', () => {
 
 describe('registry recovery', () => {
     it('allows a forward latest release and refuses to downgrade it', () => {
-        expect(() => validatePublicationTag('4.0.1', 'latest', { latest: '4.0.0' })).not.toThrow()
-        expect(() => validatePublicationTag('4.0.1', 'latest', { latest: '4.0.2' })).toThrow()
+        expect(() => validatePublicationTag('5.0.0', 'latest', { latest: '4.0.1' })).not.toThrow()
+        expect(() => validatePublicationTag('5.0.0', 'latest', { latest: '5.0.1' })).toThrow()
     })
     it('keeps next separate from latest and guards its ordering', () => {
         expect(() =>
-            validatePublicationTag('4.1.0-next.2', 'next', {
-                next: '4.1.0-next.1',
-                latest: '4.0.1',
+            validatePublicationTag('5.1.0-next.2', 'next', {
+                next: '5.1.0-next.1',
+                latest: '5.0.0',
             }),
         ).not.toThrow()
         expect(() =>
-            validatePublicationTag('4.1.0-next.2', 'next', { next: '4.1.0-next.3' }),
+            validatePublicationTag('5.1.0-next.2', 'next', { next: '5.1.0-next.3' }),
         ).toThrow()
-        expect(() => validatePublicationTag('4.1.0-next.2', 'latest', {})).toThrow()
-        expect(() => validatePublicationTag('4.1.0', 'next', {})).toThrow()
+        expect(() => validatePublicationTag('5.1.0-next.2', 'latest', {})).toThrow()
+        expect(() => validatePublicationTag('5.1.0', 'next', {})).toThrow()
     })
     it('allows explicit recovery without reusing a normal channel', () => {
         expect(() =>
-            validatePublicationTag('4.0.1', 'migration-recovery', { latest: '4.2.0' }),
+            validatePublicationTag('5.0.0', 'migration-recovery', { latest: '5.2.0' }),
         ).not.toThrow()
-        expect(() => validatePublicationTag('4.0.1', 'internal', {})).toThrow()
+        expect(() => validatePublicationTag('5.0.0', 'internal', {})).toThrow()
     })
     it('only treats a structured 404 as absence, never auth or service failure', () => {
         expect(registryJson({ status: 1, stdout: '{"error":{"code":"E404"}}' })).toBeUndefined()

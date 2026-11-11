@@ -12,15 +12,15 @@ function runRecord(overrides: Record<string, unknown>) {
         mkdirSync(bin)
         const sourceSha = 'a'.repeat(40)
         const metadata = {
-            version: '4.0.1',
+            version: '5.0.0',
             sourceSha,
             branch: 'main',
             notes: '[Posted by Jarvis]\n\nNotes',
-            filename: 'todoist-comms-sdk-4.0.1.tgz',
+            filename: 'todoist-comms-sdk-5.0.0.tgz',
         }
         const release = {
             id: 42,
-            tag_name: 'v4.0.1',
+            tag_name: 'v5.0.0',
             target_commitish: sourceSha,
             draft: false,
             prerelease: false,
@@ -35,7 +35,7 @@ function runRecord(overrides: Record<string, unknown>) {
             writeFileSync(join(bin, name), `#!${process.execPath}\n${code}\n`, { mode: 0o755 })
         executable(
             'node',
-            `const args=process.argv.slice(2); if(args[1]==='check-registry') console.log(JSON.stringify({tags:{latest:'4.0.1'}})); else if(args[1]!=='verify') process.exit(91)`,
+            `const args=process.argv.slice(2); if(args[1]==='check-registry') console.log(JSON.stringify({tags:{latest:'5.0.0'}})); else if(args[1]!=='verify') process.exit(91)`,
         )
         executable(
             'git',
@@ -43,7 +43,7 @@ function runRecord(overrides: Record<string, unknown>) {
         )
         executable(
             'gh',
-            `const args=process.argv.slice(2); const route=args.find(x=>x.startsWith('repos/')); if(args.includes('POST')||args.includes('PATCH')||args.includes('DELETE')) {console.error('unexpected write'); process.exit(93)}; if(route?.includes('git/matching-refs')) console.log(JSON.stringify([{ref:'refs/tags/v4.0.1',object:{type:'commit',sha:'${sourceSha}'}}])); else if(route?.includes('/assets')) console.log('[]'); else if(route?.startsWith('repos/todoist/comms-sdk-typescript/releases?')) console.log(JSON.stringify([${JSON.stringify(release)}])); else if(route==='repos/todoist/comms-sdk-typescript/releases/42') console.log(JSON.stringify(${JSON.stringify(release)})); else if(route?.includes('/assets')) console.log('[]'); else process.exit(94)`,
+            `const args=process.argv.slice(2); const route=args.find(x=>x.startsWith('repos/')); if(args.includes('POST')||args.includes('PATCH')||args.includes('DELETE')) {console.error('unexpected write'); process.exit(93)}; if(route?.includes('git/matching-refs')) console.log(JSON.stringify([{ref:'refs/tags/v5.0.0',object:{type:'commit',sha:'${sourceSha}'}}])); else if(route?.includes('/assets')) console.log('[]'); else if(route?.startsWith('repos/todoist/comms-sdk-typescript/releases?')) console.log(JSON.stringify([${JSON.stringify(release)}])); else if(route==='repos/todoist/comms-sdk-typescript/releases/42') console.log(JSON.stringify(${JSON.stringify(release)})); else if(route?.includes('/assets')) console.log('[]'); else process.exit(94)`,
         )
         return spawnSync(process.execPath, [resolve('scripts/record-release.mjs'), directory], {
             encoding: 'utf8',
@@ -68,7 +68,7 @@ describe('record CLI does not accept tag name alone', () => {
             { published_at: null },
             'Release has no valid published timestamp',
         ],
-        ['missing original assets', {}, 'lacks todoist-comms-sdk-4.0.1.tgz'],
+        ['missing original assets', {}, 'lacks todoist-comms-sdk-5.0.0.tgz'],
     ])('rejects a same-tag published record with %s', (_label, change, error) => {
         const result = runRecord(change as Record<string, unknown>)
         expect(result.status, result.stderr).not.toBe(0)

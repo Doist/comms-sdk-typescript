@@ -210,9 +210,10 @@ export async function assertRecordedBaseline(api, tag) {
             Number.isFinite(Date.parse(release.published_at)),
         'Baseline has no published timestamp',
     )
-    if (tag === 'v4.0.0') {
-        // The inspected legacy release has no assets. This exception is bound to its exact commit.
-        assert.equal(api.tagSha(tag), '96d5ca358cf8346471d08fb8b08c0f8474445cc5')
+    if (tag === 'v4.0.1') {
+        // The last @doist/comms-sdk release predates retained artifacts and has no assets. This
+        // exception is bound to its exact tag commit.
+        assert.equal(api.tagSha(tag), 'b6c13f63d9e4914ed83c550081a9a503596f4d56')
         assert.equal(release.prerelease, false)
         return
     }

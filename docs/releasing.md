@@ -1,6 +1,6 @@
 # Releasing the scoped SDK
 
-The first current-line package is `@todoist/comms-sdk@4.0.1`. It keeps depending on
+The first current-line package is `@todoist/comms-sdk@5.0.0`. It keeps depending on
 the shared Kotlin library as `@doist/sdk-kmp` (pinned to `0.6.0`), which is published
 on npmjs. `@todoist/sdk-kmp` is not published yet; moving to it is a later follow-up
 with its own release. `scripts/release.mjs` refuses to pack or publish a manifest that
@@ -25,10 +25,12 @@ is needed only for semantic-release's push-authorization check; its dry run neve
 pushes. The selected checkout is exactly the triggering run's SHA, not a custom ref.
 
 The existing scope-independent `v<version>` tags are retained. The first build
-requires the existing `v4.0.0` baseline and explicitly selects the approved patch
-`4.0.1`; a newly analyzed feature/breaking change stops for target reconciliation.
+requires the existing `v4.0.1` baseline (the last `@doist/comms-sdk` release) and
+must analyse to a major: renaming the package breaks every consumer, so the scope
+change is merged with a breaking-change title (`feat!:`) and ships as `5.0.0`. Any
+other result on that baseline (a patch, a minor or no release) stops the build.
 Subsequent conventional commits determine the normal next version. The `next`
-branch resumes only after stable 4.0.1. No old tags are rewritten. Release records
+branch resumes only after stable 5.0.0. No old tags are rewritten. Release records
 include semantic-release channel notes, so the next prerelease increments normally.
 Stable releases also retain the existing source changelog/version record policy:
 only after completed dual publication, the recorder prepends the original notes to
@@ -53,7 +55,7 @@ same-version copies before each publication. Conflicting bytes, auth failures or
 ambiguous network responses stop before any write. Matching copies are skipped.
 The interactive helper selects the explicit original successful run/attempt, finds its unique artifact ID, verifies the downloaded ZIP against GitHub's authenticated SHA-256 archive digest, and compares both the tarball and full metadata byte for byte; edited local checksums cannot authorize a replacement. No retry rebuilds or recalculates a version.
 
-A second push can arrive while the first retained artifact awaits publication. The builder refuses to produce another plan while an earlier retained plan lacks a verified, published release record with both original assets. A bare tag or interrupted draft is not completed history. Before skipping ancestor runs, it verifies the baseline record, exact tag commit, stable/prerelease state, published timestamp, original tarball and `release.json`, hashes, and authenticated source run/attempt. The only asset-free exception is the inspected legacy `v4.0.0` at `96d5ca358cf8346471d08fb8b08c0f8474445cc5`; that record must still be published and stable. Completed records retain their assets beyond Actions artifact expiry. A new stable baseline additionally requires its verified source changelog/version commit; unfinished commitback blocks the next artifact build. Finish the earlier artifact and release record, then dispatch `release.yml` on the current release branch to analyze the later commits against the new baseline. Do not rebuild the partially published version. The proposed version must also be untagged: a prerelease tag with a channel note still pending cannot produce a second artifact. Build and publish queues stay separate so GitHub's single pending-run limit cannot replace a pending publisher with a new build.
+A second push can arrive while the first retained artifact awaits publication. The builder refuses to produce another plan while an earlier retained plan lacks a verified, published release record with both original assets. A bare tag or interrupted draft is not completed history. Before skipping ancestor runs, it verifies the baseline record, exact tag commit, stable/prerelease state, published timestamp, original tarball and `release.json`, hashes, and authenticated source run/attempt. The only asset-free exception is `v4.0.1`, the last `@doist/comms-sdk` release, at `b6c13f63d9e4914ed83c550081a9a503596f4d56`; that record must still be published and stable. Completed records retain their assets beyond Actions artifact expiry. A new stable baseline additionally requires its verified source changelog/version commit; unfinished commitback blocks the next artifact build. Finish the earlier artifact and release record, then dispatch `release.yml` on the current release branch to analyze the later commits against the new baseline. Do not rebuild the partially published version. The proposed version must also be untagged: a prerelease tag with a channel note still pending cannot produce a second artifact. Build and publish queues stay separate so GitHub's single pending-run limit cannot replace a pending publisher with a new build.
 
 ## Administrator setup
 

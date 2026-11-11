@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { publishArtifact } from './registry-release.mjs'
 
-const metadata = { name: '@todoist/comms-sdk', version: '4.0.1', integrity: 'sha512-reviewed' }
+const metadata = { name: '@todoist/comms-sdk', version: '5.0.0', integrity: 'sha512-reviewed' }
 const environment = {
     GH_PACKAGES_TOKEN: 'fixture-gh',
     GH_TOKEN: 'fixture-api',
@@ -65,7 +65,7 @@ function fixture(
                 return {
                     status: 0,
                     stdout: JSON.stringify({
-                        latest: copies[destination] === metadata.integrity ? '4.0.1' : '4.0.0',
+                        latest: copies[destination] === metadata.integrity ? '5.0.0' : '4.0.1',
                     }),
                 }
             if (destination === 'github') ghReads++
