@@ -566,7 +566,14 @@ const searchResultBaseShape = {
      * `threadId`, `conversationId`, `commentId`, or `messageId` to reference objects.
      */
     id: z.string(),
-    snippet: z.string(),
+    /**
+     * Text of the match. The API can send `null` for a result with no snippet text;
+     * that arrives here as an empty string, so one such result doesn't fail the page.
+     */
+    snippet: z
+        .string()
+        .nullable()
+        .transform((snippet) => snippet ?? ''),
     snippetCreatorId: z.number(),
     snippetLastUpdated: z.date(),
     channelId: z.string().nullable().optional(),
