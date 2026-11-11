@@ -56,7 +56,7 @@ const config: Config = {
                     to: '/',
                 },
                 {
-                    href: 'https://github.com/Doist/comms-sdk-typescript',
+                    href: 'https://github.com/todoist/comms-sdk-typescript',
                     label: 'GitHub',
                     position: 'right',
                 },
@@ -91,7 +91,7 @@ const config: Config = {
                         },
                         {
                             label: 'GitHub',
-                            href: 'https://github.com/Doist/comms-sdk-typescript',
+                            href: 'https://github.com/todoist/comms-sdk-typescript',
                         },
                     ],
                 },

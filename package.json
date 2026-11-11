@@ -4,7 +4,7 @@
     "description": "A TypeScript wrapper for the Comms REST API.",
     "author": "Doist developers",
     "homepage": "https://doist.github.io/comms-sdk-typescript/",
-    "repository": "https://github.com/Doist/comms-sdk-typescript",
+    "repository": "https://github.com/todoist/comms-sdk-typescript",
     "publishConfig": {
         "access": "public",
         "provenance": true
