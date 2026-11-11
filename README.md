@@ -183,4 +183,4 @@ GitHub workflow.
 
 ## Feedback
 
-Open issues at https://github.com/Doist/comms-sdk-typescript.
+Open issues at https://github.com/todoist/comms-sdk-typescript.

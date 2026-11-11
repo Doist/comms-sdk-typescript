@@ -134,7 +134,7 @@ async function createDefaultTransport(): Promise<DefaultTransport | undefined> {
         // `interceptors.decompress()` decodes gzip/deflate/br/zstd bodies. On
         // Node 24+, attaching any custom dispatcher to global `fetch` strips
         // `content-encoding` without actually decompressing the body.
-        // See https://github.com/Doist/todoist-cli/issues/318.
+        // See https://github.com/todoist/todoist-cli/issues/318.
         const decompress = interceptors.decompress()
 
         // Pair undici's own `fetch` with this dispatcher so the request client
