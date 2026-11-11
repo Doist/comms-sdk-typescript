@@ -27,7 +27,7 @@ function fixture(version = '4.0.0') {
     const manifest = {
         name: '@todoist/comms-sdk',
         version,
-        dependencies: { '@todoist/sdk-kmp': '0.6.2' },
+        dependencies: { '@doist/sdk-kmp': '0.6.0' },
         userField: 'preserve me',
     }
     const lock = {
@@ -179,7 +179,7 @@ describe('stable source release record', () => {
             expect(JSON.parse(f.file(result.recordSha, 'package.json'))).toEqual({
                 name: '@todoist/comms-sdk',
                 version: '4.0.1',
-                dependencies: { '@todoist/sdk-kmp': '0.6.2' },
+                dependencies: { '@doist/sdk-kmp': '0.6.0' },
                 userField: 'preserve me',
             })
             const lock = JSON.parse(f.file(result.recordSha, 'package-lock.json'))

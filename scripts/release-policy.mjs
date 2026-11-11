@@ -4,6 +4,22 @@ export const REPOSITORY = 'todoist/comms-sdk-typescript'
 export const VERSION = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-next\.([1-9]\d*))?$/
 export const SHA = /^[a-f0-9]{40}$/
 
+// The shared Kotlin library ships as `@doist/sdk-kmp`; no `@todoist/sdk-kmp` package is
+// published, so a packed manifest naming it would not install. Any exact pin of the old-scope
+// package is accepted, so dependency updates don't need a release-script change.
+export function assertSdkKmpDependency(dependencies = {}) {
+    assert.match(
+        dependencies['@doist/sdk-kmp'] ?? '',
+        /^\d+\.\d+\.\d+$/,
+        'Packed manifest must pin @doist/sdk-kmp to an exact version',
+    )
+    assert.equal(
+        dependencies['@todoist/sdk-kmp'],
+        undefined,
+        'Packed manifest must not depend on the unpublished @todoist/sdk-kmp',
+    )
+}
+
 export function readSourceRun(api, environment = process.env) {
     const id = environment.ARTIFACT_RUN_ID || ''
     const attempt = environment.ARTIFACT_RUN_ATTEMPT || ''

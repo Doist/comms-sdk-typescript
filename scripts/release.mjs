@@ -7,7 +7,14 @@ import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { compareRetainedArtifact } from './artifact-source.mjs'
 import { publishArtifact } from './registry-release.mjs'
-import { validateSourceRun, readSourceRun, REPOSITORY, VERSION, SHA } from './release-policy.mjs'
+import {
+    assertSdkKmpDependency,
+    validateSourceRun,
+    readSourceRun,
+    REPOSITORY,
+    VERSION,
+    SHA,
+} from './release-policy.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const [command, directory = 'release-artifact', requestedDestination] = process.argv.slice(2)
@@ -40,8 +47,7 @@ function inspect(tarball) {
     assert.equal(manifest.publishConfig, undefined)
     assert.equal(manifest.scripts, undefined)
     assert.equal(manifest.repository, 'https://github.com/todoist/comms-sdk-typescript')
-    assert.equal(manifest.dependencies['@todoist/sdk-kmp'], '0.6.2')
-    assert.equal(manifest.dependencies['@doist/sdk-kmp'], undefined)
+    assertSdkKmpDependency(manifest.dependencies)
     assert.equal(manifest.exports['.'].default, './dist/esm/index.js')
     assert.equal(manifest.exports['.'].types, './dist/types/index.d.ts')
     const bytes = readFileSync(tarball)

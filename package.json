@@ -44,7 +44,7 @@
         "prepare": "node -e \"require('fs').existsSync('.git') && require('child_process').execSync('lefthook install --reset-hooks-path', { stdio: 'inherit' })\" && npm run build"
     },
     "dependencies": {
-        "@todoist/sdk-kmp": "0.6.2",
+        "@doist/sdk-kmp": "0.6.0",
         "camelcase": "9.0.0",
         "ts-custom-error": "3.3.1",
         "undici": "8.12.3",

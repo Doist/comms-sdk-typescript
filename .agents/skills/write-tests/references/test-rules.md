@@ -27,10 +27,10 @@ Write the expected value out as literals (a lookup table or `it.each` rows are f
 
 The real boundary here is the Comms API: MSW handlers (`server.use`), or a `customFetch` stub. Other boundaries: the global `fetch` and undici in the transport tests, a local `node:http` server for the real dispatcher, the clock (`vi.useFakeTimers`, `src/transport/fetch-with-retry.test.ts:136`), environment variables such as the proxy settings.
 
-| Flag                                                                            | Fine                                                                                                                                                                     |
-| ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| A **new** `vi.mock` of an internal module, to make setup easier                 | The suite-wide transport seam in `src/testUtils/msw-setup.ts`, which lets MSW see requests                                                                               |
-| Mocking the function the test is about, or one that computes its expected value | A call-through mock of `@todoist/sdk-kmp` that records what the SDK hands the shared library, next to assertions on the result (`src/utils/reply-recipients.test.ts:12`) |
+| Flag                                                                            | Fine                                                                                                                                                                   |
+| ------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A **new** `vi.mock` of an internal module, to make setup easier                 | The suite-wide transport seam in `src/testUtils/msw-setup.ts`, which lets MSW see requests                                                                             |
+| Mocking the function the test is about, or one that computes its expected value | A call-through mock of `@doist/sdk-kmp` that records what the SDK hands the shared library, next to assertions on the result (`src/utils/reply-recipients.test.ts:12`) |
 
 New tests should answer requests with MSW rather than mock a client or the transport.
 

@@ -1,4 +1,4 @@
-import { getDefaultReplyRecipients as getSharedDefaultReplyRecipients } from '@todoist/sdk-kmp/shared-comms-clients'
+import { getDefaultReplyRecipients as getSharedDefaultReplyRecipients } from '@doist/sdk-kmp/shared-comms-clients'
 import { http, HttpResponse } from 'msw'
 import { applyNotifyAudience } from '../clients/notify-audience'
 import { CommsApi } from '../comms-api'
@@ -9,8 +9,8 @@ import { getDefaultReplyRecipients } from './reply-recipients'
 
 // Calls through, so a test can check how the SDK describes each comment to the
 // library, which the result can't always show.
-vi.mock('@todoist/sdk-kmp/shared-comms-clients', async (importOriginal) => {
-    const actual = await importOriginal<typeof import('@todoist/sdk-kmp/shared-comms-clients')>()
+vi.mock('@doist/sdk-kmp/shared-comms-clients', async (importOriginal) => {
+    const actual = await importOriginal<typeof import('@doist/sdk-kmp/shared-comms-clients')>()
     return { ...actual, getDefaultReplyRecipients: vi.fn(actual.getDefaultReplyRecipients) }
 })
 

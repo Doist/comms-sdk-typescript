@@ -1,27 +1,19 @@
 # Releasing the scoped SDK
 
-The first current-line package is `@todoist/comms-sdk@4.0.1`. Its runtime dependency
-`@todoist/sdk-kmp@0.6.2` must be published and installable first. Until then the
-migration draft is **WAITING_FOR_PUBLICATION**: the old lockfile is deliberately
-unchanged, and an old-scope overlay is only provisional evidence. Do not merge it.
+The first current-line package is `@todoist/comms-sdk@4.0.1`. It keeps depending on
+the shared Kotlin library as `@doist/sdk-kmp` (pinned to `0.6.0`), which is published
+on npmjs. `@todoist/sdk-kmp` is not published yet; moving to it is a later follow-up
+with its own release. `scripts/release.mjs` refuses to pack or publish a manifest that
+names `@todoist/sdk-kmp` or does not pin `@doist/sdk-kmp` to an exact version.
 
-## Complete the real dependency verification
+## Dependency resolution
 
-After both upstream registry copies exist, use Node 24 and npm 11:
-
-```sh
-npm view @todoist/sdk-kmp@0.6.2 version dist --registry=https://registry.npmjs.org/ --json
-npm install --package-lock-only --ignore-scripts --no-audit --no-fund
-npm ci --ignore-scripts --no-audit --no-fund
-npm run verify
-npm run attw
-(cd website && npm ci --ignore-scripts --no-audit --no-fund && npm run postinstall && npm run build)
-```
-
-Review and commit the actual lockfile; do not invent URLs, integrity, or aliases.
-The website is private and is never published as a package. Public-only installs use
-npmjs via `.npmrc`. Mixed public/private consumers route the whole `@todoist` scope
-to GitHub Packages, with explicit read access; npm has no registry fallback.
+The repository's `.npmrc` routes the `@todoist` scope to npmjs, and `@doist/sdk-kmp`
+resolves from the default npmjs registry. The website is private and is never
+published as a package. Public-only installs use npmjs. Mixed public/private
+consumers that route the whole `@todoist` scope to GitHub Packages need explicit read
+access to the mirror (npm has no registry fallback), and must still resolve
+`@doist/sdk-kmp` wherever they route the `@doist` scope.
 
 ## Build first, publish later
 

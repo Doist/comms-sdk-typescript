@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+    assertSdkKmpDependency,
     registryJson,
     validatePublicationTag,
     validateSourceRun,
@@ -127,5 +128,20 @@ describe('original source run attempt', () => {
                 ARTIFACT_RUN_ATTEMPT: '2',
             }),
         ).toThrow()
+    })
+})
+
+describe('packed shared-library dependency', () => {
+    it('accepts an exact pin of the published old-scope package', () => {
+        expect(() => assertSdkKmpDependency({ '@doist/sdk-kmp': '0.6.0' })).not.toThrow()
+        expect(() => assertSdkKmpDependency({ '@doist/sdk-kmp': '0.7.12' })).not.toThrow()
+    })
+    it.each([
+        ['missing', { zod: '4.6.6' }],
+        ['a range', { '@doist/sdk-kmp': '^0.6.0' }],
+        ['the unpublished new scope', { '@todoist/sdk-kmp': '0.6.2' }],
+        ['both scopes', { '@doist/sdk-kmp': '0.6.0', '@todoist/sdk-kmp': '0.6.2' }],
+    ])('rejects %s', (_label, dependencies) => {
+        expect(() => assertSdkKmpDependency(dependencies)).toThrow(/sdk-kmp/)
     })
 })
