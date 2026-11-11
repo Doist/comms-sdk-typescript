@@ -1,3 +1,9 @@
+## [4.0.1](https://github.com/todoist/comms-sdk-typescript/compare/v4.0.0...v4.0.1) (2026-11-11)
+
+### Bug Fixes
+
+* **ci:** use the todoist GitHub org after the rename ([#141](https://github.com/todoist/comms-sdk-typescript/issues/141)) ([87f74fa](https://github.com/todoist/comms-sdk-typescript/commit/87f74faa856701d855a8dc6d35871cdce8573f04))
+
 ## [4.0.0](https://github.com/Doist/comms-sdk-typescript/compare/v3.12.0...v4.0.0) (2026-11-10)
 
 ### ⚠ BREAKING CHANGES
