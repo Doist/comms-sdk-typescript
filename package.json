@@ -1,5 +1,5 @@
 {
-    "name": "@doist/comms-sdk",
+    "name": "@todoist/comms-sdk",
     "version": "4.0.1",
     "description": "A TypeScript wrapper for the Comms REST API.",
     "author": "Doist developers",
