@@ -238,3 +238,43 @@ describe('UsersClient status', () => {
         })
     })
 })
+
+describe('UsersClient update', () => {
+    let client: UsersClient
+
+    beforeEach(() => {
+        client = new UsersClient({ apiToken: TEST_API_TOKEN })
+    })
+
+    it('sends the name as full_name, the field Comms reads', async () => {
+        let body: unknown
+        server.use(
+            http.post(apiUrl('api/v1.0/users/update'), async ({ request }) => {
+                body = await request.json()
+                return HttpResponse.json(mockUser)
+            }),
+        )
+
+        await client.update({ name: 'Ada Lovelace', timezone: 'Europe/London', lang: 'en' })
+
+        expect(body).toEqual({
+            full_name: 'Ada Lovelace',
+            timezone: 'Europe/London',
+            lang: 'en',
+        })
+    })
+
+    it('sends only the fields given', async () => {
+        let body: unknown
+        server.use(
+            http.post(apiUrl('api/v1.0/users/update'), async ({ request }) => {
+                body = await request.json()
+                return HttpResponse.json(mockUser)
+            }),
+        )
+
+        await client.update({ timezone: 'Europe/London' })
+
+        expect(body).toEqual({ timezone: 'Europe/London' })
+    })
+})
