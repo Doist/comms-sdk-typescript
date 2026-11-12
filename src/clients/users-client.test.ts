@@ -259,4 +259,19 @@ describe('UsersClient update', () => {
             lang: 'en',
         })
     })
+
+    it('sends no full_name when no name is given', async () => {
+        let body: unknown
+        server.use(
+            http.post(apiUrl('api/v1.0/users/update'), async ({ request }) => {
+                body = await request.json()
+                return HttpResponse.json(mockUser)
+            }),
+        )
+
+        const api = new CommsApi(TEST_API_TOKEN)
+        await api.users.update({ timezone: 'Europe/London' })
+
+        expect(body).toEqual({ timezone: 'Europe/London' })
+    })
 })

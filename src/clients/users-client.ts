@@ -206,8 +206,6 @@ export class UsersClient extends BaseClient {
      * ```
      */
     update(args: UpdateUserArgs): Promise<User> {
-        // Comms reads the name as `full_name` and ignores fields it does not know,
-        // so a `name` key would be dropped without an error.
         const { name, ...rest } = args
         const payload = name === undefined ? rest : { ...rest, fullName: name }
         return this.post(`${ENDPOINT_USERS}/update`, payload, UserSchema)
