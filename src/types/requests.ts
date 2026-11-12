@@ -67,6 +67,7 @@ export const CreateCommentArgsSchema = z.object({
     threadId: z.string(),
     content: z.string(),
     id: z.string().optional(),
+    clientRequestId: z.string().optional(),
     attachments: z.array(RequestAttachmentSchema).nullable().optional(),
     actions: z.unknown().nullable().optional(),
     recipients: z.array(z.number()).nullable().optional(),

@@ -96,6 +96,8 @@ export class CommentsClient extends BaseClient {
      * @param args - The arguments for creating a comment.
      * @param args.threadId - The thread ID.
      * @param args.content - The comment content.
+     * @param args.clientRequestId - Id of the comment this one answers. Only honoured for
+     *   Agent Core's replies; other callers' values are ignored.
      * @param args.recipients - Optional array of user IDs to notify directly.
      * @param args.groups - Optional array of custom group IDs to notify.
      * @param args.directMentions - Optional array of user IDs that were @-mentioned in

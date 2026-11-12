@@ -5,9 +5,11 @@ import { server } from '../testUtils/msw-setup'
 import {
     TEST_API_BASE_URL as BASE,
     TEST_API_TOKEN,
+    TEST_CHANNEL_ID,
     TEST_COMMENT_ID,
     TEST_THREAD_ID,
 } from '../testUtils/test-defaults'
+import { CreateCommentArgsSchema } from '../types/requests'
 
 // These tests pin the wire shape of `comments-client` — every camelCase
 // field on the args side ends up snake_case on the wire (via
@@ -16,6 +18,49 @@ import {
 // that catches a casing regression locally.
 
 describe('CommentsClient — wire serialization', () => {
+    it.each([
+        { clientRequestId: 'abc', expected: { client_request_id: 'abc' } },
+        { clientRequestId: undefined, expected: {} },
+    ])(
+        'createComment preserves clientRequestId=$clientRequestId through schema parsing and serialization',
+        async ({ clientRequestId, expected }) => {
+            let capturedBody: unknown
+            server.use(
+                http.post(`${BASE}/comments/add`, async ({ request }) => {
+                    capturedBody = await request.json()
+                    return HttpResponse.json({
+                        id: TEST_COMMENT_ID,
+                        thread_id: TEST_THREAD_ID,
+                        channel_id: TEST_CHANNEL_ID,
+                        creator: 1,
+                        content: 'hello',
+                        posted_ts: 1_609_459_200,
+                        workspace_id: 1,
+                        system_message: null,
+                    })
+                }),
+            )
+
+            const api = new CommsApi(TEST_API_TOKEN)
+            const args = CreateCommentArgsSchema.parse({
+                threadId: TEST_THREAD_ID,
+                content: 'hello',
+                ...(clientRequestId === undefined ? {} : { clientRequestId }),
+            })
+            const comment = await api.comments.createComment(args)
+
+            expect(capturedBody).toEqual({
+                thread_id: TEST_THREAD_ID,
+                content: 'hello',
+                id: expect.any(String),
+                ...expected,
+            })
+            expect(comment.id).toBe(TEST_COMMENT_ID)
+            expect(comment.content).toBe('hello')
+            expect(comment.threadId).toBe(TEST_THREAD_ID)
+        },
+    )
+
     it('getComments sends thread_id / newer_than_ts / older_than_ts on the URL', async () => {
         const capturedUrls: URL[] = []
         server.use(

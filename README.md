@@ -67,6 +67,11 @@ const sameChannel = await api.channels.createChannel({
 })
 ```
 
+For Agent Core replies, `comments.createComment` also accepts an optional
+`clientRequestId`, the ID of the comment being answered. The SDK sends it as
+`client_request_id`. Only Agent Core's replies honour this value; other callers'
+values are ignored.
+
 ### Broadcast group markers
 
 Use the string constants `EVERYONE` / `EVERYONE_IN_THREAD` when
