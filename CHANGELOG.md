@@ -1,9 +1,3 @@
-## [5.0.2](https://github.com/todoist/comms-sdk-typescript/compare/v5.0.1...v5.0.2) (2026-11-12)
-
-### Bug Fixes
-
-* **users:** send the name as full_name in users.update ([#140](https://github.com/todoist/comms-sdk-typescript/issues/140)) ([24a7472](https://github.com/todoist/comms-sdk-typescript/commit/24a7472d554fd4a1898785ca3ab0169aedeb9c32))
-
 ## [5.0.1](https://github.com/todoist/comms-sdk-typescript/compare/v5.0.0...v5.0.1) (2026-11-11)
 
 ### Bug Fixes
