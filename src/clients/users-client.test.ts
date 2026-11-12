@@ -1,5 +1,6 @@
 import { http, HttpResponse } from 'msw'
 import { beforeEach, describe, expect, it } from 'vitest'
+import { CommsApi } from '../comms-api'
 import { apiUrl } from '../testUtils/msw-handlers'
 import { server } from '../testUtils/msw-setup'
 import { mockUser, TEST_API_TOKEN } from '../testUtils/test-defaults'
@@ -236,5 +237,41 @@ describe('UsersClient status', () => {
 
             expect(user.status).toEqual({ message: 'Away', effects: {} })
         })
+    })
+})
+
+describe('UsersClient update', () => {
+    it('sends the name as full_name, the field Comms reads', async () => {
+        let body: unknown
+        server.use(
+            http.post(apiUrl('api/v1.0/users/update'), async ({ request }) => {
+                body = await request.json()
+                return HttpResponse.json(mockUser)
+            }),
+        )
+
+        const api = new CommsApi(TEST_API_TOKEN)
+        await api.users.update({ name: 'Ada Lovelace', timezone: 'Europe/London', lang: 'en' })
+
+        expect(body).toEqual({
+            full_name: 'Ada Lovelace',
+            timezone: 'Europe/London',
+            lang: 'en',
+        })
+    })
+
+    it('sends no full_name when no name is given', async () => {
+        let body: unknown
+        server.use(
+            http.post(apiUrl('api/v1.0/users/update'), async ({ request }) => {
+                body = await request.json()
+                return HttpResponse.json(mockUser)
+            }),
+        )
+
+        const api = new CommsApi(TEST_API_TOKEN)
+        await api.users.update({ timezone: 'Europe/London' })
+
+        expect(body).toEqual({ timezone: 'Europe/London' })
     })
 })

@@ -206,7 +206,9 @@ export class UsersClient extends BaseClient {
      * ```
      */
     update(args: UpdateUserArgs): Promise<User> {
-        return this.post(`${ENDPOINT_USERS}/update`, args, UserSchema)
+        const { name, ...rest } = args
+        const payload = name === undefined ? rest : { ...rest, fullName: name }
+        return this.post(`${ENDPOINT_USERS}/update`, payload, UserSchema)
     }
 
     /**
