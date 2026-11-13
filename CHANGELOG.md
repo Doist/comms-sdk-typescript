@@ -1,3 +1,9 @@
+## [5.1.0](https://github.com/todoist/comms-sdk-typescript/compare/v5.0.2...v5.1.0) (2026-11-13)
+
+### Features
+
+* **comments:** support clientRequestId on comment creation ([#147](https://github.com/todoist/comms-sdk-typescript/issues/147)) ([89b710e](https://github.com/todoist/comms-sdk-typescript/commit/89b710ee2cebcbd0cde2e2f3523a827762bfda8f))
+
 ## [5.0.2](https://github.com/todoist/comms-sdk-typescript/compare/v5.0.1...v5.0.2) (2026-11-12)
 
 ### Bug Fixes
