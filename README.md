@@ -67,6 +67,11 @@ const sameChannel = await api.channels.createChannel({
 })
 ```
 
+`comments.createComment`, `threads.closeThread`, and `threads.reopenThread`
+accept an optional `clientRequestId`, the ID of the comment being answered.
+The SDK sends it as `client_request_id`. Only replies sent by Comms' agent
+service honour this value; other callers' values are ignored.
+
 ### Broadcast group markers
 
 Use the string constants `EVERYONE` / `EVERYONE_IN_THREAD` when

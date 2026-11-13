@@ -337,6 +337,8 @@ export class ThreadsClient extends BaseClient {
      * @param args - The arguments for closing a thread.
      * @param args.id - The thread ID.
      * @param args.content - The comment content.
+     * @param args.clientRequestId - Id of the comment this one answers. Only honoured
+     *   for replies sent by Comms' agent service; other callers' values are ignored.
      * @param args.attachments - Optional array of {@link Attachment} objects.
      * @param args.actions - Optional array of action objects.
      * @param args.recipients - Optional array of user IDs to notify directly.
@@ -366,6 +368,8 @@ export class ThreadsClient extends BaseClient {
      * @param args - The arguments for reopening a thread.
      * @param args.id - The thread ID.
      * @param args.content - The comment content.
+     * @param args.clientRequestId - Id of the comment this one answers. Only honoured
+     *   for replies sent by Comms' agent service; other callers' values are ignored.
      * @param args.attachments - Optional array of {@link Attachment} objects.
      * @param args.actions - Optional array of action objects.
      * @param args.recipients - Optional array of user IDs to notify directly.
