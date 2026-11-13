@@ -67,10 +67,10 @@ const sameChannel = await api.channels.createChannel({
 })
 ```
 
-For Agent Core replies, `comments.createComment` also accepts an optional
-`clientRequestId`, the ID of the comment being answered. The SDK sends it as
-`client_request_id`. Only Agent Core's replies honour this value; other callers'
-values are ignored.
+`comments.createComment`, `threads.closeThread`, and `threads.reopenThread`
+accept an optional `clientRequestId`, the ID of the comment being answered.
+The SDK sends it as `client_request_id`. Only replies sent by Comms' agent
+service honour this value; other callers' values are ignored.
 
 ### Broadcast group markers
 
